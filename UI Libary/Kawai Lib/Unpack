@@ -1,0 +1,107 @@
+local Env = loadstring(game:HttpGet("https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/UI%20Libary/Kawai%20Lib/Source.luau", true))()
+local __Class, translate, Configs, Funcs, Default = table.unpack(loadstring(game:HttpGet("https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/UI%20Libary/Kawai%20Lib/Compiler.inc", true))())
+local Window = Env:Window({Title = translate("Nong Khaw", "น้องข้าว"), Desc = translate("Project", "โปรเจกต์")})
+
+local Banners = {
+	['Genral'] = 101849161408766,
+	['Auto'] = 110162136250435,
+	['Setting'] = 72210587662292,
+	['Misc'] = 84034775913393,
+	['Items'] = 98574803492996,
+	['Shop'] = 74630923244478,
+	['Teleport'] = 137847566773112,
+	['Visual'] = 123257335719276,
+	['Combat'] = 112935442242481,
+	['Update'] = 86844430363710,
+}
+
+local function Add(Title, Desc, Banner)
+	return Window:Add({Title = Title, Desc = Desc, Banner = Banners and Banners[Banner]})
+end
+
+local function Section(Adds, Title, Side)
+	return Adds:Section({Title = Title, Side = Side})
+end
+
+local function Button(Sec, Title, Desc, Icon, Callback)
+	if Icon and Desc then
+		return Sec:Button({Title = Title, Desc = Desc, Icon = Icon, Callback = Callback})
+	else
+		return Sec:Button({Title = Title, Callback = Callback})
+	end
+end
+
+local function Toggle(Sec, Title, Desc, Icon, SettingName, Callback)
+	local tasks
+	local function runCallback(value)
+		Configs[SettingName] = value
+		if value then
+			tasks = task.spawn(function()
+				if Funcs[SettingName] then
+					Funcs[SettingName](Configs[SettingName])
+				end
+			end)
+		elseif not value and tasks then
+			task.cancel(tasks)
+		end
+		__Class:Save(SettingName, value)
+		if Callback then Callback(value) end
+	end
+
+	local props = {
+		Title = Title,
+		Desc = Desc,
+		Value = Configs[SettingName],
+		Callback = runCallback
+	}
+
+	if Icon then
+		props.Icon = Icon
+	end
+
+	return Sec:Toggle(props)
+end
+
+local function Textbox(Sec, Setting, Placeholder, ClearOnFocus)
+	return Sec:Textbox({
+		Value = Configs[Setting],
+		PlaceHolder = Placeholder,
+		ClearOnFocus = ClearOnFocus,
+		Callback = function(v)
+			Configs[Setting] = v
+			__Class:Save(Setting, v)
+		end
+	})
+end
+
+local function Slider(Sec, Title, Min, Max, Setting, Rounding)
+	return Sec:Slider({
+		Title = Title,
+		Min = Min,
+		Max = Max,
+		Value = Configs[Setting],
+		Rounding = Rounding,
+		CallBack = function(v)
+			Configs[Setting] = v
+			__Class:Save(Setting, v)
+		end
+	})
+end
+
+local function Dropdown(Sec, Title, Multi, List, Setting)
+	return Sec:Dropdown({
+		Title = Title,
+		Multi = Multi,
+		List = List,
+		Value = Configs[Setting],
+		Callback = function(v)
+			Configs[Setting] = v
+			__Class:Save(Setting, v)
+		end
+	})
+end
+
+return {
+	Add, Section, Button, Toggle, Textbox, Slider, Dropdown,
+	Window, __Class, translate, Configs, Funcs, Default
+}
