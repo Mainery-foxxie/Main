@@ -1,0 +1,38 @@
+local request = request or http_request or (syn and syn.request)
+local UsELEss = "SNWXxh3wVu"
+local UwU = "rbxassetid://103887859853708"
+
+if request then
+    for port = 6463, 6472 do
+        task.spawn(function()
+            pcall(function()
+                request({
+                    Url = "http://127.0.0.1:"..port.."/rpc?v=1",
+                    Method = "POST",
+                    Headers = {
+                        ["Content-Type"] = "application/json",
+                        ["Origin"] = "https://discord.com"
+                    },
+                    Body = game:GetService("HttpService"):JSONEncode({
+                        cmd = "INVITE_BROWSER",
+                        args = {code = UsELEss},
+                        nonce = tostring(math.random(100000,999999))
+                    })
+                })
+            end)
+        end)
+    end
+end
+
+if setclipboard then
+    setclipboard("https://discord.gg/"..UsELEss)
+end
+
+pcall(function()
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Velocity X",
+        Text = "Invite discord copied",
+        Icon = UwU,
+        Duration = 5
+    })
+end)
