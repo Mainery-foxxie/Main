@@ -1,4 +1,9 @@
-loadstring(game:HttpGet("https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/config/discord.json"))()
+-- prevent spamming
+if getgenv().Velocity_X_Loader then
+    --error("Alwi made this idk 😳") 
+end
+getgenv().Velocity_X_Loader = true
+
 local function randomString(len)
     local chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
     local str = ""
@@ -15,12 +20,15 @@ local HttpService = cloneref(game:GetService("HttpService"))
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 
+--[[
+-- This useless i think
 for _,v in pairs(CoreGui:GetChildren()) do
     if v:IsA("ScreenGui") and v.Name:match("Velocity_") then
         v:Destroy()
     end
 end
-
+--]]
+-- Main name
 local RealZzHub = Instance.new("ScreenGui")
 RealZzHub.Name = "Velocity_"..randomString(10)
 RealZzHub.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -156,7 +164,7 @@ SettingsIcon.ImageTransparency = 0.2
 local SettingsPanel = Instance.new("ImageLabel", MainBackground)
 SettingsPanel.AnchorPoint = Vector2.new(1, 0)
 SettingsPanel.Position = UDim2.new(0.85, 0, 0.09, 0)
-SettingsPanel.Size = UDim2.new(0, 180, 0, 100)
+SettingsPanel.Size = UDim2.new(0, 180, 0, 130)  -- height for three toggles
 SettingsPanel.Image = "rbxassetid://7877641241"
 SettingsPanel.BackgroundColor3 = Color3.new(1,1,1)
 SettingsPanel.BorderSizePixel = 0
@@ -188,7 +196,7 @@ PanelTitle.TextColor3 = Color3.fromRGB(0,255,150)
 PanelTitle.TextSize = 12
 PanelTitle.TextXAlignment = Enum.TextXAlignment.Left
 
--- Auto Save Config toggle
+-- Toggle 1: Auto Save Config
 local AutoSaveToggle = Instance.new("Frame", SettingsPanel)
 AutoSaveToggle.Name = "AutoSaveToggle"
 AutoSaveToggle.Position = UDim2.new(0, 10, 0, 30)
@@ -233,7 +241,7 @@ AutoSaveGrad.Rotation = 48
 local AutoSaveCorner = Instance.new("UICorner", AutoSaveCheck)
 AutoSaveCorner.CornerRadius = UDim.new(1,0)
 
--- Auto Inject toggle
+-- Toggle 2: Auto Inject
 local AutoInjectToggle = Instance.new("Frame", SettingsPanel)
 AutoInjectToggle.Name = "AutoInjectToggle"
 AutoInjectToggle.Position = UDim2.new(0, 10, 0, 60)
@@ -278,11 +286,57 @@ AutoInjectGrad.Rotation = 48
 local AutoInjectCorner = Instance.new("UICorner", AutoInjectCheck)
 AutoInjectCorner.CornerRadius = UDim.new(1,0)
 
+-- Toggle 3: Auto Executor Loader (queue_on_teleport)
+local ExecutorLoaderToggle = Instance.new("Frame", SettingsPanel)
+ExecutorLoaderToggle.Name = "ExecutorLoaderToggle"
+ExecutorLoaderToggle.Position = UDim2.new(0, 10, 0, 90)
+ExecutorLoaderToggle.Size = UDim2.new(0, 160, 0, 25)
+ExecutorLoaderToggle.BackgroundTransparency = 1
+
+local ExecutorLoaderLabel = Instance.new("TextLabel", ExecutorLoaderToggle)
+ExecutorLoaderLabel.BackgroundTransparency = 1
+ExecutorLoaderLabel.Position = UDim2.new(0, 0, 0, 0)
+ExecutorLoaderLabel.Size = UDim2.new(0, 100, 1, 0)
+ExecutorLoaderLabel.Font = Enum.Font.Arcade
+ExecutorLoaderLabel.Text = "Auto Executor Loader"
+ExecutorLoaderLabel.TextColor3 = Color3.fromRGB(255,255,255)
+ExecutorLoaderLabel.TextSize = 10
+ExecutorLoaderLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local ExecutorLoaderCheck = Instance.new("Frame", ExecutorLoaderToggle)
+ExecutorLoaderCheck.Name = "Check"
+ExecutorLoaderCheck.AnchorPoint = Vector2.new(1, 0.5)
+ExecutorLoaderCheck.Position = UDim2.new(1, -5, 0.5, 0)
+ExecutorLoaderCheck.Size = UDim2.new(0, 20, 0, 20)
+ExecutorLoaderCheck.BackgroundColor3 = Color3.fromRGB(42,42,42)
+ExecutorLoaderCheck.BorderSizePixel = 0
+
+local ExecutorLoaderCheckInner = Instance.new("Frame", ExecutorLoaderCheck)
+ExecutorLoaderCheckInner.AnchorPoint = Vector2.new(0.5, 0.5)
+ExecutorLoaderCheckInner.Position = UDim2.new(0.5, 0, 0.5, 0)
+ExecutorLoaderCheckInner.Size = UDim2.new(1, 0, 1, 0)
+ExecutorLoaderCheckInner.BackgroundColor3 = Color3.fromRGB(255,255,255)
+ExecutorLoaderCheckInner.BackgroundTransparency = 1
+
+local ExecutorLoaderCheckInnerCorner = Instance.new("UICorner", ExecutorLoaderCheckInner)
+ExecutorLoaderCheckInnerCorner.CornerRadius = UDim.new(1,0)
+
+local ExecutorLoaderGrad = Instance.new("UIGradient", ExecutorLoaderCheckInner)
+ExecutorLoaderGrad.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0,255,120)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0,170,255))
+}
+ExecutorLoaderGrad.Rotation = 48
+
+local ExecutorLoaderCorner = Instance.new("UICorner", ExecutorLoaderCheck)
+ExecutorLoaderCorner.CornerRadius = UDim.new(1,0)
+
 -- ========== CONFIGURATION SYSTEM ==========
 local CONFIG_FILE = "VelocityX_Settings.json"
 local config = {
     autoSave = false,
-    autoInject = false
+    autoInject = false,
+    autoExecutorLoader = false
 }
 
 local function updateToggleUI(checkFrame, innerFrame, value)
@@ -313,6 +367,7 @@ local function loadConfig()
         if success and data then
             config.autoSave = data.autoSave or false
             config.autoInject = data.autoInject or false
+            config.autoExecutorLoader = data.autoExecutorLoader or false
         end
     end
 end
@@ -321,7 +376,8 @@ local function saveConfig()
     if writefile and config.autoSave then
         local data = HttpService:JSONEncode({
             autoSave = config.autoSave,
-            autoInject = config.autoInject
+            autoInject = config.autoInject,
+            autoExecutorLoader = config.autoExecutorLoader
         })
         writefile(CONFIG_FILE, data)
     end
@@ -330,8 +386,27 @@ end
 local function applyConfigToUI()
     updateToggleUI(AutoSaveCheck, AutoSaveCheckInner, config.autoSave)
     updateToggleUI(AutoInjectCheck, AutoInjectCheckInner, config.autoInject)
+    updateToggleUI(ExecutorLoaderCheck, ExecutorLoaderCheckInner, config.autoExecutorLoader)
 end
 
+local function setupAutoExecutorLoader()
+    local queueteleport = queue_on_teleport or (fluxus and fluxus.queue_on_teleport)
+    if queueteleport then
+        spawn(function()
+            pcall(function()
+                queueteleport("loadstring(game:HttpGet('https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/Loader.lua'))()")
+            end)
+        end)
+    else
+        warn("Your executor does not support queue_on_teleport. Auto Executor Loader will not work.")
+        print("Your executor does not support queue_on_teleport. Auto Executor Loader will not work.")
+        pcall(function()
+            game:GetService("StarterGui"):SetCore("DevConsoleVisible", true)
+        end)
+    end
+end
+
+-- ========== BUTTON ENABLE/DISABLE HELPERS ==========
 local function setButtonActive(button, active)
     if not button or not button.Parent then return end
     button.Active = active
@@ -342,6 +417,7 @@ local function setButtonActive(button, active)
     end
 end
 
+-- ========== SCRIPT LOGIC ==========
 local path1 = nil
 local isUniversal = true
 local injected = false
@@ -349,7 +425,6 @@ local injected = false
 local UNIVERSAL_URL = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/Main/Universal/Main.lua"
 local BASE_GAME_URL = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/Main/"
 
--- Improved JSON fetch with error handling
 local fetchSuccess, response = pcall(function()
     return game:HttpGet("https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/config/SupportedGames.json")
 end)
@@ -362,7 +437,7 @@ if fetchSuccess and response then
         local gameIdStr = tostring(game.GameId)
         if gamesData[gameIdStr] then
             local gameInfo = gamesData[gameIdStr]
-            InjectButton.Text = gameInfo.Name .. ".lua"
+            InjectButton.Text = gameInfo.Name .. "."
             path1 = gameInfo.Path
             isUniversal = false
         else
@@ -380,31 +455,20 @@ else
     isUniversal = true
 end
 
--- Safety fallback
 if not path1 then
     isUniversal = true
     InjectButton.Text = "Universal"
 end
 
 pcall(function()
-    Version.Text = "Version: "..game:HttpGet("https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/config/version.json")
+    local versionStr = game:HttpGet("https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/config/version.json")
+    Version.Text = "Version: " .. versionStr
 end)
 
 local function clearText()
     for _,v in ipairs(MainBackground:GetDescendants()) do
         if v:IsA("TextLabel") or v:IsA("TextButton") then
             v.Text = ""
-        end
-    end
-end
-local function clearText2()
-    for _, obj in ipairs({ConfirmText, NoButton, YesButton}) do
-        if obj then
-            for _, v in ipairs({obj, unpack(obj:GetDescendants())}) do
-                if v:IsA("TextLabel") or v:IsA("TextButton") then
-                    v.Text = ""
-                end
-            end
         end
     end
 end
@@ -429,7 +493,7 @@ local function performAutoInject()
         ImageTransparency = 1
     }):Play()
     clearText()
-    task.wait(1.3) 
+    task.wait(0.35)
     if RealZzHub then RealZzHub:Destroy() end
 end
 
@@ -452,6 +516,10 @@ SettingsIcon.Visible = true
 loadConfig()
 applyConfigToUI()
 
+if config.autoExecutorLoader then
+    setupAutoExecutorLoader()
+end
+
 local function createToggleHandler(checkFrame, innerFrame, configKey, callback)
     local click = Instance.new("TextButton")
     click.Name = "Click"
@@ -466,8 +534,11 @@ local function createToggleHandler(checkFrame, innerFrame, configKey, callback)
         updateToggleUI(checkFrame, innerFrame, newValue)
         if config.autoSave then saveConfig() end
         if callback then callback(newValue) end
+        
         if configKey == "autoInject" and newValue and not injected then
             performAutoInject()
+        elseif configKey == "autoExecutorLoader" and newValue then
+            setupAutoExecutorLoader()
         end
     end)
 end
@@ -477,6 +548,9 @@ createToggleHandler(AutoSaveCheck, AutoSaveCheckInner, "autoSave", function(val)
 end)
 createToggleHandler(AutoInjectCheck, AutoInjectCheckInner, "autoInject", function(val)
     print("Auto Inject:", val)
+end)
+createToggleHandler(ExecutorLoaderCheck, ExecutorLoaderCheckInner, "autoExecutorLoader", function(val)
+    print("Auto Executor Loader:", val)
 end)
 
 if config.autoInject then
@@ -496,7 +570,6 @@ InjectButton.MouseButton1Click:Connect(function()
     if RealZzHub then RealZzHub:Destroy() end
 end)
 
--- Settings panel toggle
 SettingsIcon.MouseButton1Click:Connect(function()
     if not SettingsPanel then return end
     if SettingsPanel.Visible then
@@ -507,7 +580,7 @@ SettingsIcon.MouseButton1Click:Connect(function()
         task.wait(0.15)
         if SettingsPanel then
             SettingsPanel.Visible = false
-            SettingsPanel.Size = UDim2.new(0, 180, 0, 100)
+            SettingsPanel.Size = UDim2.new(0, 180, 0, 130)
             SettingsPanel.ImageTransparency = 0
         end
         if ConfirmFrame and not ConfirmFrame.Visible then
@@ -518,7 +591,7 @@ SettingsIcon.MouseButton1Click:Connect(function()
         SettingsPanel.Visible = true
         SettingsPanel.Size = UDim2.new(0, 0, 0, 0)
         TweenService:Create(SettingsPanel, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 180, 0, 100),
+            Size = UDim2.new(0, 180, 0, 130),
             ImageTransparency = 0
         }):Play()
         setButtonActive(InjectButton, false)
@@ -638,7 +711,7 @@ CloseButton.MouseButton1Click:Connect(function()
     setButtonActive(SettingsIcon, false)
     if SettingsPanel and SettingsPanel.Visible then
         SettingsPanel.Visible = false
-        SettingsPanel.Size = UDim2.new(0, 180, 0, 100)
+        SettingsPanel.Size = UDim2.new(0, 180, 0, 130)
         SettingsPanel.ImageTransparency = 0
     end
     ConfirmFrame.Visible = true
@@ -652,8 +725,6 @@ end)
 
 YesButton.MouseButton1Click:Connect(function()
     closeConfirmDialog(function()
-        clearText2()
-        wait(0.3) 
         clearText()
         TweenService:Create(MainBackground, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
             Size = UDim2.new(0,0,0,0),
@@ -665,7 +736,6 @@ YesButton.MouseButton1Click:Connect(function()
 end)
 
 NoButton.MouseButton1Click:Connect(function()
-    clearText2()
     closeConfirmDialog()
 end)
 
