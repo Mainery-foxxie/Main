@@ -425,8 +425,9 @@ local injected = false
 local UNIVERSAL_URL = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/Main/Universal/Main.lua"
 local BASE_GAME_URL = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/Main/"
 
+-- add faster tick niggers
 local fetchSuccess, response = pcall(function()
-    return game:HttpGet("https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/config/SupportedGames.json")
+    return game:HttpGet("https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/config/SupportedGames.json?nocache=" .. tick())
 end)
 
 if fetchSuccess and response then
