@@ -1,4 +1,4 @@
-if game.PlaceId == 80261671008194 then
+if game.PlaceId == 80261671008194 or game.PlaceId == 9300467672 then
 getgenv().Tomura_AfkGame = {
     ["Auto Click Bubble"] = true,
     ["Anti Afk"] = true,
