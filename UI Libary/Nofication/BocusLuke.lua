@@ -1,6 +1,50 @@
 local Nofitication = {}
 
 local GUI = game:GetService("CoreGui"):FindFirstChild("STX_Nofitication")
+local UserInputService = game:GetService("UserInputService")
+
+-- Helper function to enable dragging for a frame using a drag handle
+local function makeDraggable(frame, dragHandle)
+    local dragging = false
+    local dragStartPos = nil
+    local frameStartPos = nil
+
+    local function updatePosition(input)
+        local delta = input.Position - dragStartPos
+        local newPos = UDim2.new(
+            frameStartPos.X.Scale,
+            frameStartPos.X.Offset + delta.X,
+            frameStartPos.Y.Scale,
+            frameStartPos.Y.Offset + delta.Y
+        )
+        frame.Position = newPos
+    end
+
+    dragHandle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStartPos = input.Position
+            frameStartPos = frame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement) then
+            updatePosition(input)
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+end
 
 function Nofitication:Notify(nofdebug, middledebug, all)
     local SelectedType = string.lower(tostring(middledebug.Type))
@@ -35,34 +79,32 @@ function Nofitication:Notify(nofdebug, middledebug, all)
     Window.Size = UDim2.new(0, 230, 0, 80)
     Window.ZIndex = 2
 
-    -- Apply rounded corners to the main window
+    -- Rounded corners
     local windowCorner = Instance.new("UICorner")
     windowCorner.CornerRadius = UDim.new(0, 6)
     windowCorner.Parent = Window
 
-    -- Timer bar (slider)
+    -- Timer bar with blue‑green gradient
     Outline_A.Name = "Outline_A"
     Outline_A.Parent = Window
-    Outline_A.BackgroundColor3 = Color3.fromRGB(255, 255, 255) -- Base white for gradient
+    Outline_A.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     Outline_A.BorderSizePixel = 0
     Outline_A.Position = UDim2.new(0, 0, 0, 25)
     Outline_A.Size = UDim2.new(0, 230, 0, 2)
     Outline_A.ZIndex = 5
 
-    -- Add blue-green gradient to the timer bar
     local gradient = Instance.new("UIGradient")
     gradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 150, 255)),   -- Blue
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 100))    -- Green
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 150, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 100))
     })
     gradient.Parent = Outline_A
 
-    -- Round the timer bar slightly
     local barCorner = Instance.new("UICorner")
     barCorner.CornerRadius = UDim.new(0, 2)
     barCorner.Parent = Outline_A
 
-    -- Title
+    -- Title (acts as drag handle)
     WindowTitle.Name = "WindowTitle"
     WindowTitle.Parent = Window
     WindowTitle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -77,6 +119,7 @@ function Nofitication:Notify(nofdebug, middledebug, all)
     WindowTitle.TextColor3 = Color3.fromRGB(220, 220, 220)
     WindowTitle.TextSize = 12.000
     WindowTitle.TextXAlignment = Enum.TextXAlignment.Left
+    WindowTitle.TextYAlignment = Enum.TextYAlignment.Center
 
     -- Description
     WindowDescription.Name = "WindowDescription"
@@ -95,6 +138,9 @@ function Nofitication:Notify(nofdebug, middledebug, all)
     WindowDescription.TextWrapped = true
     WindowDescription.TextXAlignment = Enum.TextXAlignment.Left
     WindowDescription.TextYAlignment = Enum.TextYAlignment.Top
+
+    -- Make the notification draggable (touch + mouse)
+    makeDraggable(ambientShadow, WindowTitle)
 
     -- Notification type handling
     if SelectedType == "default" then
