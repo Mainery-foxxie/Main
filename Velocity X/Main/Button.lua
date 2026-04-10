@@ -23,7 +23,22 @@ task.spawn(function()
         pcall(function()
             local c = game.Players.LocalPlayer.Character or game.Players.LocalPlayer.CharacterAdded:Wait()
             local h = c:FindFirstChildOfClass("Humanoid")
-            if h and h.Health <= 50 then
+            if h and h.Health <= 70 then
+                game.Players.LocalPlayer:kick("hi") 
+                game:GetService("TeleportService"):Teleport(
+                    game.PlaceId,
+                    game.Players.LocalPlayer
+                )
+            end
+        end)
+    end
+end)
+
+task.spawn(function()
+    while task.wait() do
+        pcall(function()
+                 wait(1) 
+                    game.Players.LocalPlayer:kick("hi")
                 game:GetService("TeleportService"):Teleport(
                     game.PlaceId,
                     game.Players.LocalPlayer
