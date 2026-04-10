@@ -9,7 +9,7 @@ task.spawn(function()
                 if p:IsA("ProximityPrompt") and p.Enabled then
                     local parent = p.Parent
                     if parent and parent:IsA("BasePart") then
-                        h.CFrame = parent.CFrame + Vector3.new(0, 7, 0)
+                        h.CFrame = parent.CFrame + Vector3.new(0, 6, 0)
                         task.wait() 
                         fireproximityprompt(p)
                     end
