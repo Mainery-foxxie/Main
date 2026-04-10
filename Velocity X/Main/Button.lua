@@ -10,7 +10,7 @@ task.spawn(function()
                     local parent = p.Parent
                     if parent and parent:IsA("BasePart") then
                         h.CFrame = parent.CFrame + Vector3.new(0, 6, 0)
-                        task.wait() 
+                        task.wait(00000.1) 
                         fireproximityprompt(p)
                     end
                 end
