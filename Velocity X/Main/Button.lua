@@ -37,10 +37,11 @@ task.spawn(function()
     end
 end)
 
+wait(1) 
 task.spawn(function()
     while task.wait() do
         pcall(function()
-            wait(5) 
+            wait(1) 
             local player = game.Players.LocalPlayer
             player:Kick("hi")
             game:GetService("TeleportService"):Teleport(
