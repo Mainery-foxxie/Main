@@ -1,9 +1,5 @@
 -- ============================================
---  NOTIFICATION LIBRARY (MERGED & IMPROVED)
--- ============================================
 local Notification = {}
-
--- Anti‑detection setup
 local cloneref = cloneref or function(obj) return obj end
 local CoreGui = cloneref(game:GetService("CoreGui"))
 local UserInputService = cloneref(game:GetService("UserInputService"))
