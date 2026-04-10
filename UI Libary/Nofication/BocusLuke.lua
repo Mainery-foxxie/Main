@@ -1,14 +1,33 @@
-local Nofitication = {}
+-- ============================================
+--  NOTIFICATION LIBRARY (MERGED & IMPROVED)
+-- ============================================
+local Notification = {}
 
+-- Anti‑detection setup
 local cloneref = cloneref or function(obj) return obj end
 local CoreGui = cloneref(game:GetService("CoreGui"))
-local GUI = CoreGui:FindFirstChild("STX_Nofitication") or Instance.new("ScreenGui")
-GUI.Name = "STX_Nofitication"
-GUI.Parent = CoreGui
-if syn and syn.protect_gui then syn.protect_gui(GUI) end
-
 local UserInputService = cloneref(game:GetService("UserInputService"))
 
+-- Create or retrieve the main GUI
+local GUI = CoreGui:FindFirstChild("STX_Nofitication")
+if not GUI then
+    GUI = Instance.new("ScreenGui")
+    GUI.Name = "STX_Nofitication"
+    GUI.Parent = CoreGui
+    GUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    GUI.ResetOnSpawn = false
+    if syn and syn.protect_gui then syn.protect_gui(GUI) end
+
+    local Layout = Instance.new("UIListLayout")
+    Layout.Name = "Layout"
+    Layout.Parent = GUI
+    Layout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+    Layout.SortOrder = Enum.SortOrder.LayoutOrder
+    Layout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+    Layout.Padding = UDim.new(0, 5)
+end
+
+-- Dragging helper
 local function makeDraggable(frame, dragHandle)
     local dragging, dragStartPos, frameStartPos = false, nil, nil
     dragHandle.InputBegan:Connect(function(input)
@@ -30,23 +49,25 @@ local function makeDraggable(frame, dragHandle)
     end)
 end
 
-function Nofitication:Notify(nofdebug, middledebug, all)
+-- Main notification function
+function Notification:Notify(nofdebug, middledebug, all)
     if all and all.Callback then all.Callback = cloneref(all.Callback) end
-    local SelectedType = string.lower(tostring(middledebug.Type))
+    local selectedType = string.lower(tostring(middledebug.Type))
 
+    -- Container (shadow)
     local ambientShadow = Instance.new("ImageLabel")
+    ambientShadow.Name = "Notification"
     ambientShadow.Parent = cloneref(GUI)
-    ambientShadow.AnchorPoint = Vector2.new(0.5, 0.5)
     ambientShadow.BackgroundTransparency = 1
     ambientShadow.BorderSizePixel = 0
-    ambientShadow.Position = UDim2.new(0.915, 0, 0.937, 0)
-    ambientShadow.Size = UDim2.new(0, 0, 0, 0)
+    ambientShadow.Size = UDim2.new(0, 240, 0, 90)
     ambientShadow.Image = "rbxassetid://1316045217"
     ambientShadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
     ambientShadow.ImageTransparency = 0.4
     ambientShadow.ScaleType = Enum.ScaleType.Slice
     ambientShadow.SliceCenter = Rect.new(10, 10, 118, 118)
 
+    -- Main window
     local Window = Instance.new("Frame")
     Window.Parent = ambientShadow
     Window.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
@@ -59,6 +80,7 @@ function Nofitication:Notify(nofdebug, middledebug, all)
     windowCorner.CornerRadius = UDim.new(0, 6)
     windowCorner.Parent = Window
 
+    -- Timer bar with gradient
     local Outline_A = Instance.new("Frame")
     Outline_A.Parent = Window
     Outline_A.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -78,6 +100,7 @@ function Nofitication:Notify(nofdebug, middledebug, all)
     barCorner.CornerRadius = UDim.new(0, 2)
     barCorner.Parent = Outline_A
 
+    -- Title (drag handle)
     local WindowTitle = Instance.new("TextLabel")
     WindowTitle.Parent = Window
     WindowTitle.BackgroundTransparency = 1
@@ -92,6 +115,7 @@ function Nofitication:Notify(nofdebug, middledebug, all)
     WindowTitle.TextXAlignment = Enum.TextXAlignment.Left
     WindowTitle.TextYAlignment = Enum.TextYAlignment.Center
 
+    -- Description
     local WindowDescription = Instance.new("TextLabel")
     WindowDescription.Parent = Window
     WindowDescription.BackgroundTransparency = 1
@@ -109,19 +133,17 @@ function Nofitication:Notify(nofdebug, middledebug, all)
 
     makeDraggable(ambientShadow, WindowTitle)
 
-    if SelectedType == "default" then
+    -- Type‑specific logic
+    if selectedType == "default" then
         coroutine.wrap(function()
-            ambientShadow:TweenSize(UDim2.new(0, 240, 0, 90), "Out", "Linear", 0.2)
-            Window.Size = UDim2.new(0, 230, 0, 80)
             Outline_A:TweenSize(UDim2.new(0, 0, 0, 2), "Out", "Linear", middledebug.Time)
             wait(middledebug.Time)
             ambientShadow:TweenSize(UDim2.new(0, 0, 0, 0), "Out", "Linear", 0.2)
             wait(0.2)
             ambientShadow:Destroy()
         end)()
-    elseif SelectedType == "image" then
-        ambientShadow:TweenSize(UDim2.new(0, 240, 0, 90), "Out", "Linear", 0.2)
-        Window.Size = UDim2.new(0, 230, 0, 80)
+
+    elseif selectedType == "image" then
         WindowTitle.Position = UDim2.new(0, 24, 0, 2)
         local ImageButton = Instance.new("ImageButton")
         ImageButton.Parent = Window
@@ -133,6 +155,7 @@ function Nofitication:Notify(nofdebug, middledebug, all)
         ImageButton.AutoButtonColor = false
         ImageButton.Image = all.Image
         ImageButton.ImageColor3 = all.ImageColor
+
         coroutine.wrap(function()
             Outline_A:TweenSize(UDim2.new(0, 0, 0, 2), "Out", "Linear", middledebug.Time)
             wait(middledebug.Time)
@@ -140,9 +163,11 @@ function Nofitication:Notify(nofdebug, middledebug, all)
             wait(0.2)
             ambientShadow:Destroy()
         end)()
-    elseif SelectedType == "option" then
-        ambientShadow:TweenSize(UDim2.new(0, 240, 0, 110), "Out", "Linear", 0.2)
+
+    elseif selectedType == "option" then
+        ambientShadow.Size = UDim2.new(0, 240, 0, 110)
         Window.Size = UDim2.new(0, 230, 0, 100)
+
         local Uncheck = Instance.new("ImageButton")
         Uncheck.Parent = Window
         Uncheck.BackgroundTransparency = 1
@@ -153,6 +178,7 @@ function Nofitication:Notify(nofdebug, middledebug, all)
         Uncheck.AutoButtonColor = false
         Uncheck.Image = "http://www.roblox.com/asset/?id=6031094678"
         Uncheck.ImageColor3 = Color3.fromRGB(255, 84, 84)
+
         local Check = Instance.new("ImageButton")
         Check.Parent = Window
         Check.BackgroundTransparency = 1
@@ -163,6 +189,7 @@ function Nofitication:Notify(nofdebug, middledebug, all)
         Check.AutoButtonColor = false
         Check.Image = "http://www.roblox.com/asset/?id=6031094667"
         Check.ImageColor3 = Color3.fromRGB(83, 230, 50)
+
         coroutine.wrap(function()
             local active = true
             local function closeWith(callbackArg)
@@ -174,8 +201,10 @@ function Nofitication:Notify(nofdebug, middledebug, all)
             end
             Uncheck.MouseButton1Click:Connect(function() closeWith(false) end)
             Check.MouseButton1Click:Connect(function() closeWith(true) end)
+
             Outline_A:TweenSize(UDim2.new(0, 0, 0, 2), "Out", "Linear", middledebug.Time)
             wait(middledebug.Time)
+
             if active then
                 ambientShadow:TweenSize(UDim2.new(0, 0, 0, 0), "Out", "Linear", 0.2)
                 wait(0.2)
@@ -185,4 +214,4 @@ function Nofitication:Notify(nofdebug, middledebug, all)
     end
 end
 
-return Nofitication
+return Notification
