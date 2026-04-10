@@ -1,10 +1,9 @@
--- ============================================
 local Notification = {}
 local cloneref = cloneref or function(obj) return obj end
 local CoreGui = cloneref(game:GetService("CoreGui"))
 local UserInputService = cloneref(game:GetService("UserInputService"))
 
--- Create or retrieve the main GUI
+-- Create main GUI container
 local GUI = CoreGui:FindFirstChild("STX_Nofitication")
 if not GUI then
     GUI = Instance.new("ScreenGui")
@@ -12,7 +11,9 @@ if not GUI then
     GUI.Parent = CoreGui
     GUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     GUI.ResetOnSpawn = false
-    if syn and syn.protect_gui then syn.protect_gui(GUI) end
+    if syn and syn.protect_gui then
+        syn.protect_gui(GUI)
+    end
 
     local Layout = Instance.new("UIListLayout")
     Layout.Name = "Layout"
@@ -23,34 +24,54 @@ if not GUI then
     Layout.Padding = UDim.new(0, 5)
 end
 
--- Dragging helper
+-- Make a frame draggable using a handle (title bar)
 local function makeDraggable(frame, dragHandle)
-    local dragging, dragStartPos, frameStartPos = false, nil, nil
+    local dragging = false
+    local dragStartPos = nil
+    local frameStartPos = nil
+
     dragHandle.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging, dragStartPos, frameStartPos = true, input.Position, frame.Position
+            dragging = true
+            dragStartPos = input.Position
+            frameStartPos = frame.Position
             input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
             end)
         end
     end)
+
     UserInputService.InputChanged:Connect(function(input)
         if dragging and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement) then
             local delta = input.Position - dragStartPos
-            frame.Position = UDim2.new(frameStartPos.X.Scale, frameStartPos.X.Offset + delta.X, frameStartPos.Y.Scale, frameStartPos.Y.Offset + delta.Y)
+            frame.Position = UDim2.new(
+                frameStartPos.X.Scale,
+                frameStartPos.X.Offset + delta.X,
+                frameStartPos.Y.Scale,
+                frameStartPos.Y.Offset + delta.Y
+            )
         end
     end)
+
     UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
     end)
 end
 
--- Main notification function
+-- Main function
 function Notification:Notify(nofdebug, middledebug, all)
-    if all and all.Callback then all.Callback = cloneref(all.Callback) end
+    -- Protect callback function
+    if all and all.Callback then
+        all.Callback = cloneref(all.Callback)
+    end
+
     local selectedType = string.lower(tostring(middledebug.Type))
 
-    -- Container (shadow)
+    -- Shadow container
     local ambientShadow = Instance.new("ImageLabel")
     ambientShadow.Name = "Notification"
     ambientShadow.Parent = cloneref(GUI)
@@ -76,7 +97,7 @@ function Notification:Notify(nofdebug, middledebug, all)
     windowCorner.CornerRadius = UDim.new(0, 6)
     windowCorner.Parent = Window
 
-    -- Timer bar with gradient
+    -- Timer bar (slider) with gradient
     local Outline_A = Instance.new("Frame")
     Outline_A.Parent = Window
     Outline_A.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -87,8 +108,8 @@ function Notification:Notify(nofdebug, middledebug, all)
 
     local gradient = Instance.new("UIGradient")
     gradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 150, 255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 100))
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 150, 255)),  -- Blue
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 100))    -- Green
     })
     gradient.Parent = Outline_A
 
@@ -96,7 +117,7 @@ function Notification:Notify(nofdebug, middledebug, all)
     barCorner.CornerRadius = UDim.new(0, 2)
     barCorner.Parent = Outline_A
 
-    -- Title (drag handle)
+    -- Title (also drag handle)
     local WindowTitle = Instance.new("TextLabel")
     WindowTitle.Parent = Window
     WindowTitle.BackgroundTransparency = 1
@@ -127,9 +148,10 @@ function Notification:Notify(nofdebug, middledebug, all)
     WindowDescription.TextXAlignment = Enum.TextXAlignment.Left
     WindowDescription.TextYAlignment = Enum.TextYAlignment.Top
 
+    -- Enable dragging
     makeDraggable(ambientShadow, WindowTitle)
 
-    -- Type‑specific logic
+    -- Type‑specific setup and auto‑dismiss logic
     if selectedType == "default" then
         coroutine.wrap(function()
             Outline_A:TweenSize(UDim2.new(0, 0, 0, 2), "Out", "Linear", middledebug.Time)
@@ -141,6 +163,7 @@ function Notification:Notify(nofdebug, middledebug, all)
 
     elseif selectedType == "image" then
         WindowTitle.Position = UDim2.new(0, 24, 0, 2)
+
         local ImageButton = Instance.new("ImageButton")
         ImageButton.Parent = Window
         ImageButton.BackgroundTransparency = 1
@@ -189,14 +212,21 @@ function Notification:Notify(nofdebug, middledebug, all)
         coroutine.wrap(function()
             local active = true
             local function closeWith(callbackArg)
-                pcall(function() all.Callback(callbackArg) end)
+                pcall(function()
+                    all.Callback(callbackArg)
+                end)
                 ambientShadow:TweenSize(UDim2.new(0, 0, 0, 0), "Out", "Linear", 0.2)
                 wait(0.2)
                 ambientShadow:Destroy()
                 active = false
             end
-            Uncheck.MouseButton1Click:Connect(function() closeWith(false) end)
-            Check.MouseButton1Click:Connect(function() closeWith(true) end)
+
+            Uncheck.MouseButton1Click:Connect(function()
+                closeWith(false)
+            end)
+            Check.MouseButton1Click:Connect(function()
+                closeWith(true)
+            end)
 
             Outline_A:TweenSize(UDim2.new(0, 0, 0, 2), "Out", "Linear", middledebug.Time)
             wait(middledebug.Time)
