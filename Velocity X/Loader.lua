@@ -20,7 +20,6 @@ if getgenv().Velocity_X_Loader then
     else
         warn("Velocity X is already active.")
     end
-    return
 end
 getgenv().Velocity_X_Loader = true
 
