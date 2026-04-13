@@ -1,18 +1,22 @@
 local Notification = {}
 
+-- Anti‑detection: use cloneref if available, otherwise direct reference
 local cloneref = cloneref or function(obj) return obj end
 local CoreGui = cloneref(game:GetService("CoreGui"))
 local UserInputService = cloneref(game:GetService("UserInputService"))
 local TweenService = game:GetService("TweenService")
 
+-- Create/find GUI (no cloneref on parent assignment)
 local GUI = CoreGui:FindFirstChild("STX_Nofitication")
 if not GUI then
     GUI = Instance.new("ScreenGui")
     GUI.Name = "STX_Nofitication"
-    GUI.Parent = CoreGui
+    GUI.Parent = CoreGui  -- direct parenting works fine
     GUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     GUI.ResetOnSpawn = false
-    if syn and syn.protect_gui then syn.protect_gui(GUI) end
+    if syn and syn.protect_gui then
+        syn.protect_gui(GUI)
+    end
 
     local Layout = Instance.new("UIListLayout")
     Layout.Parent = GUI
@@ -44,13 +48,12 @@ local function makeDraggable(frame, dragHandle)
 end
 
 function Notification:Notify(nofdebug, middledebug, all)
-    if all and all.Callback then all.Callback = cloneref(all.Callback) end
     local selectedType = string.lower(tostring(middledebug.Type))
 
     -- Create elements (start invisible)
     local ambientShadow = Instance.new("ImageLabel")
     ambientShadow.Name = "Notification"
-    ambientShadow.Parent = cloneref(GUI)
+    ambientShadow.Parent = GUI  -- direct parent, no cloneref
     ambientShadow.BackgroundTransparency = 1
     ambientShadow.BorderSizePixel = 0
     ambientShadow.Size = UDim2.new(0, 0, 0, 0)
@@ -171,7 +174,7 @@ function Notification:Notify(nofdebug, middledebug, all)
         table.insert(extraElements, Check)
     end
 
-    -- Entrance animation function
+    -- Entrance animation
     local function playEntrance(targetSize)
         local sizeTween = TweenService:Create(ambientShadow, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = targetSize })
         local shadowFade = TweenService:Create(ambientShadow, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { ImageTransparency = 0.4 })
@@ -179,25 +182,25 @@ function Notification:Notify(nofdebug, middledebug, all)
         local titleFade = TweenService:Create(WindowTitle, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { TextTransparency = 0 })
         local descFade = TweenService:Create(WindowDescription, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { TextTransparency = 0 })
         local barFade = TweenService:Create(Outline_A, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 0 })
-        
+
         sizeTween:Play()
         shadowFade:Play()
         windowFade:Play()
         titleFade:Play()
         descFade:Play()
         barFade:Play()
-        
+
         for _, el in ipairs(extraElements) do
             if el:IsA("ImageButton") then
                 local fade = TweenService:Create(el, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { ImageTransparency = 0 })
                 fade:Play()
             end
         end
-        
+
         sizeTween.Completed:Wait()
     end
 
-    -- Exit animation function
+    -- Exit animation
     local function playExit()
         local sizeTween = TweenService:Create(ambientShadow, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = UDim2.new(0, 0, 0, 0) })
         local fadeTween = TweenService:Create(ambientShadow, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { ImageTransparency = 1 })
@@ -207,28 +210,24 @@ function Notification:Notify(nofdebug, middledebug, all)
         ambientShadow:Destroy()
     end
 
-    -- Main coroutine for timing
+    -- Main coroutine
     coroutine.wrap(function()
-        -- Determine target size
         local targetSize = UDim2.new(0, 240, 0, 90)
         if selectedType == "option" then
             targetSize = UDim2.new(0, 240, 0, 110)
         end
-        
-        -- Play entrance
+
         playEntrance(targetSize)
-        
-        -- Start timer bar shrink
+
         Outline_A:TweenSize(UDim2.new(0, 0, 0, 2), "Out", "Linear", middledebug.Time)
         wait(middledebug.Time)
-        
-        -- Auto close if not already closed by option buttons
+
         if selectedType ~= "option" or (selectedType == "option" and not extraElements[1].Parent) then
             playExit()
         end
     end)()
 
-    -- For option type, handle button clicks
+    -- Option button handling
     if selectedType == "option" then
         local Uncheck = extraElements[1]
         local Check = extraElements[2]
