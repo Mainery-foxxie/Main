@@ -1,21 +1,58 @@
 -- ========== PREVENT DUPLICATE LOADER ==========
 if getgenv().Velocity_X_Loader then
-    -- Load notification library first (if possible) to show error
     local Notify
     pcall(function()
         Notify = loadstring(game:HttpGet("https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/UI%20Libary/Nofication/BocusLuke.lua"))()
     end)
+
     if Notify then
         Notify:Notify({
-            Title = "Loader Already Running",
-            Description = "Velocity X is already active in this session.",
+            Title = "Velocity X",
+            Description = "This session is already loaded. Do you want to delete the config file?",
         }, {
-            OutlineColor = Color3.fromRGB(255, 50, 50),
-            Time = 4,
-            Type = "default",
+            OutlineColor = Color3.fromRGB(255, 80, 80),
+            Time = 10,
+            Type = "option",
         }, {
-            Image = "rbxassetid://103887859853708",
-            ImageColor = Color3.fromRGB(255, 255, 255),
+            Callback = function(choice)
+                if choice then
+                    local CONFIG_FILE = "Velocity X/VelocityX_Settings.json"
+                    local deleted = false
+                    if isfile and delfile then
+                        if isfile(CONFIG_FILE) then
+                            pcall(function()
+                                delfile(CONFIG_FILE)
+                                deleted = true
+                            end)
+                        end
+                    end
+                    if deleted then
+                        Notify:Notify({
+                            Title = "Config Deleted",
+                            Description = "Settings file has been removed.",
+                        }, {
+                            OutlineColor = Color3.fromRGB(255, 100, 100),
+                            Time = 3,
+                            Type = "default",
+                        }, {
+                            Image = "rbxassetid://103887859853708",
+                            ImageColor = Color3.fromRGB(255, 255, 255),
+                        })
+                        end
+                    else
+                    Notify:Notify({
+                        Title = "Loader Already Running",
+                        Description = "Velocity X is already active in this session.",
+                    }, {
+                        OutlineColor = Color3.fromRGB(255, 50, 50),
+                        Time = 4,
+                        Type = "default",
+                    }, {
+                        Image = "rbxassetid://103887859853708",
+                        ImageColor = Color3.fromRGB(255, 255, 255),
+                    })
+                end
+            end
         })
     else
         warn("Velocity X is already active.")
@@ -24,7 +61,6 @@ if getgenv().Velocity_X_Loader then
 end
 getgenv().Velocity_X_Loader = true
 
--- ========== NOTIFICATION LIBRARY ==========
 local Notify
 pcall(function()
     Notify = loadstring(game:HttpGet("https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/UI%20Libary/Nofication/BocusLuke.lua"))()
@@ -44,7 +80,6 @@ local function showNotification(title, desc, outlineColor, duration, imageId)
             ImageColor = Color3.fromRGB(255, 255, 255),
         })
     else
-        -- Fallback to print/warn if notification library fails
         warn(title .. ": " .. desc)
     end
 end
@@ -53,8 +88,8 @@ local function randomString(len)
     local chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
     local str = ""
     for i = 1, len do
-        local r = math.random(1,#chars)
-        str = str .. chars:sub(r,r)
+        local r = math.random(1, #chars)
+        str = str .. chars:sub(r, r)
     end
     return str
 end
@@ -67,7 +102,7 @@ local RunService = game:GetService("RunService")
 
 -- Main GUI
 local RealZzHub = Instance.new("ScreenGui")
-RealZzHub.Name = "Velocity_"..randomString(10)
+RealZzHub.Name = "Velocity_" .. randomString(10)
 RealZzHub.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 if syn and syn.protect_gui then
@@ -80,19 +115,19 @@ else
 end
 
 local MainBackground = Instance.new("ImageLabel", RealZzHub)
-MainBackground.AnchorPoint = Vector2.new(0.5,0.5)
-MainBackground.Position = UDim2.new(0.5,0,0.5,0)
-MainBackground.Size = UDim2.new(0,1,0,1)
+MainBackground.AnchorPoint = Vector2.new(0.5, 0.5)
+MainBackground.Position = UDim2.new(0.5, 0, 0.5, 0)
+MainBackground.Size = UDim2.new(0, 1, 0, 1)
 MainBackground.Image = "rbxassetid://7877641241"
-MainBackground.BackgroundColor3 = Color3.new(1,1,1)
+MainBackground.BackgroundColor3 = Color3.new(1, 1, 1)
 MainBackground.BorderSizePixel = 0
 MainBackground.Visible = false
 MainBackground.ImageTransparency = 1
 
 local Gradient = Instance.new("UIGradient", MainBackground)
 Gradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(0,255,120)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(0,170,255))
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 120)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 170, 255))
 }
 Gradient.Rotation = 45
 
@@ -128,63 +163,63 @@ Corner.CornerRadius = UDim.new(0, 8)
 
 local Logo = Instance.new("ImageButton", MainBackground)
 Logo.BackgroundTransparency = 1
-Logo.Position = UDim2.new(0,6,0,6)
-Logo.Size = UDim2.new(0,25,0,25)
+Logo.Position = UDim2.new(0, 6, 0, 6)
+Logo.Size = UDim2.new(0, 25, 0, 25)
 Logo.Image = "rbxassetid://103887859853708"
 Logo.Visible = false
 
 local Name = Instance.new("TextLabel", MainBackground)
 Name.BackgroundTransparency = 1
-Name.Position = UDim2.new(0.11,0,0.04,0)
-Name.Size = UDim2.new(0,78,0,25)
+Name.Position = UDim2.new(0.11, 0, 0.04, 0)
+Name.Size = UDim2.new(0, 78, 0, 25)
 Name.Font = Enum.Font.Arcade
 Name.Text = "Velocity X Loader"
 Name.TextSize = 15
 Name.TextXAlignment = Enum.TextXAlignment.Left
-Name.TextColor3 = Color3.fromRGB(0,255,150)
+Name.TextColor3 = Color3.fromRGB(0, 255, 150)
 Name.TextStrokeTransparency = 0
-Name.TextStrokeColor3 = Color3.fromRGB(0,0,0)
+Name.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 Name.Visible = false
 
 local InjectButton = Instance.new("TextButton", MainBackground)
-InjectButton.BackgroundColor3 = Color3.fromRGB(255,255,255)
+InjectButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 InjectButton.BackgroundTransparency = 1
-InjectButton.Position = UDim2.new(0.11,0,0.33,0)
-InjectButton.Size = UDim2.new(0,252,0,47)
+InjectButton.Position = UDim2.new(0.11, 0, 0.33, 0)
+InjectButton.Size = UDim2.new(0, 252, 0, 47)
 InjectButton.Font = Enum.Font.Arcade
 InjectButton.Text = "Initializing..."
 InjectButton.TextScaled = true
-InjectButton.TextColor3 = Color3.new(0,0,0)
+InjectButton.TextColor3 = Color3.new(0, 0, 0)
 InjectButton.Visible = false
 
-Instance.new("UICorner", InjectButton).CornerRadius = UDim.new(0,4)
+Instance.new("UICorner", InjectButton).CornerRadius = UDim.new(0, 4)
 
 local BtnGradient = Instance.new("UIGradient", InjectButton)
 BtnGradient.Color = Gradient.Color
 BtnGradient.Rotation = 90
 
 local BtnStroke = Instance.new("UIStroke", InjectButton)
-BtnStroke.Color = Color3.fromRGB(0,255,150)
+BtnStroke.Color = Color3.fromRGB(0, 255, 150)
 BtnStroke.Thickness = 1.5
 
 local Version = Instance.new("TextLabel", MainBackground)
 Version.BackgroundTransparency = 1
-Version.Position = UDim2.new(0.26,0,0.86,0)
-Version.Size = UDim2.new(0,227,0,21)
+Version.Position = UDim2.new(0.26, 0, 0.86, 0)
+Version.Size = UDim2.new(0, 227, 0, 21)
 Version.Font = Enum.Font.Arcade
 Version.Text = "Loading..."
 Version.TextSize = 13
 Version.TextXAlignment = Enum.TextXAlignment.Right
-Version.TextColor3 = Color3.fromRGB(0,200,255)
+Version.TextColor3 = Color3.fromRGB(0, 200, 255)
 Version.TextStrokeTransparency = 0
-Version.TextStrokeColor3 = Color3.fromRGB(0,0,0)
+Version.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 Version.Visible = false
 
 local CloseButton = Instance.new("TextButton", MainBackground)
 CloseButton.BackgroundTransparency = 1
-CloseButton.Position = UDim2.new(0.928,0,0,-2)
+CloseButton.Position = UDim2.new(0.928, 0, 0, -2)
 CloseButton.Rotation = 45
-CloseButton.Size = UDim2.new(0,25,0,25)
+CloseButton.Size = UDim2.new(0, 25, 0, 25)
 CloseButton.Font = Enum.Font.Arcade
 CloseButton.Text = "+"
 CloseButton.TextSize = 29
@@ -192,8 +227,8 @@ CloseButton.Visible = false
 
 local SettingsIcon = Instance.new("ImageButton", MainBackground)
 SettingsIcon.BackgroundTransparency = 1
-SettingsIcon.Position = UDim2.new(0.85,0,0.01,0)
-SettingsIcon.Size = UDim2.new(0,22,0,22)
+SettingsIcon.Position = UDim2.new(0.85, 0, 0.01, 0)
+SettingsIcon.Size = UDim2.new(0, 22, 0, 22)
 SettingsIcon.Image = "rbxassetid://101339235267993"
 SettingsIcon.Visible = false
 SettingsIcon.ImageTransparency = 0.2
@@ -204,20 +239,20 @@ SettingsPanel.AnchorPoint = Vector2.new(1, 0)
 SettingsPanel.Position = UDim2.new(0.85, 0, 0.09, 0)
 SettingsPanel.Size = UDim2.new(0, 200, 0, 150)
 SettingsPanel.Image = "rbxassetid://7877641241"
-SettingsPanel.BackgroundColor3 = Color3.new(1,1,1)
+SettingsPanel.BackgroundColor3 = Color3.new(1, 1, 1)
 SettingsPanel.BorderSizePixel = 0
 SettingsPanel.Visible = false
 SettingsPanel.ZIndex = 2
 
 local PanelGradient = Instance.new("UIGradient", SettingsPanel)
 PanelGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(0,255,120)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(0,170,255))
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 120)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 170, 255))
 }
 PanelGradient.Rotation = 45
 
 local PanelStroke = Instance.new("UIStroke", SettingsPanel)
-PanelStroke.Color = Color3.fromRGB(0,200,255)
+PanelStroke.Color = Color3.fromRGB(0, 200, 255)
 PanelStroke.Thickness = 2
 PanelStroke.Transparency = 0.3
 
@@ -230,7 +265,7 @@ PanelTitle.Position = UDim2.new(0, 8, 0, 5)
 PanelTitle.Size = UDim2.new(1, -16, 0, 20)
 PanelTitle.Font = Enum.Font.Arcade
 PanelTitle.Text = "Settings"
-PanelTitle.TextColor3 = Color3.fromRGB(0,255,150)
+PanelTitle.TextColor3 = Color3.fromRGB(0, 255, 150)
 PanelTitle.TextSize = 12
 PanelTitle.TextXAlignment = Enum.TextXAlignment.Left
 PanelTitle.ZIndex = 3
@@ -261,7 +296,7 @@ local function addToggle(parent, labelText, defaultValue, callback)
     label.Size = UDim2.new(0, 130, 1, 0)
     label.Font = Enum.Font.Arcade
     label.Text = labelText
-    label.TextColor3 = Color3.fromRGB(255,255,255)
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
     label.TextSize = 10
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.ZIndex = 2
@@ -271,7 +306,7 @@ local function addToggle(parent, labelText, defaultValue, callback)
     checkFrame.AnchorPoint = Vector2.new(1, 0.5)
     checkFrame.Position = UDim2.new(1, -5, 0.5, 0)
     checkFrame.Size = UDim2.new(0, 20, 0, 20)
-    checkFrame.BackgroundColor3 = Color3.fromRGB(42,42,42)
+    checkFrame.BackgroundColor3 = Color3.fromRGB(42, 42, 42)
     checkFrame.BorderSizePixel = 0
     checkFrame.ZIndex = 2
     
@@ -279,22 +314,22 @@ local function addToggle(parent, labelText, defaultValue, callback)
     inner.AnchorPoint = Vector2.new(0.5, 0.5)
     inner.Position = UDim2.new(0.5, 0, 0.5, 0)
     inner.Size = UDim2.new(1, 0, 1, 0)
-    inner.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    inner.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     inner.BackgroundTransparency = 1
     inner.ZIndex = 2
     
     local innerCorner = Instance.new("UICorner", inner)
-    innerCorner.CornerRadius = UDim.new(1,0)
+    innerCorner.CornerRadius = UDim.new(1, 0)
     
     local grad = Instance.new("UIGradient", inner)
     grad.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(0,255,120)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(0,170,255))
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 120)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 170, 255))
     }
     grad.Rotation = 48
     
     local checkCorner = Instance.new("UICorner", checkFrame)
-    checkCorner.CornerRadius = UDim.new(1,0)
+    checkCorner.CornerRadius = UDim.new(1, 0)
     
     local function updateUI(value)
         if value then
@@ -303,7 +338,7 @@ local function addToggle(parent, labelText, defaultValue, callback)
                 BackgroundTransparency = 0
             }):Play()
             TweenService:Create(checkFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                BackgroundColor3 = Color3.fromRGB(60,60,60)
+                BackgroundColor3 = Color3.fromRGB(60, 60, 60)
             }):Play()
         else
             TweenService:Create(inner, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
@@ -311,7 +346,7 @@ local function addToggle(parent, labelText, defaultValue, callback)
                 BackgroundTransparency = 1
             }):Play()
             TweenService:Create(checkFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                BackgroundColor3 = Color3.fromRGB(42,42,42)
+                BackgroundColor3 = Color3.fromRGB(42, 42, 42)
             }):Play()
         end
     end
@@ -332,7 +367,6 @@ local function addToggle(parent, labelText, defaultValue, callback)
         if callback then callback(currentValue) end
     end)
     
-    -- Return controller object with Get/Set methods
     return {
         Frame = toggleFrame,
         Get = function() return currentValue end,
@@ -346,7 +380,7 @@ local function addToggle(parent, labelText, defaultValue, callback)
     }
 end
 
--- ========== CONFIGURATION SYSTEM (with folder) ==========
+-- ========== CONFIGURATION SYSTEM ==========
 local CONFIG_FOLDER = "Velocity X"
 local CONFIG_FILE = CONFIG_FOLDER .. "/VelocityX_Settings.json"
 
@@ -395,14 +429,10 @@ local function setupAutoExecutorLoader()
             end)
         end)
     else
-        showNotification("Executor Not Supported", "queue_on_teleport is not available. Auto Executor Loader will not work.", Color3.fromRGB(255, 50, 50), 5)
-        pcall(function()
-            game:GetService("StarterGui"):SetCore("DevConsoleVisible", true)
-        end)
+        showNotification("Executor Not Supported", "queue_on_teleport is not available.", Color3.fromRGB(255, 50, 50), 5)
     end
 end
 
--- ========== BUTTON HELPERS ==========
 local function setButtonActive(button, active)
     if not button or not button.Parent then return end
     button.Active = active
@@ -413,74 +443,83 @@ local function setButtonActive(button, active)
     end
 end
 
--- ========== SCRIPT LOGIC (Dual JSON) ==========
 local scriptUrl = nil
 local gameName = "Universal"
 local injected = false
+local source = nil
 
 local UNIVERSAL_URL = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/Main/Universal/Main.lua"
 local GITHUB_BASE = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/Main/"
-local PASTEBIN_URL = "https://pastebin.com/raw/vYB4r00Z"
+local GITHUB_JSON_URL = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/config/SupportedGames.json"
+local PASTEBIN_JSON_URL = "https://pastebin.com/raw/vYB4r00Z"
 
-local function fetchFromGitHub()
-    local success, response = pcall(function()
-        return game:HttpGet("https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/config/SupportedGames.json?nocache=" .. tick())
+local function fetch(url)
+    local success, result = pcall(function()
+        return game:HttpGet(url)
     end)
-    if success and response then
-        local decodeSuccess, gamesData = pcall(function()
-            return HttpService:JSONDecode(response)
+    if success then
+        return result
+    else
+        return nil
+    end
+end
+
+local gameId = tostring(game.GameId)
+
+--[[
+print("========================================")
+print("Velocity X Loader - Checking Game Support")
+print("Game Place ID: " .. gameId)
+print("========================================")
+--]]
+
+local githubData = fetch(GITHUB_JSON_URL .. "?nocache=" .. tick())
+if githubData then
+    local success, json = pcall(function()
+        return HttpService:JSONDecode(githubData)
+    end)
+    if success and json and json[gameId] then
+        scriptUrl = GITHUB_BASE .. json[gameId].Path
+        gameName = json[gameId].Name
+        source = "GitHub"
+    else
+        print("Not found in GitHub JSON.")
+    end
+else
+    print("Failed to fetch GitHub JSON.")
+end
+
+if not scriptUrl then
+    print("Attempting Pastebin JSON...")
+    local pastebinData = fetch(PASTEBIN_JSON_URL .. "?nocache=" .. tick())
+    if pastebinData then
+        local success, json = pcall(function()
+            return HttpService:JSONDecode(pastebinData)
         end)
-        if decodeSuccess and gamesData then
-            local gameIdStr = tostring(game.GameId)
-            if gamesData[gameIdStr] then
-                local info = gamesData[gameIdStr]
-                gameName = info.Name
-                scriptUrl = GITHUB_BASE .. info.Path
-                return true
-            end
+        if success and json and json[gameId] then
+            local path = json[gameId].Path
+            local randomstring = json[gameId].randomstring or ""
+            scriptUrl = path .. randomstring
+            gameName = json[gameId].Name
+            source = "Pastebin"
         else
-            showNotification("JSON Error", "Failed to decode GitHub JSON. Using fallback.", Color3.fromRGB(255, 150, 0), 3)
+            print("Not found in Pastebin JSON.")
         end
     else
-        showNotification("Network Error", "Could not fetch GitHub JSON. Using fallback.", Color3.fromRGB(255, 150, 0), 3)
-    end
-    return false
-end
-
-local function fetchFromPastebin()
-    local success, response = pcall(function()
-        return game:HttpGet(PASTEBIN_URL .. "?nocache=" .. tick())
-    end)
-    if success and response then
-        local decodeSuccess, gamesData = pcall(function()
-            return HttpService:JSONDecode(response)
-        end)
-        if decodeSuccess and gamesData then
-            local gameIdStr = tostring(game.GameId)
-            if gamesData[gameIdStr] then
-                local info = gamesData[gameIdStr]
-                gameName = info.Name
-                scriptUrl = info.Path .. info.randomstring
-                return true
-            end
-        else
-            showNotification("JSON Error", "Failed to decode Pastebin JSON.", Color3.fromRGB(255, 150, 0), 3)
-        end
-    else
-        showNotification("Network Error", "Could not fetch Pastebin JSON.", Color3.fromRGB(255, 150, 0), 3)
-    end
-    return false
-end
-
-if not fetchFromGitHub() then
-    if not fetchFromPastebin() then
-        scriptUrl = UNIVERSAL_URL
-        gameName = "Universal"
-        showNotification("Using Universal Script", "No game‑specific script found for this place.", Color3.fromRGB(0, 170, 255), 3)
+        print("failed to fetch Pastebin JSON.")
     end
 end
 
-InjectButton.Text = gameName .. ".lua"
+if not scriptUrl then
+    scriptUrl = UNIVERSAL_URL
+    gameName = "Universal"
+    source = "Universal Fallback"
+    showNotification("Using Universal Script", "No game-specific script found.", Color3.fromRGB(0, 170, 255), 3)
+eels
+    showNotification("Game Supported", "Loaded: " .. gameName, Color3.fromRGB(0, 255, 120), 3)
+end
+
+InjectButton.Text = gameName .. "."
 
 pcall(function()
     local versionStr = game:HttpGet("https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/config/version.json")
@@ -488,7 +527,7 @@ pcall(function()
 end)
 
 local function clearText()
-    for _,v in ipairs(MainBackground:GetDescendants()) do
+    for _, v in ipairs(MainBackground:GetDescendants()) do
         if v:IsA("TextLabel") or v:IsA("TextButton") then
             v.Text = ""
         end
@@ -506,7 +545,7 @@ local function performAutoInject()
     injectScript()
     InjectButton.Text = "Injecting..."
     TweenService:Create(MainBackground, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-        Size = UDim2.new(0,0,0,0),
+        Size = UDim2.new(0, 0, 0, 0),
         ImageTransparency = 1
     }):Play()
     clearText()
@@ -514,11 +553,10 @@ local function performAutoInject()
     if RealZzHub then RealZzHub:Destroy() end
 end
 
--- OPEN ANIMATION
 MainBackground.Visible = true
-MainBackground.Size = UDim2.new(0,0,0,0)
+MainBackground.Size = UDim2.new(0, 0, 0, 0)
 TweenService:Create(MainBackground, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-    Size = UDim2.new(0,318,0,150),
+    Size = UDim2.new(0, 318, 0, 150),
     ImageTransparency = 0.2
 }):Play()
 task.wait(0.4)
@@ -532,7 +570,6 @@ SettingsIcon.Visible = true
 
 loadConfig()
 
--- Create toggles (now storing controllers)
 local autoSaveCtrl = addToggle(ScrollingFrame, "Auto Save Config", config.autoSave, function(val)
     config.autoSave = val
     if config.autoSave then saveConfig() end
@@ -557,7 +594,6 @@ local autoLoaderCtrl = addToggle(ScrollingFrame, "Auto Executor Loader", config.
     end
 end)
 
--- ========== DELETE CONFIG BUTTON ==========
 local deleteConfigButton = Instance.new("TextButton")
 deleteConfigButton.Name = "DeleteConfigButton"
 deleteConfigButton.Size = UDim2.new(0, 180, 0, 30)
@@ -570,9 +606,7 @@ deleteConfigButton.TextColor3 = Color3.fromRGB(255, 100, 100)
 deleteConfigButton.TextSize = 12
 deleteConfigButton.ZIndex = 2
 
-local delBtnCorner = Instance.new("UICorner", deleteConfigButton)
-delBtnCorner.CornerRadius = UDim.new(0, 4)
-
+Instance.new("UICorner", deleteConfigButton).CornerRadius = UDim.new(0, 4)
 local delBtnStroke = Instance.new("UIStroke", deleteConfigButton)
 delBtnStroke.Color = Color3.fromRGB(255, 100, 100)
 delBtnStroke.Thickness = 1.5
@@ -580,7 +614,6 @@ delBtnStroke.Transparency = 0.5
 
 deleteConfigButton.Parent = ScrollingFrame
 
--- Update canvas size function to include all elements
 local function updateCanvasSize()
     local totalHeight = 0
     for _, child in ipairs(ScrollingFrame:GetChildren()) do
@@ -604,13 +637,12 @@ if config.autoExecutorLoader then
     setupAutoExecutorLoader()
 end
 
--- Manual inject
 InjectButton.MouseButton1Click:Connect(function()
     if not InjectButton.Active then return end
     injectScript()
     InjectButton.Text = "Injecting..."
     TweenService:Create(MainBackground, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-        Size = UDim2.new(0,0,0,0),
+        Size = UDim2.new(0, 0, 0, 0),
         ImageTransparency = 1
     }):Play()
     clearText()
@@ -618,7 +650,6 @@ InjectButton.MouseButton1Click:Connect(function()
     if RealZzHub then RealZzHub:Destroy() end
 end)
 
--- Settings panel toggle
 SettingsIcon.MouseButton1Click:Connect(function()
     if not SettingsPanel then return end
     if SettingsPanel.Visible then
@@ -649,29 +680,27 @@ SettingsIcon.MouseButton1Click:Connect(function()
     end
 end)
 
--- ========== CONFIRMATION DIALOG (for close) ==========
+-- ========== CONFIRMATION DIALOG (close) ==========
 local ConfirmFrame = Instance.new("ImageLabel", MainBackground)
 ConfirmFrame.AnchorPoint = Vector2.new(0.5, 0.5)
 ConfirmFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 ConfirmFrame.Size = UDim2.new(0, 200, 0, 100)
 ConfirmFrame.Image = "rbxassetid://7877641241"
-ConfirmFrame.BackgroundColor3 = Color3.new(1,1,1)
+ConfirmFrame.BackgroundColor3 = Color3.new(1, 1, 1)
 ConfirmFrame.BorderSizePixel = 0
 ConfirmFrame.Visible = false
 ConfirmFrame.ZIndex = 3
 
 local ConfirmGradient = Instance.new("UIGradient", ConfirmFrame)
 ConfirmGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(0,255,120)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(0,170,255))
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 120)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 170, 255))
 }
 ConfirmGradient.Rotation = 45
-local ConfirmStroke = Instance.new("UIStroke", ConfirmFrame)
-ConfirmStroke.Color = Color3.fromRGB(0,200,255)
-ConfirmStroke.Thickness = 2
-ConfirmStroke.Transparency = 0.3
-local ConfirmCorner = Instance.new("UICorner", ConfirmFrame)
-ConfirmCorner.CornerRadius = UDim.new(0, 8)
+Instance.new("UIStroke", ConfirmFrame).Color = Color3.fromRGB(0, 200, 255)
+Instance.new("UIStroke", ConfirmFrame).Thickness = 2
+Instance.new("UIStroke", ConfirmFrame).Transparency = 0.3
+Instance.new("UICorner", ConfirmFrame).CornerRadius = UDim.new(0, 8)
 
 local ConfirmText = Instance.new("TextLabel", ConfirmFrame)
 ConfirmText.BackgroundTransparency = 1
@@ -680,63 +709,57 @@ ConfirmText.Size = UDim2.new(1, 0, 0.3, 0)
 ConfirmText.Font = Enum.Font.Arcade
 ConfirmText.Text = "Are you sure you want\nto close Velocity X?"
 ConfirmText.TextSize = 12
-ConfirmText.TextColor3 = Color3.fromRGB(0,255,150)
+ConfirmText.TextColor3 = Color3.fromRGB(0, 255, 150)
 ConfirmText.TextStrokeTransparency = 0
-ConfirmText.TextStrokeColor3 = Color3.fromRGB(0,0,0)
+ConfirmText.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 
 local YesButton = Instance.new("TextButton", ConfirmFrame)
-YesButton.BackgroundColor3 = Color3.fromRGB(255,255,255)
+YesButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 YesButton.BackgroundTransparency = 1
 YesButton.Position = UDim2.new(0.15, 0, 0.65, 0)
 YesButton.Size = UDim2.new(0, 70, 0, 30)
 YesButton.Font = Enum.Font.Arcade
 YesButton.Text = "Yes"
 YesButton.TextScaled = true
-YesButton.TextColor3 = Color3.new(0,0,0)
+YesButton.TextColor3 = Color3.new(0, 0, 0)
 Instance.new("UICorner", YesButton).CornerRadius = UDim.new(0, 4)
 local YesGradient = Instance.new("UIGradient", YesButton)
 YesGradient.Color = ConfirmGradient.Color
 YesGradient.Rotation = 90
-local YesStroke = Instance.new("UIStroke", YesButton)
-YesStroke.Color = Color3.fromRGB(0,255,150)
-YesStroke.Thickness = 1.5
+Instance.new("UIStroke", YesButton).Color = Color3.fromRGB(0, 255, 150)
+Instance.new("UIStroke", YesButton).Thickness = 1.5
 
 local NoButton = Instance.new("TextButton", ConfirmFrame)
-NoButton.BackgroundColor3 = Color3.fromRGB(255,255,255)
+NoButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 NoButton.BackgroundTransparency = 1
 NoButton.Position = UDim2.new(0.55, 0, 0.65, 0)
 NoButton.Size = UDim2.new(0, 70, 0, 30)
 NoButton.Font = Enum.Font.Arcade
 NoButton.Text = "No"
 NoButton.TextScaled = true
-NoButton.TextColor3 = Color3.new(0,0,0)
+NoButton.TextColor3 = Color3.new(0, 0, 0)
 Instance.new("UICorner", NoButton).CornerRadius = UDim.new(0, 4)
 local NoGradient = Instance.new("UIGradient", NoButton)
 NoGradient.Color = ConfirmGradient.Color
 NoGradient.Rotation = 90
-local NoStroke = Instance.new("UIStroke", NoButton)
-NoStroke.Color = Color3.fromRGB(0,255,150)
-NoStroke.Thickness = 1.5
+Instance.new("UIStroke", NoButton).Color = Color3.fromRGB(0, 255, 150)
+Instance.new("UIStroke", NoButton).Thickness = 1.5
 
 local confirmClosing = false
 local function closeConfirmDialog(callback)
-    if not ConfirmFrame or not ConfirmFrame.Parent then
-        if callback then callback() end
-        return
-    end
-    if not ConfirmFrame.Visible or confirmClosing then
+    if not ConfirmFrame or not ConfirmFrame.Parent or not ConfirmFrame.Visible or confirmClosing then
         if callback then callback() end
         return
     end
     confirmClosing = true
     local tween = TweenService:Create(ConfirmFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-        Size = UDim2.new(0,0,0,0),
+        Size = UDim2.new(0, 0, 0, 0),
         ImageTransparency = 1
     })
     tween.Completed:Connect(function()
         if ConfirmFrame and ConfirmFrame.Parent then
             ConfirmFrame.Visible = false
-            ConfirmFrame.Size = UDim2.new(0,200,0,100)
+            ConfirmFrame.Size = UDim2.new(0, 200, 0, 100)
             ConfirmFrame.ImageTransparency = 0
         end
         confirmClosing = false
@@ -765,10 +788,10 @@ CloseButton.MouseButton1Click:Connect(function()
         SettingsPanel.ImageTransparency = 0
     end
     ConfirmFrame.Visible = true
-    ConfirmFrame.Size = UDim2.new(0,0,0,0)
+    ConfirmFrame.Size = UDim2.new(0, 0, 0, 0)
     ConfirmFrame.ImageTransparency = 1
     TweenService:Create(ConfirmFrame, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0,200,0,100),
+        Size = UDim2.new(0, 200, 0, 100),
         ImageTransparency = 0
     }):Play()
 end)
@@ -777,7 +800,7 @@ YesButton.MouseButton1Click:Connect(function()
     closeConfirmDialog(function()
         clearText()
         TweenService:Create(MainBackground, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-            Size = UDim2.new(0,0,0,0),
+            Size = UDim2.new(0, 0, 0, 0),
             ImageTransparency = 1
         }):Play()
         task.wait(0.3)
@@ -796,23 +819,21 @@ DeleteConfirmFrame.AnchorPoint = Vector2.new(0.5, 0.5)
 DeleteConfirmFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 DeleteConfirmFrame.Size = UDim2.new(0, 200, 0, 100)
 DeleteConfirmFrame.Image = "rbxassetid://7877641241"
-DeleteConfirmFrame.BackgroundColor3 = Color3.new(1,1,1)
+DeleteConfirmFrame.BackgroundColor3 = Color3.new(1, 1, 1)
 DeleteConfirmFrame.BorderSizePixel = 0
 DeleteConfirmFrame.Visible = false
 DeleteConfirmFrame.ZIndex = 3
 
 local DeleteConfirmGradient = Instance.new("UIGradient", DeleteConfirmFrame)
 DeleteConfirmGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(255,100,100)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(255,50,50))
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 100, 100)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 50, 50))
 }
 DeleteConfirmGradient.Rotation = 45
-local DeleteConfirmStroke = Instance.new("UIStroke", DeleteConfirmFrame)
-DeleteConfirmStroke.Color = Color3.fromRGB(255,100,100)
-DeleteConfirmStroke.Thickness = 2
-DeleteConfirmStroke.Transparency = 0.3
-local DeleteConfirmCorner = Instance.new("UICorner", DeleteConfirmFrame)
-DeleteConfirmCorner.CornerRadius = UDim.new(0, 8)
+Instance.new("UIStroke", DeleteConfirmFrame).Color = Color3.fromRGB(255, 100, 100)
+Instance.new("UIStroke", DeleteConfirmFrame).Thickness = 2
+Instance.new("UIStroke", DeleteConfirmFrame).Transparency = 0.3
+Instance.new("UICorner", DeleteConfirmFrame).CornerRadius = UDim.new(0, 8)
 
 local DeleteConfirmText = Instance.new("TextLabel", DeleteConfirmFrame)
 DeleteConfirmText.BackgroundTransparency = 1
@@ -821,63 +842,57 @@ DeleteConfirmText.Size = UDim2.new(1, 0, 0.3, 0)
 DeleteConfirmText.Font = Enum.Font.Arcade
 DeleteConfirmText.Text = "Delete config file?"
 DeleteConfirmText.TextSize = 12
-DeleteConfirmText.TextColor3 = Color3.fromRGB(255,255,255)
+DeleteConfirmText.TextColor3 = Color3.fromRGB(255, 255, 255)
 DeleteConfirmText.TextStrokeTransparency = 0
-DeleteConfirmText.TextStrokeColor3 = Color3.fromRGB(0,0,0)
+DeleteConfirmText.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 
 local DeleteYesButton = Instance.new("TextButton", DeleteConfirmFrame)
-DeleteYesButton.BackgroundColor3 = Color3.fromRGB(255,255,255)
+DeleteYesButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 DeleteYesButton.BackgroundTransparency = 1
 DeleteYesButton.Position = UDim2.new(0.15, 0, 0.65, 0)
 DeleteYesButton.Size = UDim2.new(0, 70, 0, 30)
 DeleteYesButton.Font = Enum.Font.Arcade
 DeleteYesButton.Text = "Yes"
 DeleteYesButton.TextScaled = true
-DeleteYesButton.TextColor3 = Color3.new(0,0,0)
+DeleteYesButton.TextColor3 = Color3.new(0, 0, 0)
 Instance.new("UICorner", DeleteYesButton).CornerRadius = UDim.new(0, 4)
 local DeleteYesGradient = Instance.new("UIGradient", DeleteYesButton)
 DeleteYesGradient.Color = DeleteConfirmGradient.Color
 DeleteYesGradient.Rotation = 90
-local DeleteYesStroke = Instance.new("UIStroke", DeleteYesButton)
-DeleteYesStroke.Color = Color3.fromRGB(255,100,100)
-DeleteYesStroke.Thickness = 1.5
+Instance.new("UIStroke", DeleteYesButton).Color = Color3.fromRGB(255, 100, 100)
+Instance.new("UIStroke", DeleteYesButton).Thickness = 1.5
 
 local DeleteNoButton = Instance.new("TextButton", DeleteConfirmFrame)
-DeleteNoButton.BackgroundColor3 = Color3.fromRGB(255,255,255)
+DeleteNoButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 DeleteNoButton.BackgroundTransparency = 1
 DeleteNoButton.Position = UDim2.new(0.55, 0, 0.65, 0)
 DeleteNoButton.Size = UDim2.new(0, 70, 0, 30)
 DeleteNoButton.Font = Enum.Font.Arcade
 DeleteNoButton.Text = "No"
 DeleteNoButton.TextScaled = true
-DeleteNoButton.TextColor3 = Color3.new(0,0,0)
+DeleteNoButton.TextColor3 = Color3.new(0, 0, 0)
 Instance.new("UICorner", DeleteNoButton).CornerRadius = UDim.new(0, 4)
 local DeleteNoGradient = Instance.new("UIGradient", DeleteNoButton)
 DeleteNoGradient.Color = DeleteConfirmGradient.Color
 DeleteNoGradient.Rotation = 90
-local DeleteNoStroke = Instance.new("UIStroke", DeleteNoButton)
-DeleteNoStroke.Color = Color3.fromRGB(255,100,100)
-DeleteNoStroke.Thickness = 1.5
+Instance.new("UIStroke", DeleteNoButton).Color = Color3.fromRGB(255, 100, 100)
+Instance.new("UIStroke", DeleteNoButton).Thickness = 1.5
 
 local deleteConfirmClosing = false
 local function closeDeleteConfirmDialog(callback)
-    if not DeleteConfirmFrame or not DeleteConfirmFrame.Parent then
-        if callback then callback() end
-        return
-    end
-    if not DeleteConfirmFrame.Visible or deleteConfirmClosing then
+    if not DeleteConfirmFrame or not DeleteConfirmFrame.Parent or not DeleteConfirmFrame.Visible or deleteConfirmClosing then
         if callback then callback() end
         return
     end
     deleteConfirmClosing = true
     local tween = TweenService:Create(DeleteConfirmFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-        Size = UDim2.new(0,0,0,0),
+        Size = UDim2.new(0, 0, 0, 0),
         ImageTransparency = 1
     })
     tween.Completed:Connect(function()
         if DeleteConfirmFrame and DeleteConfirmFrame.Parent then
             DeleteConfirmFrame.Visible = false
-            DeleteConfirmFrame.Size = UDim2.new(0,200,0,100)
+            DeleteConfirmFrame.Size = UDim2.new(0, 200, 0, 100)
             DeleteConfirmFrame.ImageTransparency = 0
         end
         deleteConfirmClosing = false
@@ -895,17 +910,16 @@ local function closeDeleteConfirmDialog(callback)
     tween:Play()
 end
 
--- Show delete confirmation when Delete Config button clicked
 deleteConfigButton.MouseButton1Click:Connect(function()
     if DeleteConfirmFrame.Visible or ConfirmFrame.Visible then return end
     setButtonActive(InjectButton, false)
     setButtonActive(CloseButton, false)
     setButtonActive(SettingsIcon, false)
     DeleteConfirmFrame.Visible = true
-    DeleteConfirmFrame.Size = UDim2.new(0,0,0,0)
+    DeleteConfirmFrame.Size = UDim2.new(0, 0, 0, 0)
     DeleteConfirmFrame.ImageTransparency = 1
     TweenService:Create(DeleteConfirmFrame, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0,200,0,100),
+        Size = UDim2.new(0, 200, 0, 100),
         ImageTransparency = 0
     }):Play()
 end)
@@ -922,19 +936,17 @@ DeleteYesButton.MouseButton1Click:Connect(function()
             end
         end
         if fileDeleted then
-            -- Reset config in memory
             config.autoSave = false
             config.autoInject = false
             config.autoExecutorLoader = false
             
-            -- Reset toggle UI using the Set methods
             autoSaveCtrl:Set(false)
             autoInjectCtrl:Set(false)
             autoLoaderCtrl:Set(false)
             
             showNotification("Config Deleted", "Settings file has been removed.", Color3.fromRGB(255, 100, 100), 3)
         end
-        -- If file not found, no notification (as requested)
+        -- No notification if file not found
     end)
 end)
 
