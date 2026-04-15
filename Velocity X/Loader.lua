@@ -1,10 +1,8 @@
--- ========== PREVENT DUPLICATE LOADER ==========
 if getgenv().Velocity_X_Loader then
     local Notify
     pcall(function()
         Notify = loadstring(game:HttpGet("https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/UI%20Libary/Nofication/BocusLuke.lua"))()
     end)
-
     if Notify then
         Notify:Notify({
             Title = "Velocity X",
@@ -38,8 +36,8 @@ if getgenv().Velocity_X_Loader then
                             Image = "rbxassetid://103887859853708",
                             ImageColor = Color3.fromRGB(255, 255, 255),
                         })
-                        end
-                    else
+                    end
+                else
                     Notify:Notify({
                         Title = "Loader Already Running",
                         Description = "Velocity X is already active in this session.",
@@ -100,7 +98,6 @@ local HttpService = cloneref(game:GetService("HttpService"))
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 
--- Main GUI
 local RealZzHub = Instance.new("ScreenGui")
 RealZzHub.Name = "Velocity_" .. randomString(10)
 RealZzHub.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -233,7 +230,6 @@ SettingsIcon.Image = "rbxassetid://101339235267993"
 SettingsIcon.Visible = false
 SettingsIcon.ImageTransparency = 0.2
 
--- ========== SETTINGS PANEL WITH SCROLLING ==========
 local SettingsPanel = Instance.new("ImageLabel", MainBackground)
 SettingsPanel.AnchorPoint = Vector2.new(1, 0)
 SettingsPanel.Position = UDim2.new(0.85, 0, 0.09, 0)
@@ -380,7 +376,6 @@ local function addToggle(parent, labelText, defaultValue, callback)
     }
 end
 
--- ========== CONFIGURATION SYSTEM ==========
 local CONFIG_FOLDER = "Velocity X"
 local CONFIG_FILE = CONFIG_FOLDER .. "/VelocityX_Settings.json"
 
@@ -418,7 +413,6 @@ local function saveConfig()
     end
 end
 
--- ========== AUTO EXECUTOR LOADER ==========
 local function setupAutoExecutorLoader()
     local queueteleport = queue_on_teleport or (fluxus and fluxus.queue_on_teleport)
     if queueteleport then
@@ -446,7 +440,6 @@ end
 local scriptUrl = nil
 local gameName = "Universal"
 local injected = false
-local source = nil
 
 local UNIVERSAL_URL = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/Main/Universal/Main.lua"
 local GITHUB_BASE = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/Main/"
@@ -466,13 +459,6 @@ end
 
 local gameId = tostring(game.GameId)
 
---[[
-print("========================================")
-print("Velocity X Loader - Checking Game Support")
-print("Game Place ID: " .. gameId)
-print("========================================")
---]]
-
 local githubData = fetch(GITHUB_JSON_URL .. "?nocache=" .. tick())
 if githubData then
     local success, json = pcall(function()
@@ -481,16 +467,10 @@ if githubData then
     if success and json and json[gameId] then
         scriptUrl = GITHUB_BASE .. json[gameId].Path
         gameName = json[gameId].Name
-        source = "GitHub"
-    else
-        print("Not found in GitHub JSON.")
     end
-else
-    print("Failed to fetch GitHub JSON.")
 end
 
 if not scriptUrl then
-    print("Attempting Pastebin JSON...")
     local pastebinData = fetch(PASTEBIN_JSON_URL .. "?nocache=" .. tick())
     if pastebinData then
         local success, json = pcall(function()
@@ -501,25 +481,19 @@ if not scriptUrl then
             local randomstring = json[gameId].randomstring or ""
             scriptUrl = path .. randomstring
             gameName = json[gameId].Name
-            source = "Pastebin"
-        else
-            print("Not found in Pastebin JSON.")
         end
-    else
-        print("failed to fetch Pastebin JSON.")
     end
 end
 
 if not scriptUrl then
     scriptUrl = UNIVERSAL_URL
     gameName = "Universal"
-    source = "Universal Fallback"
     showNotification("Using Universal Script", "No game-specific script found.", Color3.fromRGB(0, 170, 255), 3)
-eels
+else
     showNotification("Game Supported", "Loaded: " .. gameName, Color3.fromRGB(0, 255, 120), 3)
 end
 
-InjectButton.Text = gameName .. "."
+InjectButton.Text = gameName .. ".lua"
 
 pcall(function()
     local versionStr = game:HttpGet("https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/config/version.json")
@@ -629,7 +603,6 @@ local function onPanelOpen()
     updateCanvasSize()
 end
 
--- Auto actions
 if config.autoInject then
     performAutoInject()
 end
@@ -680,7 +653,6 @@ SettingsIcon.MouseButton1Click:Connect(function()
     end
 end)
 
--- ========== CONFIRMATION DIALOG (close) ==========
 local ConfirmFrame = Instance.new("ImageLabel", MainBackground)
 ConfirmFrame.AnchorPoint = Vector2.new(0.5, 0.5)
 ConfirmFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
@@ -812,7 +784,6 @@ NoButton.MouseButton1Click:Connect(function()
     closeConfirmDialog()
 end)
 
--- ========== DELETE CONFIG CONFIRMATION DIALOG ==========
 local DeleteConfirmFrame = Instance.new("ImageLabel", MainBackground)
 DeleteConfirmFrame.Name = "DeleteConfirmFrame"
 DeleteConfirmFrame.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -946,7 +917,6 @@ DeleteYesButton.MouseButton1Click:Connect(function()
             
             showNotification("Config Deleted", "Settings file has been removed.", Color3.fromRGB(255, 100, 100), 3)
         end
-        -- No notification if file not found
     end)
 end)
 
@@ -954,7 +924,6 @@ DeleteNoButton.MouseButton1Click:Connect(function()
     closeDeleteConfirmDialog()
 end)
 
--- DRAG SYSTEM
 local UIS = game:GetService("UserInputService")
 local dragging = false
 local dragInput, mousePos, framePos
