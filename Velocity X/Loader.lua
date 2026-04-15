@@ -23,6 +23,7 @@ if getgenv().Velocity_X_Loader then
                                 if isfile(CONFIG_FILE) then
                                     delfile(CONFIG_FILE)
                                     deleted = true
+                                    getgenv().Velocity_X_Loader = false
                                 end
                             end)
                         end
