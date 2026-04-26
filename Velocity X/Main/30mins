@@ -1,3 +1,12 @@
+local VirtualUser = game:GetService("VirtualUser")
+local Players = game:GetService("Players")
+local LP = Players.LocalPlayer
+
+LP.Idled:Connect(function()
+   game:GetService("VirtualUser"):CaptureController()
+    game:GetService("VirtualUser"):ClickButton2(Vector2.new())
+end)
+while wait(0.1) do
 spawn(function()
         for _, descendant in ipairs(workspace:GetDescendants()) do
             if descendant:IsA("TouchTransmitter") and
@@ -12,5 +21,4 @@ spawn(function()
             end
         end
     end)
-wait(3) 
-loadstring(game:HttpGet("https://pastebin.com/raw/cWbZhmD3"))()
+end
