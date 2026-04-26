@@ -1,24 +1,34 @@
-local VirtualUser = game:GetService("VirtualUser")
 local Players = game:GetService("Players")
+local VirtualUser = game:GetService("VirtualUser")
 local LP = Players.LocalPlayer
 
+-- Anti AFK
 LP.Idled:Connect(function()
-   game:GetService("VirtualUser"):CaptureController()
-    game:GetService("VirtualUser"):ClickButton2(Vector2.new())
+    VirtualUser:CaptureController()
+    VirtualUser:ClickButton2(Vector2.new())
 end)
-while wait(0.1) do
-spawn(function()
-        for _, descendant in ipairs(workspace:GetDescendants()) do
-            if descendant:IsA("TouchTransmitter") and
-                    game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character.PrimaryPart then
-                task.spawn(function()
-                    firetouchinterest(descendant:FindFirstAncestorWhichIsA("Part"),
-                        game.Players.LocalPlayer.Character.PrimaryPart, 1)
-                    task.wait()
-                    firetouchinterest(descendant:FindFirstAncestorWhichIsA("Part"),
-                        game.Players.LocalPlayer.Character.PrimaryPart, 0)
-                end)
-            end
+
+-- Cache all touch parts once
+local touchParts = {}
+
+for _, v in ipairs(workspace:GetDescendants()) do
+    if v:IsA("TouchTransmitter") then
+        local part = v:FindFirstAncestorWhichIsA("BasePart")
+        if part then
+            table.insert(touchParts, part)
         end
-    end)
+    end
+end
+
+-- Loop touch
+while task.wait(0.2) do
+    local char = LP.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    
+    if root then
+        for _, part in ipairs(touchParts) do
+            firetouchinterest(part, root, 1)
+            firetouchinterest(part, root, 0)
+        end
+    end
 end
