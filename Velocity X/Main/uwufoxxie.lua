@@ -5,6 +5,7 @@ local Player = Players.LocalPlayer
 
 while task.wait(1) do
     pcall(function()
+        game.Players.LocalPlayer.Character:PivotTo(CFrame.new(Vector3.new(256.987030, 467.997772, 699.824585)))
         local Character = Player.Character or Player.CharacterAdded:Wait()
         local HRP = Character:WaitForChild("HumanoidRootPart")
         local WinPart = workspace:WaitForChild("Tower"):WaitForChild("WinPart")
