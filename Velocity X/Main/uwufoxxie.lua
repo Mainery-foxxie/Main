@@ -3,7 +3,7 @@ local TeleportService = game:GetService("TeleportService")
 
 local Player = Players.LocalPlayer
 
-while task.wait() do
+while task.wait(1) do
     pcall(function()
         local Character = Player.Character or Player.CharacterAdded:Wait()
         local HRP = Character:WaitForChild("HumanoidRootPart")
