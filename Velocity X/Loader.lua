@@ -145,18 +145,16 @@ local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 
--- ========== OBJUSCATION DECODER ==========
--- Recursively decode all keys and values from Base64
 local function decode_obfuscated(obj)
     if type(obj) == "table" then
         local new = {}
         for k, v in pairs(obj) do
-            local dec_key = HttpService:Base64Decode(k)   -- decode key
-            new[dec_key] = decode_obfuscated(v)           -- decode value recursively
+            local dec_key = HttpService:Base64Decode(k)   
+            new[dec_key] = decode_obfuscated(v)          
         end
         return new
     elseif type(obj) == "string" then
-        return HttpService:Base64Decode(obj)              -- decode string
+        return HttpService:Base64Decode(obj)              
     else
         return obj
     end
@@ -725,7 +723,6 @@ pcall(function()
     end
 end)
 
--- ========== FIXED: DECODE OBFUSCATED PASTEBIN JSON ==========
 if not scriptUrl then
     pcall(function()
         local pastebinData = fetch(PASTEBIN_JSON_URL .. "?nocache=" .. tick())
