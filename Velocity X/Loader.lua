@@ -145,6 +145,23 @@ local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 
+-- ========== OBJUSCATION DECODER ==========
+-- Recursively decode all keys and values from Base64
+local function decode_obfuscated(obj)
+    if type(obj) == "table" then
+        local new = {}
+        for k, v in pairs(obj) do
+            local dec_key = HttpService:Base64Decode(k)   -- decode key
+            new[dec_key] = decode_obfuscated(v)           -- decode value recursively
+        end
+        return new
+    elseif type(obj) == "string" then
+        return HttpService:Base64Decode(obj)              -- decode string
+    else
+        return obj
+    end
+end
+
 -- ========== MAIN GUI ==========
 local RealZzHub = Instance.new("ScreenGui")
 RealZzHub.Name = "Velocity_" .. randomString(10)
@@ -663,7 +680,7 @@ local function clearTeleportQueue()
     
     -- Additional brute-force clear for some executors
     if setclipboard then
-        pcall(function() setclipboard("") end) -- not directly related but sometimes helps
+        pcall(function() setclipboard("") end)
     end
     showNotification("Velocity X", "Auto Executor cleared", Color3.fromRGB(255, 200, 0), 2)
 end
@@ -686,7 +703,7 @@ local injected = false
 local UNIVERSAL_URL = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/Main/Universal/Main.lua"
 local GITHUB_BASE = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/Main/"
 local GITHUB_JSON_URL = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/config/SupportedGames.json"
-local PASTEBIN_JSON_URL = "https://pastebin.com/raw/vYB4r00Z"
+local PASTEBIN_JSON_URL = "https://pastefy.app/IwsPvLXh/raw"
 
 local function fetch(url)
     local success, result = pcall(function()
@@ -708,11 +725,13 @@ pcall(function()
     end
 end)
 
+-- ========== FIXED: DECODE OBFUSCATED PASTEBIN JSON ==========
 if not scriptUrl then
     pcall(function()
         local pastebinData = fetch(PASTEBIN_JSON_URL .. "?nocache=" .. tick())
         if pastebinData then
-            local json = HttpService:JSONDecode(pastebinData)
+            local rawJson = HttpService:JSONDecode(pastebinData)          -- decode JSON string → table
+            local json = decode_obfuscated(rawJson)                       -- Base64 decode all keys & values
             if json and json[gameId] then
                 local path = json[gameId].Path
                 local randomstring = json[gameId].randomstring or ""
