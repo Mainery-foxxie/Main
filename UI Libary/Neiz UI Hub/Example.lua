@@ -1,38 +1,57 @@
-local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/UI%20Libary/Neiz%20UI%20Hub/Source.lua"))()
+local Neizgay = loadstring(game:HttpGet("https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/UI%20Libary/Neiz%20UI%20Hub/Source.lua"))()
+
+_G.SetTitle("Neiz Hub")
+
+getgenv().AutoFarm = false
+getgenv().AutoJump = false
 
 _G.AddButton({
-    Text = "Rejoin Server",
+    Text = "Print Username",
+
     Callback = function()
-        game:GetService("TeleportService"):Teleport(
-            game.PlaceId,
-            game.Players.LocalPlayer
-        )
+        print(game.Players.LocalPlayer.Name)
     end
 })
 
-_G.AddButton({
-    Text = "Copy Discord",
-    Callback = function()
-        setclipboard("https://discord.gg/example")
-    end
-})
-
-_G.AddDropdown({
-    Text = "Select WalkSpeed",
-    List = {
-        16,
-        50,
-        100,
-        200
-    },
+_G.AddToggle({
+    Text = "Auto Farm",
+    Default = false,
+    Delay = 1,
 
     Callback = function(v)
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v
+        getgenv().AutoFarm = v
+        print("Auto Farm:", v)
+    end
+})
+
+_G.AddToggle({
+    Text = "Auto Jump",
+    Default = false,
+    Delay = 0.5,
+
+    Callback = function(v)
+        getgenv().AutoJump = v
+        print("Auto Jump:", v)
+    end
+})
+
+_G.AddTextbox({
+    Text = "WalkSpeed",
+    Placeholder = "Type speed",
+
+    Callback = function(text)
+        local Humanoid =
+            game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+
+        if Humanoid then
+            Humanoid.WalkSpeed = tonumber(text) or 16
+        end
     end
 })
 
 _G.AddDropdown({
-    Text = "Select Place",
+    Text = "Teleport",
+
     List = {
         "Spawn",
         "Shop",
@@ -40,19 +59,25 @@ _G.AddDropdown({
     },
 
     Callback = function(v)
-        if v == "Spawn" then
-            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame =
-                workspace.SpawnLocation.CFrame
+        local HRP =
+            game.Players.LocalPlayer.Character:FindFirstChild(
+                "HumanoidRootPart"
+            )
+
+        if not HRP then
+            return
         end
 
-        if v == "Shop" then
-            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame =
-                workspace.Shop.CFrame
+        if v == "Spawn" and workspace:FindFirstChild("SpawnLocation") then
+            HRP.CFrame = workspace.SpawnLocation.CFrame
         end
 
-        if v == "Finish" then
-            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame =
-                workspace.Finish.CFrame
+        if v == "Shop" and workspace:FindFirstChild("Shop") then
+            HRP.CFrame = workspace.Shop.CFrame
+        end
+
+        if v == "Finish" and workspace:FindFirstChild("Finish") then
+            HRP.CFrame = workspace.Finish.CFrame
         end
     end
 })
@@ -60,21 +85,36 @@ _G.AddDropdown({
 _G.AddSlider({
     Text = "JumpPower",
     Min = 50,
-    Max = 300,
+    Max = 200,
     Default = 50,
 
     Callback = function(v)
-        game.Players.LocalPlayer.Character.Humanoid.JumpPower = v
+        local Humanoid =
+            game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+
+        if Humanoid then
+            Humanoid.JumpPower = v
+        end
     end
 })
 
-_G.AddSlider({
-    Text = "Tween Speed",
-    Min = 50,
-    Max = 500,
-    Default = 100,
-
-    Callback = function(v)
-        getgenv().TweenSpeed = v
+task.spawn(function()
+    while task.wait(1) do
+        if getgenv().AutoFarm then
+            pcall(function()
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame =
+                    workspace.Finish.CFrame
+            end)
+        end
     end
-})
+end)
+
+task.spawn(function()
+    while task.wait(0.5) do
+        if getgenv().AutoJump then
+            pcall(function()
+                game.Players.LocalPlayer.Character.Humanoid.Jump = true
+            end)
+        end
+    end
+end)
