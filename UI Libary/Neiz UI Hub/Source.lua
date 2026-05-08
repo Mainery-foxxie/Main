@@ -102,6 +102,10 @@ UIS.InputChanged:Connect(function(Input)
     end
 end)
 
+function _G.SetTitle(text)
+    Title.Text = tostring(text)
+end
+
 function _G.AddButton(args)
     local Button = Instance.new("TextButton")
     Button.Parent = Container
@@ -152,74 +156,95 @@ function _G.AddToggle(args)
     local Debounce = false
     local Delay = args.Delay or 0.2
 
-    local Button = Instance.new("TextButton")
-    Button.Parent = Container
-    Button.Size = UDim2.new(1,0,0,32)
-    Button.BackgroundColor3 = Color3.fromRGB(25,25,25)
-    Button.BorderSizePixel = 0
-    Button.Font = Enum.Font.Code
-    Button.TextColor3 = Color3.fromRGB(255,255,255)
-    Button.TextSize = 14
-    Button.AutoButtonColor = false
+    local Holder = Instance.new("Frame")
+    Holder.Parent = Container
+    Holder.Size = UDim2.new(1,0,0,36)
+    Holder.BackgroundColor3 = Color3.fromRGB(25,25,25)
+    Holder.BorderSizePixel = 0
 
-    Instance.new("UICorner",Button).CornerRadius = UDim.new(0,8)
+    Instance.new("UICorner",Holder).CornerRadius = UDim.new(0,8)
+
+    local Label = Instance.new("TextLabel")
+    Label.Parent = Holder
+    Label.BackgroundTransparency = 1
+    Label.Position = UDim2.new(0,10,0,0)
+    Label.Size = UDim2.new(1,-60,1,0)
+    Label.Font = Enum.Font.Code
+    Label.Text = args.Text or "Toggle"
+    Label.TextColor3 = Color3.fromRGB(255,255,255)
+    Label.TextSize = 14
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+
+    local ToggleBack = Instance.new("Frame")
+    ToggleBack.Parent = Holder
+    ToggleBack.Size = UDim2.new(0,42,0,20)
+    ToggleBack.Position = UDim2.new(1,-52,0.5,-10)
+    ToggleBack.BackgroundColor3 = Color3.fromRGB(45,45,45)
+    ToggleBack.BorderSizePixel = 0
+
+    Instance.new("UICorner",ToggleBack).CornerRadius = UDim.new(1,0)
+
+    local Circle = Instance.new("Frame")
+    Circle.Parent = ToggleBack
+    Circle.Size = UDim2.new(0,16,0,16)
+    Circle.Position = UDim2.new(0,2,0.5,-8)
+    Circle.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    Circle.BorderSizePixel = 0
+
+    Instance.new("UICorner",Circle).CornerRadius = UDim.new(1,0)
 
     local function Update()
-        Button.Text =
-            (args.Text or "Toggle")
-            .. ": "
-            .. (Enabled and "ON" or "OFF")
-
         TweenService:Create(
-            Button,
+            ToggleBack,
             TweenInfo.new(0.2),
             {
                 BackgroundColor3 = Enabled
-                    and Color3.fromRGB(40,120,40)
-                    or Color3.fromRGB(25,25,25)
+                    and Color3.fromRGB(60,170,90)
+                    or Color3.fromRGB(45,45,45)
+            }
+        ):Play()
+
+        TweenService:Create(
+            Circle,
+            TweenInfo.new(
+                0.25,
+                Enum.EasingStyle.Quart,
+                Enum.EasingDirection.Out
+            ),
+            {
+                Position = Enabled
+                    and UDim2.new(1,-18,0.5,-8)
+                    or UDim2.new(0,2,0.5,-8)
             }
         ):Play()
     end
 
     Update()
 
-    Button.MouseButton1Click:Connect(function()
-        if Debounce then
-            return
-        end
+    Holder.InputBegan:Connect(function(Input)
+        if Input.UserInputType == Enum.UserInputType.MouseButton1
+        or Input.UserInputType == Enum.UserInputType.Touch then
 
-        Debounce = true
-
-        TweenService:Create(
-            Button,
-            TweenInfo.new(0.08),
-            {
-                Size = UDim2.new(1,-4,0,28)
-            }
-        ):Play()
-
-        task.wait(0.08)
-
-        TweenService:Create(
-            Button,
-            TweenInfo.new(0.08),
-            {
-                Size = UDim2.new(1,0,0,32)
-            }
-        ):Play()
-
-        Enabled = not Enabled
-        Update()
-
-        pcall(function()
-            if args.Callback then
-                args.Callback(Enabled)
+            if Debounce then
+                return
             end
-        end)
 
-        task.wait(Delay)
+            Debounce = true
 
-        Debounce = false
+            Enabled = not Enabled
+
+            Update()
+
+            pcall(function()
+                if args.Callback then
+                    args.Callback(Enabled)
+                end
+            end)
+
+            task.wait(Delay)
+
+            Debounce = false
+        end
     end)
 
     UpdateCanvas()
