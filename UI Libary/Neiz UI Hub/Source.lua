@@ -1,16 +1,76 @@
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 local TS = game:GetService("TweenService")
-local RS = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 local TextService = game:GetService("TextService")
 
 pcall(function()
-    if CoreGui:FindFirstChild("NeizHubv25") then CoreGui.NeizHubv25:Destroy() end
+    if CoreGui:FindFirstChild("NeizHubv26") then CoreGui.NeizHubv26:Destroy() end
 end)
 
+local Themes = {
+    Blue = {
+        Accent = Color3.fromRGB(60, 110, 220),
+        GradientStart = Color3.fromRGB(25, 50, 90),
+        GradientMid = Color3.fromRGB(35, 25, 60),
+        GradientEnd = Color3.fromRGB(25, 50, 90)
+    },
+    Rose = {
+        Accent = Color3.fromRGB(255, 105, 180),
+        GradientStart = Color3.fromRGB(120, 30, 60),
+        GradientMid = Color3.fromRGB(80, 25, 45),
+        GradientEnd = Color3.fromRGB(120, 30, 60)
+    },
+    Black = {
+        Accent = Color3.fromRGB(120, 120, 120),
+        GradientStart = Color3.fromRGB(30, 30, 30),
+        GradientMid = Color3.fromRGB(20, 20, 20),
+        GradientEnd = Color3.fromRGB(30, 30, 30)
+    },
+    Ocean = {
+        Accent = Color3.fromRGB(0, 180, 180),
+        GradientStart = Color3.fromRGB(0, 80, 100),
+        GradientMid = Color3.fromRGB(0, 50, 70),
+        GradientEnd = Color3.fromRGB(0, 80, 100)
+    },
+    Green = {
+        Accent = Color3.fromRGB(0, 200, 80),
+        GradientStart = Color3.fromRGB(20, 90, 40),
+        GradientMid = Color3.fromRGB(10, 70, 30),
+        GradientEnd = Color3.fromRGB(20, 90, 40)
+    },
+    Valentine = {
+        Accent = Color3.fromRGB(255, 90, 90),
+        GradientStart = Color3.fromRGB(160, 40, 50),
+        GradientMid = Color3.fromRGB(100, 25, 35),
+        GradientEnd = Color3.fromRGB(160, 40, 50)
+    },
+    Violet = {
+        Accent = Color3.fromRGB(160, 60, 255),
+        GradientStart = Color3.fromRGB(60, 30, 120),
+        GradientMid = Color3.fromRGB(40, 15, 90),
+        GradientEnd = Color3.fromRGB(60, 30, 120)
+    }
+}
+
+local CurrentTheme = "Blue"
+local accentObjects = {}
+
+local function RegisterAccent(obj, prop, compute)
+    table.insert(accentObjects, {obj = obj, prop = prop, compute = compute})
+end
+
+local function ApplyTheme(name)
+    local theme = Themes[name]
+    CurrentTheme = name
+    for _, entry in ipairs(accentObjects) do
+        local newVal = entry.compute(theme)
+        entry.obj[entry.prop] = newVal
+    end
+end
+
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "NeizHubv25"
+ScreenGui.Name = "NeizHubv26"
 ScreenGui.Parent = CoreGui
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -21,24 +81,26 @@ Main.Parent = ScreenGui
 Main.Size = UDim2.new(0, 580, 0, 400)
 Main.Position = UDim2.new(0.5, -290, 0.5, -200)
 Main.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-Main.BorderSizePixel = 0
 Main.BackgroundTransparency = 0.5
+Main.BorderSizePixel = 0
 Main.ClipsDescendants = true
 
 local MainCorner = Instance.new("UICorner", Main)
 MainCorner.CornerRadius = UDim.new(0, 10)
 
 local MainGradient = Instance.new("UIGradient", Main)
-MainGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(25, 50, 90)),
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(35, 25, 60)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(25, 50, 90))
-}
 MainGradient.Rotation = 45
+RegisterAccent(MainGradient, "Color", function(t)
+    return ColorSequence.new({
+        ColorSequenceKeypoint.new(0, t.GradientStart),
+        ColorSequenceKeypoint.new(0.5, t.GradientMid),
+        ColorSequenceKeypoint.new(1, t.GradientEnd)
+    })
+end)
 
 local MainStroke = Instance.new("UIStroke", Main)
-MainStroke.Color = Color3.fromRGB(60, 110, 220)
 MainStroke.Transparency = 0.7
+RegisterAccent(MainStroke, "Color", function(t) return t.Accent end)
 
 local TitleBar = Instance.new("Frame")
 TitleBar.Parent = Main
@@ -46,14 +108,15 @@ TitleBar.Size = UDim2.new(1, 0, 0, 45)
 TitleBar.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
 TitleBar.BorderSizePixel = 0
 TitleBar.ZIndex = 5
-
 Instance.new("UICorner", TitleBar).CornerRadius = UDim.new(0, 10)
 
 local TitleGrad = Instance.new("UIGradient", TitleBar)
-TitleGrad.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 60, 110)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 20, 40))
-}
+RegisterAccent(TitleGrad, "Color", function(t)
+    return ColorSequence.new({
+        ColorSequenceKeypoint.new(0, t.Accent),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 20, 40))
+    })
+end)
 
 local TitleLine = Instance.new("Frame")
 TitleLine.Parent = TitleBar
@@ -68,7 +131,7 @@ local Title = Instance.new("TextLabel")
 Title.Parent = TitleBar
 Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0, 15, 0, 0)
-Title.Size = UDim2.new(1, -50, 1, 0)
+Title.Size = UDim2.new(1, -80, 1, 0)
 Title.Font = Enum.Font.Code
 Title.Text = "Neiz UI Hub"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -79,7 +142,7 @@ Title.ZIndex = 6
 local ToggleButton = Instance.new("TextButton")
 ToggleButton.Parent = TitleBar
 ToggleButton.BackgroundTransparency = 1
-ToggleButton.Position = UDim2.new(1, -38, 0.5, -12)
+ToggleButton.Position = UDim2.new(1, -68, 0.5, -12)
 ToggleButton.Size = UDim2.new(0, 24, 0, 24)
 ToggleButton.Text = ""
 ToggleButton.ZIndex = 7
@@ -93,6 +156,55 @@ ToggleIcon.Size = UDim2.new(1, 0, 1, 0)
 ToggleIcon.ImageColor3 = Color3.fromRGB(200, 200, 200)
 ToggleIcon.Rotation = 90
 ToggleIcon.ZIndex = 8
+
+local SettingsButton = Instance.new("ImageButton")
+SettingsButton.Parent = TitleBar
+SettingsButton.BackgroundTransparency = 1
+SettingsButton.Position = UDim2.new(1, -38, 0.5, -12)
+SettingsButton.Size = UDim2.new(0, 24, 0, 24)
+SettingsButton.Image = "rbxassetid://6031094670"
+SettingsButton.ImageColor3 = Color3.fromRGB(200, 200, 200)
+SettingsButton.ZIndex = 7
+
+local ThemePanel = Instance.new("Frame")
+ThemePanel.Parent = Main
+ThemePanel.Size = UDim2.new(0, 200, 0, 260)
+ThemePanel.Position = UDim2.new(0, 150, 0, 50)
+ThemePanel.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+ThemePanel.BorderSizePixel = 0
+ThemePanel.Visible = false
+ThemePanel.ZIndex = 10
+Instance.new("UICorner", ThemePanel).CornerRadius = UDim.new(0, 8)
+
+local ThemeTitle = Instance.new("TextLabel")
+ThemeTitle.Parent = ThemePanel
+ThemeTitle.Size = UDim2.new(1, 0, 0, 30)
+ThemeTitle.BackgroundTransparency = 1
+ThemeTitle.Font = Enum.Font.Code
+ThemeTitle.Text = "Themes"
+ThemeTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+ThemeTitle.TextSize = 14
+ThemeTitle.ZIndex = 11
+
+local ThemeLayout = Instance.new("UIListLayout")
+ThemeLayout.Parent = ThemePanel
+ThemeLayout.Padding = UDim.new(0, 5)
+ThemeLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+local ThemePad = Instance.new("UIPadding")
+ThemePad.Parent = ThemePanel
+ThemePad.PaddingLeft = UDim.new(0, 8)
+ThemePad.PaddingRight = UDim.new(0, 8)
+ThemePad.PaddingTop = UDim.new(0, 35)
+ThemePad.PaddingBottom = UDim.new(0, 8)
+
+local function CloseThemePanel()
+    ThemePanel.Visible = false
+end
+
+SettingsButton.MouseButton1Click:Connect(function()
+    ThemePanel.Visible = not ThemePanel.Visible
+end)
 
 local TabBar = Instance.new("Frame")
 TabBar.Parent = Main
@@ -188,7 +300,7 @@ local function SelectTab(btn)
         end
     end
     task.wait(0.08)
-    Tween(btn, 0.2, { BackgroundColor3 = Color3.fromRGB(42, 90, 190) })
+    Tween(btn, 0.2, { BackgroundColor3 = Themes[CurrentTheme].Accent })
     Tween(btn, 0.2, { TextColor3 = Color3.fromRGB(255, 255, 255) })
     local pg = PagesFrame:FindFirstChild(btn.Name)
     if pg then Tween(pg, 0.3, { Position = UDim2.new(0, 0, 0, 0) }) end
@@ -207,7 +319,7 @@ local function toggleWindow()
     if hidden then
         Tween(Main, 0.45, { Size = UDim2.new(0, 580, 0, 45) }, function()
             local titleSize = TextService:GetTextSize(Title.Text, 15, Enum.Font.Code, Vector2.new(math.huge, math.huge))
-            Tween(Main, 0.45, { Size = UDim2.new(0, titleSize.X + 50, 0, 45) }, function()
+            Tween(Main, 0.45, { Size = UDim2.new(0, titleSize.X + 110, 0, 45) }, function()
                 toggleBusy = false
             end)
         end)
@@ -225,7 +337,7 @@ local dragStart, startPos
 
 TitleBar.InputBegan:Connect(function(inp)
     if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
-        if ToggleButton:IsAncestorOf(inp) then return end
+        if ToggleButton:IsAncestorOf(inp) or SettingsButton:IsAncestorOf(inp) then return end
         dragging = true
         dragStart = inp.Position
         startPos = Main.Position
@@ -257,12 +369,10 @@ function _G.AddTab(tabName, iconAssetId)
     TabBtn.TextColor3 = Color3.fromRGB(140, 140, 140)
     TabBtn.TextSize = 12
     TabBtn.AutoButtonColor = false
-
     Instance.new("UICorner", TabBtn).CornerRadius = UDim.new(0, 7)
 
-    local icon
     if iconAssetId then
-        icon = Instance.new("ImageLabel")
+        local icon = Instance.new("ImageLabel")
         icon.Parent = TabBtn
         icon.BackgroundTransparency = 1
         icon.Position = UDim2.new(0, 8, 0.5, -10)
@@ -350,9 +460,10 @@ function _G.AddTab(tabName, iconAssetId)
         Accent.Parent = Holder
         Accent.Size = UDim2.new(0, 3, 0, 16)
         Accent.Position = UDim2.new(0, 0, 0.5, -8)
-        Accent.BackgroundColor3 = Color3.fromRGB(60, 110, 220)
+        Accent.BackgroundColor3 = Themes[CurrentTheme].Accent
         Accent.BorderSizePixel = 0
         Instance.new("UICorner", Accent).CornerRadius = UDim.new(1, 0)
+        RegisterAccent(Accent, "BackgroundColor3", function(t) return t.Accent end)
 
         local HStroke = Instance.new("UIStroke", Holder)
         HStroke.Color = Color3.fromRGB(38, 38, 38)
@@ -368,7 +479,7 @@ function _G.AddTab(tabName, iconAssetId)
         Btn.AutoButtonColor = false
 
         local function playClickAnim()
-            TS:Create(HStroke, TweenInfo.new(0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out, 0, true), { Color = Color3.fromRGB(60, 110, 220) }):Play()
+            TS:Create(HStroke, TweenInfo.new(0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out, 0, true), { Color = Themes[CurrentTheme].Accent }):Play()
             TS:Create(Holder, TweenInfo.new(0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out, 0, true), { BackgroundColor3 = Color3.fromRGB(35, 70, 160) }):Play()
             task.wait(0.2)
             TS:Create(HStroke, TweenInfo.new(0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), { Color = Color3.fromRGB(38, 38, 38) }):Play()
@@ -384,7 +495,7 @@ function _G.AddTab(tabName, iconAssetId)
 
         Btn.MouseEnter:Connect(function()
             Tween(Holder, 0.15, { BackgroundColor3 = Color3.fromRGB(28, 28, 28) })
-            Tween(HStroke, 0.15, { Color = Color3.fromRGB(60, 110, 220), Transparency = 0.5 })
+            Tween(HStroke, 0.15, { Color = Themes[CurrentTheme].Accent, Transparency = 0.5 })
         end)
         Btn.MouseLeave:Connect(function()
             Tween(Holder, 0.15, { BackgroundColor3 = Color3.fromRGB(22, 22, 22) })
@@ -423,19 +534,20 @@ function _G.AddTab(tabName, iconAssetId)
         Track.Parent = Holder
         Track.Size = UDim2.new(0, 40, 0, 20)
         Track.Position = UDim2.new(1, -50, 0.5, -10)
-        Track.BackgroundColor3 = enabled and Color3.fromRGB(55, 160, 85) or Color3.fromRGB(40, 40, 40)
+        Track.BackgroundColor3 = enabled and Themes[CurrentTheme].Accent or Color3.fromRGB(40, 40, 40)
         Track.BorderSizePixel = 0
         Instance.new("UICorner", Track).CornerRadius = UDim.new(1, 0)
 
         local Circle = Instance.new("Frame")
         Circle.Parent = Track
         Circle.Size = UDim2.new(0, 16, 0, 16)
+        Circle.Position = enabled and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
         Circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         Circle.BorderSizePixel = 0
         Instance.new("UICorner", Circle).CornerRadius = UDim.new(1, 0)
 
         local function Refresh()
-            Tween(Track, 0.2, { BackgroundColor3 = enabled and Color3.fromRGB(55, 160, 85) or Color3.fromRGB(40, 40, 40) })
+            Tween(Track, 0.2, { BackgroundColor3 = enabled and Themes[CurrentTheme].Accent or Color3.fromRGB(40, 40, 40) })
             local targetPos = enabled and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
             Tween(Circle, 0.25, { Position = targetPos, Size = UDim2.new(0, 16, 0, 16) })
         end
@@ -513,7 +625,7 @@ function _G.AddTab(tabName, iconAssetId)
         Box.TextXAlignment = Enum.TextXAlignment.Left
 
         Box.Focused:Connect(function()
-            Tween(BoxStroke, 0.2, { Color = Color3.fromRGB(60, 110, 220), Transparency = 0.2 })
+            Tween(BoxStroke, 0.2, { Color = Themes[CurrentTheme].Accent, Transparency = 0.2 })
             Tween(BoxHolder, 0.2, { BackgroundColor3 = Color3.fromRGB(24, 24, 24) })
         end)
         Box.FocusLost:Connect(function(enter)
@@ -621,24 +733,37 @@ function _G.AddTab(tabName, iconAssetId)
                 Opt.BorderSizePixel = 0
                 Opt.Font = Enum.Font.Code
                 Opt.Text = tostring(v)
-                Opt.TextColor3 = multi and (table.find(selected, v) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(160, 160, 160))
-                    or (selected[1] == v and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(160, 160, 160))
                 Opt.TextSize = 12
                 Opt.AutoButtonColor = false
                 Instance.new("UICorner", Opt).CornerRadius = UDim.new(0, 5)
+
+                local optTextLabel = Opt:FindFirstChild("TextLabel")
+                if not optTextLabel then
+                    optTextLabel = Instance.new("TextLabel")
+                    optTextLabel.Parent = Opt
+                    optTextLabel.BackgroundTransparency = 1
+                    optTextLabel.Size = UDim2.new(1, -30, 1, 0)
+                    optTextLabel.Position = UDim2.new(0, 12, 0, 0)
+                    optTextLabel.TextColor3 = Color3.fromRGB(160, 160, 160)
+                    optTextLabel.Font = Enum.Font.Code
+                    optTextLabel.Text = tostring(v)
+                    optTextLabel.TextSize = 12
+                    optTextLabel.TextXAlignment = Enum.TextXAlignment.Left
+                end
 
                 local indicator
                 if multi then
                     indicator = Instance.new("Frame")
                     indicator.Parent = Opt
                     indicator.Size = UDim2.new(0, 10, 0, 10)
-                    indicator.Position = UDim2.new(0, 8, 0.5, -5)
-                    indicator.BackgroundColor3 = table.find(selected, v) and Color3.fromRGB(60, 110, 220) or Color3.fromRGB(55, 55, 55)
+                    indicator.Position = UDim2.new(0, 4, 0.5, -5)
+                    indicator.BackgroundColor3 = table.find(selected, v) and Themes[CurrentTheme].Accent or Color3.fromRGB(55, 55, 55)
                     indicator.BorderSizePixel = 0
                     Instance.new("UICorner", indicator).CornerRadius = UDim.new(1, 0)
-                    Opt.TextLabel.Position = UDim2.new(0, 24, 0, 0)
-                    Opt.TextLabel.Size = UDim2.new(1, -30, 1, 0)
-                    Opt.TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+                    optTextLabel.Position = UDim2.new(0, 20, 0, 0)
+                    optTextLabel.Size = UDim2.new(1, -26, 1, 0)
+                else
+                    optTextLabel.TextColor3 = (selected[1] == v) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(160, 160, 160)
                 end
 
                 Opt.MouseEnter:Connect(function()
@@ -656,13 +781,13 @@ function _G.AddTab(tabName, iconAssetId)
                             if indicator then
                                 Tween(indicator, 0.2, { BackgroundColor3 = Color3.fromRGB(55, 55, 55) })
                             end
-                            Opt.TextColor3 = Color3.fromRGB(160, 160, 160)
+                            optTextLabel.TextColor3 = Color3.fromRGB(160, 160, 160)
                         else
                             table.insert(selected, v)
                             if indicator then
-                                Tween(indicator, 0.2, { BackgroundColor3 = Color3.fromRGB(60, 110, 220) })
+                                Tween(indicator, 0.2, { BackgroundColor3 = Themes[CurrentTheme].Accent })
                             end
-                            Opt.TextColor3 = Color3.fromRGB(255, 255, 255)
+                            optTextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
                         end
                         SelLbl.Text = #selected > 0 and (#selected .. " selected") or "None selected"
                         pcall(function() if args.Callback then args.Callback(selected) end end)
@@ -671,7 +796,10 @@ function _G.AddTab(tabName, iconAssetId)
                         SelLbl.Text = v
                         for _, c2 in pairs(Scroll:GetChildren()) do
                             if c2:IsA("TextButton") then
-                                c2.TextColor3 = c2.Text == v and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(160, 160, 160)
+                                local childLabel = c2:FindFirstChild("TextLabel")
+                                if childLabel then
+                                    childLabel.TextColor3 = c2.Text == v and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(160, 160, 160)
+                                end
                             end
                         end
                         pcall(function() if args.Callback then args.Callback(v) end end)
@@ -782,9 +910,10 @@ function _G.AddTab(tabName, iconAssetId)
         ValLbl.Size = UDim2.new(0, 46, 1, 0)
         ValLbl.Font = Enum.Font.Code
         ValLbl.Text = tostring(Default)
-        ValLbl.TextColor3 = Color3.fromRGB(60, 110, 220)
+        ValLbl.TextColor3 = Themes[CurrentTheme].Accent
         ValLbl.TextSize = 12
         ValLbl.TextXAlignment = Enum.TextXAlignment.Right
+        RegisterAccent(ValLbl, "TextColor3", function(t) return t.Accent end)
 
         local Bar = Instance.new("Frame")
         Bar.Parent = Outer
@@ -797,9 +926,10 @@ function _G.AddTab(tabName, iconAssetId)
         local Fill = Instance.new("Frame")
         Fill.Parent = Bar
         Fill.Size = UDim2.new((Default - Min) / (Max - Min), 0, 1, 0)
-        Fill.BackgroundColor3 = Color3.fromRGB(60, 110, 220)
+        Fill.BackgroundColor3 = Themes[CurrentTheme].Accent
         Fill.BorderSizePixel = 0
         Instance.new("UICorner", Fill).CornerRadius = UDim.new(1, 0)
+        RegisterAccent(Fill, "BackgroundColor3", function(t) return t.Accent end)
 
         local Knob = Instance.new("Frame")
         Knob.Parent = Bar
@@ -888,11 +1018,28 @@ function _G.SetTitle(text)
     Title.Text = tostring(text)
 end
 
+local themButtons = {}
+for name, _ in pairs(Themes) do
+    local btn = Instance.new("TextButton")
+    btn.Parent = ThemePanel
+    btn.Size = UDim2.new(1, 0, 0, 26)
+    btn.BackgroundColor3 = Themes[name].Accent
+    btn.Font = Enum.Font.Code
+    btn.Text = name
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 12
+    btn.AutoButtonColor = false
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
+    btn.MouseButton1Click:Connect(function()
+        ApplyTheme(name)
+        CloseThemePanel()
+    end)
+end
+ApplyTheme("Blue")
+
 UIS.InputBegan:Connect(function(inp, gpe)
     if gpe then return end
     if inp.KeyCode == Enum.KeyCode.RightControl then
         ScreenGui.Enabled = not ScreenGui.Enabled
     end
 end)
-
-return ScreenGui
