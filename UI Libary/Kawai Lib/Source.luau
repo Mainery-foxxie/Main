@@ -4,11 +4,11 @@ local TweenService: TweenService = game:GetService("TweenService")
 local UserInputService: UserInputService = game:GetService("UserInputService")
 
 GetIcon = function(i)
-	if type(i) == 'string' and not i:find('rbxassetid://') then
-		return "rbxassetid://".. i
-	elseif type(i) == 'number' then
-		return "rbxassetid://".. i
-	else
+	if type(i) == "string" and not i:find("rbxassetid://") then
+		return "rbxassetid://" .. i
+	elseif type(i) == "number" then
+		return "rbxassetid://" .. tostring(i)
+	elseif type(i) == "string" and i:find("rbxthumb://") then
 		return i
 	end
 end
