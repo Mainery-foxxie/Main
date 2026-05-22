@@ -315,14 +315,9 @@ if _earlySkipIntro then
 end
 
 local Notify
-local notifyOk, notifyErr = pcall(function()
-    local src = game:HttpGet("https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/UI%20Libary/Nofication/BocusLuke.lua")
-    if not src or #src == 0 then error("Empty notification library response") end
-    Notify = loadstring(src)()
+pcall(function()
+    Notify = loadstring(game:HttpGet("https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/UI%20Libary/Nofication/BocusLuke.lua"))()
 end)
-if not notifyOk then
-    warn("[VelocityX] Notification library failed to load: " .. tostring(notifyErr))
-end
 
 local function showNotification(title, desc, outlineColor, duration, imageId)
     if Notify then
@@ -970,35 +965,31 @@ end
 
 local gameId = tostring(game.GameId)
 
-local githubOk, githubErr = pcall(function()
+pcall(function()
     local githubData = fetch(GITHUB_JSON_URL .. "?nocache=" .. tick())
-    if not githubData or #githubData == 0 then error("Empty response") end
-    local json = HttpService:JSONDecode(githubData)
-    if json and json[gameId] then
-        scriptUrl = GITHUB_BASE .. json[gameId].Path
-        gameName = json[gameId].Name
-    end
-end)
-if not githubOk then
-    warn("[VelocityX] GitHub game list failed: " .. tostring(githubErr))
-end
-
-if not scriptUrl then
-    local pastebinOk, pastebinErr = pcall(function()
-        local pastebinData = fetch(PASTEBIN_JSON_URL .. "?nocache=" .. tick())
-        if not pastebinData or #pastebinData == 0 then error("Empty response") end
-        local rawJson = HttpService:JSONDecode(pastebinData)
-        local json = decode_obfuscated(rawJson)
+    if githubData then
+        local json = HttpService:JSONDecode(githubData)
         if json and json[gameId] then
-            local path = json[gameId].Path
-            local randomstring = json[gameId].randomstring or ""
-            scriptUrl = path .. randomstring
+            scriptUrl = GITHUB_BASE .. json[gameId].Path
             gameName = json[gameId].Name
         end
-    end)
-    if not pastebinOk then
-        warn("[VelocityX] Pastefy game list failed: " .. tostring(pastebinErr))
     end
+end)
+
+if not scriptUrl then
+    pcall(function()
+        local pastebinData = fetch(PASTEBIN_JSON_URL .. "?nocache=" .. tick())
+        if pastebinData then
+            local rawJson = HttpService:JSONDecode(pastebinData)
+            local json = decode_obfuscated(rawJson)
+            if json and json[gameId] then
+                local path = json[gameId].Path
+                local randomstring = json[gameId].randomstring or ""
+                scriptUrl = path .. randomstring
+                gameName = json[gameId].Name
+            end
+        end
+    end)
 end
 
 if not scriptUrl then
@@ -1011,15 +1002,10 @@ end
 
 InjectButton.Text = gameName .. ".lua"
 
-local versionOk, versionErr = pcall(function()
+pcall(function()
     local versionStr = game:HttpGet("https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/config/version.json")
-    if not versionStr or #versionStr == 0 then error("Empty version response") end
     Version.Text = "Version: " .. versionStr
 end)
-if not versionOk then
-    Version.Text = "Version: ?"
-    warn("[VelocityX] Version fetch failed: " .. tostring(versionErr))
-end
 
 local function clearText()
     for _, v in ipairs(MainBackground:GetDescendants()) do
@@ -1050,82 +1036,12 @@ local function cleanupAntiFeatures()
     end
 end
 
-local function shakeError()
-    pcall(function()
-        local orig = MainBackground.Position
-        local shakeInfo = TweenInfo.new(0.07, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, 4, true)
-        TweenService:Create(MainBackground, shakeInfo, {
-            Position = UDim2.new(orig.X.Scale, orig.X.Offset + 8, orig.Y.Scale, orig.Y.Offset)
-        }):Play()
-        task.wait(0.6)
-        TweenService:Create(MainBackground, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Position = orig
-        }):Play()
-    end)
-end
-
 local function injectScript()
     if injected then return end
     injected = true
-
-    -- Attempt to fetch and run the resolved script URL
-    local fetchOk, fetchErr = pcall(function()
-        local scriptContent = game:HttpGet(scriptUrl)
-        if not scriptContent or #scriptContent == 0 then
-            error("Empty response from URL")
-        end
-        local loadOk, loadErr = pcall(loadstring(scriptContent))
-        if not loadOk then
-            error("Script runtime error: " .. tostring(loadErr))
-        end
+    pcall(function()
+        loadstring(game:HttpGet(scriptUrl))()
     end)
-
-    if not fetchOk then
-        injected = false  -- allow retry
-        InjectButton.Text = gameName .. ".lua"
-
-        -- If game-specific script failed, fall back to Universal
-        if scriptUrl ~= UNIVERSAL_URL then
-            showNotification(
-                "⚠ Script Error",
-                "Game script failed — retrying with Universal.\n" .. tostring(fetchErr),
-                Color3.fromRGB(255, 150, 0), 6
-            )
-            task.spawn(shakeError)
-            scriptUrl = UNIVERSAL_URL
-            gameName  = "Universal"
-            InjectButton.Text = "Universal.lua"
-
-            -- Retry with universal
-            local retryOk, retryErr = pcall(function()
-                local content = game:HttpGet(UNIVERSAL_URL)
-                if not content or #content == 0 then error("Empty universal response") end
-                local ok, err = pcall(loadstring(content))
-                if not ok then error("Universal runtime error: " .. tostring(err)) end
-            end)
-            if retryOk then
-                injected = true
-            else
-                injected = false
-                showNotification(
-                    "✘ Universal Failed",
-                    "All scripts failed to load. Check your connection.\n" .. tostring(retryErr),
-                    Color3.fromRGB(255, 50, 50), 7
-                )
-                task.spawn(shakeError)
-                return  -- abort inject flow; UI stays open
-            end
-        else
-            -- Universal itself failed
-            showNotification(
-                "✘ Network Error",
-                "Failed to fetch Universal script. Check your connection.\n" .. tostring(fetchErr),
-                Color3.fromRGB(255, 50, 50), 7
-            )
-            task.spawn(shakeError)
-            return  -- abort inject flow; UI stays open
-        end
-    end
 end
 
 local function performAutoInject()
@@ -1568,40 +1484,26 @@ local _dragOk, _dragErr = pcall(function()
         end
     end
 
-    -- NOTE: No rotation applied — only scale + transparency + sway for clean drag feel.
+    -- NOTE: No rotation applied — only scale + transparency for a clean drag feel.
 
-    local isDragging    = false
-    local lastSwayTime  = 0
-    local SWAY_THROTTLE = 0.06
-    local SWAY_SPEED    = 3.2
-    local SWAY_AMP      = 5  -- degrees, safe now that ClipsDescendants = false
-
-    local function settingsOpen()
-        return SettingsPanel and SettingsPanel.Visible
-    end
+    local isDragging = false
 
     drag.DragStart:Connect(function()
-        if settingsOpen() then return end
-        isDragging   = true
-        lastSwayTime = tick()
+        -- Pause animation if settings panel is open to avoid visual glitches
+        if SettingsPanel and SettingsPanel.Visible then return end
+        isDragging = true
         applyTween(dragScale,      { Scale = 0.96 })
         applyTween(MainBackground, { BackgroundTransparency = 0.5 })
     end)
 
     drag.DragContinue:Connect(function()
-        if not isDragging or settingsOpen() then return end
-        local now = tick()
-        if (now - lastSwayTime) < SWAY_THROTTLE then return end
-        lastSwayTime = now
-        local sway = math.sin(now * SWAY_SPEED) * SWAY_AMP
-        applyTween(MainBackground, { Rotation = sway })
+        -- Nothing extra needed — UIDragDetector handles position
     end)
 
     drag.DragEnd:Connect(function()
-        isDragging   = false
-        lastSwayTime = 0
-        applyTween(dragScale,      { Scale = 1 },    snapTweenInfo)
-        applyTween(MainBackground, { BackgroundTransparency = 0, Rotation = 0 }, snapTweenInfo)
+        isDragging = false
+        applyTween(dragScale,      { Scale = 1 }, snapTweenInfo)
+        applyTween(MainBackground, { BackgroundTransparency = 0 }, snapTweenInfo)
     end)
 end)
 
