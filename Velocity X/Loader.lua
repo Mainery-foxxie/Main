@@ -90,396 +90,239 @@ local sound = Instance.new("Sound")
 sound.Parent = gui
 sound.SoundId = "rbxassetid://8745692251"
 sound.Volume = 2
-sound:Play()
 
-local bg = Instance.new("Frame")
-bg.Parent = gui
-bg.Size = UDim2.new(1,0,1,0)
-bg.BackgroundColor3 = Color3.new(0,0,0)
-bg.BorderSizePixel = 0
-
-local image = Instance.new("ImageLabel")
-image.Parent = gui
-image.BackgroundTransparency = 1
-image.Image = "rbxassetid://103887859853708"
-image.Size = UDim2.new(0,0,0,0)
-image.Position = UDim2.new(0.5,0,0.5,0)
-image.AnchorPoint = Vector2.new(0.5,0.5)
-image.ImageTransparency = 1
-image.Rotation = -180
-image.ZIndex = 5
-
-local glow = Instance.new("ImageLabel")
-glow.Parent = gui
-glow.BackgroundTransparency = 1
-glow.Image = "rbxassetid://5028857084"
-glow.Size = UDim2.new(0,0,0,0)
-glow.Position = UDim2.new(0.5,0,0.5,0)
-glow.AnchorPoint = Vector2.new(0.5,0.5)
-glow.ImageTransparency = 1
-glow.ZIndex = 4
-
-local title = Instance.new("TextLabel")
-title.Parent = gui
-title.BackgroundTransparency = 1
-title.Size = UDim2.new(1,0,0.1,0)
-title.Position = UDim2.new(0,-1000,0.37,0)
-
-title.Text = "Velocity X Loader V.1.1"
-title.Font = Enum.Font.Arcade
-title.TextScaled = true
-title.TextTransparency = 1
-title.TextColor3 = Color3.fromRGB(255,215,0)
-title.TextStrokeTransparency = 0
-title.TextStrokeColor3 = Color3.fromRGB(120,80,0)
-title.ZIndex = 10
-
-local sub = Instance.new("TextLabel")
-sub.Parent = gui
-sub.BackgroundTransparency = 1
-sub.Size = UDim2.new(1,0,0.05,0)
-sub.Position = UDim2.new(0,1000,0.47,0)
-
-sub.Text = "UwU Does need furry?"
-sub.Font = Enum.Font.Arcade
-sub.TextScaled = true
-sub.TextColor3 = Color3.fromRGB(255,255,255)
-sub.TextTransparency = 1
-sub.ZIndex = 10
-
-local barBg = Instance.new("Frame")
-barBg.Parent = gui
-barBg.Size = UDim2.new(0.4,0,0.015,0)
-barBg.Position = UDim2.new(0.3,0,0.7,0)
-barBg.BackgroundColor3 = Color3.fromRGB(40,40,40)
-barBg.BorderSizePixel = 0
-barBg.Visible = false
-
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(1,0)
-corner.Parent = barBg
-
-local bar = Instance.new("Frame")
-bar.Parent = barBg
-bar.Size = UDim2.new(0,0,1,0)
-bar.BorderSizePixel = 0
-
-local corner2 = Instance.new("UICorner")
-corner2.CornerRadius = UDim.new(1,0)
-corner2.Parent = bar
-
-local barGradient = Instance.new("UIGradient")
-barGradient.Parent = bar
-
-local progressText = Instance.new("TextLabel")
-progressText.Parent = gui
-progressText.BackgroundTransparency = 1
-progressText.Size = UDim2.new(0.4,0,0.03,0)
-progressText.Position = UDim2.new(0.3,0,0.725,0)
-
-progressText.Font = Enum.Font.Code
-progressText.TextScaled = true
-progressText.TextColor3 = Color3.fromRGB(255,255,255)
-progressText.TextStrokeTransparency = 0.4
-progressText.TextStrokeColor3 = Color3.fromRGB(120,80,0)
-progressText.Text = "0/100"
-progressText.ZIndex = 20
-
-local progressGradient = Instance.new("UIGradient")
-progressGradient.Parent = progressText
-
-local flash = Instance.new("Frame")
-flash.Parent = gui
-flash.Size = UDim2.new(1,0,1,0)
-flash.BackgroundColor3 = Color3.new(1,1,1)
-flash.BackgroundTransparency = 1
-flash.ZIndex = 100
-
-local goldGradient = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(255,215,0)),
-    ColorSequenceKeypoint.new(0.3, Color3.fromRGB(255,240,150)),
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255,255,255)),
-    ColorSequenceKeypoint.new(0.7, Color3.fromRGB(255,220,50)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(255,170,0))
-}
-
-barGradient.Color = goldGradient
-progressGradient.Color = goldGradient
-
-task.spawn(function()
-    while gui.Parent do
-        barGradient.Rotation += 1
-        progressGradient.Rotation += 1
-
-        barGradient.Offset = Vector2.new(math.sin(tick()) * 0.3,0)
-        progressGradient.Offset = Vector2.new(math.sin(tick()) * 0.3,0)
-
-        task.wait()
+-- Early skip-intro check: read config before playing anything
+local _earlySkipIntro = false
+pcall(function()
+    if readfile and isfile then
+        local _cfgPath = "Velocity X/VelocityX_Settings.json"
+        if isfile(_cfgPath) then
+            local _d = HttpService:JSONDecode(readfile(_cfgPath))
+            _earlySkipIntro = _d and _d.skipIntroUI == true
+        end
     end
 end)
 
-TweenService:Create(
-    flash,
-    TweenInfo.new(0.15),
-    {BackgroundTransparency = 0.4}
-):Play()
+if not _earlySkipIntro then
+    sound:Play()
 
-task.wait(0.15)
+    local bg = Instance.new("Frame")
+    bg.Parent = gui
+    bg.Size = UDim2.new(1,0,1,0)
+    bg.BackgroundColor3 = Color3.new(0,0,0)
+    bg.BorderSizePixel = 0
 
-TweenService:Create(
-    flash,
-    TweenInfo.new(0.5),
-    {BackgroundTransparency = 1}
-):Play()
+    local image = Instance.new("ImageLabel")
+    image.Parent = gui
+    image.BackgroundTransparency = 1
+    image.Image = "rbxassetid://103887859853708"
+    image.Size = UDim2.new(0,0,0,0)
+    image.Position = UDim2.new(0.5,0,0.5,0)
+    image.AnchorPoint = Vector2.new(0.5,0.5)
+    image.ImageTransparency = 1
+    image.Rotation = -180
+    image.ZIndex = 5
 
-TweenService:Create(
-    image,
-    TweenInfo.new(
-        1.5,
-        Enum.EasingStyle.Back,
-        Enum.EasingDirection.Out
-    ),
-    {
-        Size = UDim2.new(0,500,0,500),
-        Rotation = 0,
-        ImageTransparency = 0
+    local glow = Instance.new("ImageLabel")
+    glow.Parent = gui
+    glow.BackgroundTransparency = 1
+    glow.Image = "rbxassetid://5028857084"
+    glow.Size = UDim2.new(0,0,0,0)
+    glow.Position = UDim2.new(0.5,0,0.5,0)
+    glow.AnchorPoint = Vector2.new(0.5,0.5)
+    glow.ImageTransparency = 1
+    glow.ZIndex = 4
+
+    local title = Instance.new("TextLabel")
+    title.Parent = gui
+    title.BackgroundTransparency = 1
+    title.Size = UDim2.new(1,0,0.1,0)
+    title.Position = UDim2.new(0,-1000,0.37,0)
+    title.Text = "Velocity X Loader V.1.1"
+    title.Font = Enum.Font.Arcade
+    title.TextScaled = true
+    title.TextTransparency = 1
+    title.TextColor3 = Color3.fromRGB(255,215,0)
+    title.TextStrokeTransparency = 0
+    title.TextStrokeColor3 = Color3.fromRGB(120,80,0)
+    title.ZIndex = 10
+
+    local sub = Instance.new("TextLabel")
+    sub.Parent = gui
+    sub.BackgroundTransparency = 1
+    sub.Size = UDim2.new(1,0,0.05,0)
+    sub.Position = UDim2.new(0,1000,0.47,0)
+    sub.Text = "UwU Does need furry?"
+    sub.Font = Enum.Font.Arcade
+    sub.TextScaled = true
+    sub.TextColor3 = Color3.fromRGB(255,255,255)
+    sub.TextTransparency = 1
+    sub.ZIndex = 10
+
+    local barBg = Instance.new("Frame")
+    barBg.Parent = gui
+    barBg.Size = UDim2.new(0.4,0,0.015,0)
+    barBg.Position = UDim2.new(0.3,0,0.7,0)
+    barBg.BackgroundColor3 = Color3.fromRGB(40,40,40)
+    barBg.BorderSizePixel = 0
+    barBg.Visible = false
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(1,0)
+    corner.Parent = barBg
+
+    local bar = Instance.new("Frame")
+    bar.Parent = barBg
+    bar.Size = UDim2.new(0,0,1,0)
+    bar.BorderSizePixel = 0
+
+    local corner2 = Instance.new("UICorner")
+    corner2.CornerRadius = UDim.new(1,0)
+    corner2.Parent = bar
+
+    local barGradient = Instance.new("UIGradient")
+    barGradient.Parent = bar
+
+    local progressText = Instance.new("TextLabel")
+    progressText.Parent = gui
+    progressText.BackgroundTransparency = 1
+    progressText.Size = UDim2.new(0.4,0,0.03,0)
+    progressText.Position = UDim2.new(0.3,0,0.725,0)
+    progressText.Font = Enum.Font.Code
+    progressText.TextScaled = true
+    progressText.TextColor3 = Color3.fromRGB(255,255,255)
+    progressText.TextStrokeTransparency = 0.4
+    progressText.TextStrokeColor3 = Color3.fromRGB(120,80,0)
+    progressText.Text = "0/100"
+    progressText.ZIndex = 20
+
+    local progressGradient = Instance.new("UIGradient")
+    progressGradient.Parent = progressText
+
+    local flash = Instance.new("Frame")
+    flash.Parent = gui
+    flash.Size = UDim2.new(1,0,1,0)
+    flash.BackgroundColor3 = Color3.new(1,1,1)
+    flash.BackgroundTransparency = 1
+    flash.ZIndex = 100
+
+    local goldGradient = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255,215,0)),
+        ColorSequenceKeypoint.new(0.3, Color3.fromRGB(255,240,150)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255,255,255)),
+        ColorSequenceKeypoint.new(0.7, Color3.fromRGB(255,220,50)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255,170,0))
     }
-):Play()
 
-TweenService:Create(
-    glow,
-    TweenInfo.new(
-        1.5,
-        Enum.EasingStyle.Quad,
-        Enum.EasingDirection.Out
-    ),
-    {
-        Size = UDim2.new(0,700,0,700),
-        ImageTransparency = 0.5
-    }
-):Play()
+    barGradient.Color = goldGradient
+    progressGradient.Color = goldGradient
 
-task.wait(0.3)
+    task.spawn(function()
+        while gui.Parent do
+            barGradient.Rotation += 1
+            progressGradient.Rotation += 1
+            barGradient.Offset = Vector2.new(math.sin(tick()) * 0.3,0)
+            progressGradient.Offset = Vector2.new(math.sin(tick()) * 0.3,0)
+            task.wait()
+        end
+    end)
 
-TweenService:Create(
-    title,
-    TweenInfo.new(
-        1,
-        Enum.EasingStyle.Exponential,
-        Enum.EasingDirection.Out
-    ),
-    {
-        Position = UDim2.new(0,0,0.37,0),
-        TextTransparency = 0
-    }
-):Play()
+    TweenService:Create(flash, TweenInfo.new(0.15), {BackgroundTransparency = 0.4}):Play()
+    task.wait(0.15)
+    TweenService:Create(flash, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
 
-task.wait(0.2)
+    TweenService:Create(image, TweenInfo.new(1.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0,500,0,500), Rotation = 0, ImageTransparency = 0
+    }):Play()
 
-TweenService:Create(
-    sub,
-    TweenInfo.new(
-        1,
-        Enum.EasingStyle.Exponential,
-        Enum.EasingDirection.Out
-    ),
-    {
-        Position = UDim2.new(0,0,0.47,0),
-        TextTransparency = 0
-    }
-):Play()
+    TweenService:Create(glow, TweenInfo.new(1.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0,700,0,700), ImageTransparency = 0.5
+    }):Play()
 
-task.wait(0.5)
+    task.wait(0.3)
 
-barBg.Visible = true
-
-
-task.spawn(function()
-    for i = 0,100 do
-        progressText.Text = i.."/100"
-
-        bar.Size = UDim2.new(i/100,0,1,0)
-
-        task.wait(0.03)
-    end
-
-    
-    progressText.Text = "Loaded!"
-
-    TweenService:Create(
-        progressText,
-        TweenInfo.new(
-            0.5,
-            Enum.EasingStyle.Back,
-            Enum.EasingDirection.Out
-        ),
-        {
-            Rotation = 2
-        }
-    ):Play()
-
-    -- FLASH EFFECT
-    TweenService:Create(
-        flash,
-        TweenInfo.new(0.2),
-        {
-            BackgroundTransparency = 0.7
-        }
-    ):Play()
+    TweenService:Create(title, TweenInfo.new(1, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
+        Position = UDim2.new(0,0,0.37,0), TextTransparency = 0
+    }):Play()
 
     task.wait(0.2)
 
-    TweenService:Create(
-        flash,
-        TweenInfo.new(0.4),
-        {
-            BackgroundTransparency = 1
-        }
-    ):Play()
-end)
+    TweenService:Create(sub, TweenInfo.new(1, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
+        Position = UDim2.new(0,0,0.47,0), TextTransparency = 0
+    }):Play()
 
-task.spawn(function()
-    while gui.Parent do
-        TweenService:Create(
-            image,
-            TweenInfo.new(
-                2,
-                Enum.EasingStyle.Sine,
-                Enum.EasingDirection.InOut
-            ),
-            {
-                Rotation = 8,
-                Size = UDim2.new(0,530,0,530)
-            }
-        ):Play()
+    task.wait(0.5)
 
-        TweenService:Create(
-            glow,
-            TweenInfo.new(
-                2,
-                Enum.EasingStyle.Sine,
-                Enum.EasingDirection.InOut
-            ),
-            {
-                Rotation = -15,
-                Size = UDim2.new(0,760,0,760)
-            }
-        ):Play()
+    barBg.Visible = true
 
-        task.wait(2)
+    task.spawn(function()
+        for i = 0,100 do
+            progressText.Text = i.."/100"
+            bar.Size = UDim2.new(i/100,0,1,0)
+            task.wait(0.03)
+        end
+        progressText.Text = "Loaded!"
+        TweenService:Create(progressText, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Rotation = 2
+        }):Play()
+        TweenService:Create(flash, TweenInfo.new(0.2), {BackgroundTransparency = 0.7}):Play()
+        task.wait(0.2)
+        TweenService:Create(flash, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+    end)
 
-        TweenService:Create(
-            image,
-            TweenInfo.new(
-                2,
-                Enum.EasingStyle.Sine,
-                Enum.EasingDirection.InOut
-            ),
-            {
-                Rotation = -8,
-                Size = UDim2.new(0,500,0,500)
-            }
-        ):Play()
+    task.spawn(function()
+        while gui.Parent do
+            TweenService:Create(image, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                Rotation = 8, Size = UDim2.new(0,530,0,530)
+            }):Play()
+            TweenService:Create(glow, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                Rotation = -15, Size = UDim2.new(0,760,0,760)
+            }):Play()
+            task.wait(2)
+            TweenService:Create(image, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                Rotation = -8, Size = UDim2.new(0,500,0,500)
+            }):Play()
+            TweenService:Create(glow, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                Rotation = 15, Size = UDim2.new(0,700,0,700)
+            }):Play()
+            task.wait(2)
+        end
+    end)
 
-        TweenService:Create(
-            glow,
-            TweenInfo.new(
-                2,
-                Enum.EasingStyle.Sine,
-                Enum.EasingDirection.InOut
-            ),
-            {
-                Rotation = 15,
-                Size = UDim2.new(0,700,0,700)
-            }
-        ):Play()
+    task.wait(4)
 
-        task.wait(2)
-    end
-end)
+    TweenService:Create(flash, TweenInfo.new(0.4), {BackgroundTransparency = 0.2}):Play()
+    task.wait(0.3)
 
-task.wait(4)
+    TweenService:Create(image, TweenInfo.new(1, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+        Size = UDim2.new(0,0,0,0), Rotation = 180, ImageTransparency = 1
+    }):Play()
+    TweenService:Create(glow, TweenInfo.new(1), {ImageTransparency = 1, Size = UDim2.new(0,0,0,0)}):Play()
+    TweenService:Create(title, TweenInfo.new(1), {Position = UDim2.new(0,-1000,0.37,0), TextTransparency = 1}):Play()
+    TweenService:Create(sub, TweenInfo.new(1), {Position = UDim2.new(0,1000,0.47,0), TextTransparency = 1}):Play()
+    TweenService:Create(barBg, TweenInfo.new(1), {BackgroundTransparency = 1}):Play()
+    TweenService:Create(bar, TweenInfo.new(1), {BackgroundTransparency = 1}):Play()
+    TweenService:Create(progressText, TweenInfo.new(1), {TextTransparency = 1}):Play()
 
-TweenService:Create(
-    flash,
-    TweenInfo.new(0.4),
-    {BackgroundTransparency = 0.2}
-):Play()
+    task.wait(1.5)
 
-task.wait(0.3)
+    gui:Destroy()
+end -- end of skip-intro guard
 
-TweenService:Create(
-    image,
-    TweenInfo.new(
-        1,
-        Enum.EasingStyle.Back,
-        Enum.EasingDirection.In
-    ),
-    {
-        Size = UDim2.new(0,0,0,0),
-        Rotation = 180,
-        ImageTransparency = 1
-    }
-):Play()
+-- If intro was skipped, gui still needs to be cleaned up
+if _earlySkipIntro then
+    pcall(function() gui:Destroy() end)
+end
 
-TweenService:Create(
-    glow,
-    TweenInfo.new(1),
-    {
-        ImageTransparency = 1,
-        Size = UDim2.new(0,0,0,0)
-    }
-):Play()
-
-TweenService:Create(
-    title,
-    TweenInfo.new(1),
-    {
-        Position = UDim2.new(0,-1000,0.37,0),
-        TextTransparency = 1
-    }
-):Play()
-
-TweenService:Create(
-    sub,
-    TweenInfo.new(1),
-    {
-        Position = UDim2.new(0,1000,0.47,0),
-        TextTransparency = 1
-    }
-):Play()
-
-TweenService:Create(
-    barBg,
-    TweenInfo.new(1),
-    {
-        BackgroundTransparency = 1
-    }
-):Play()
-
-TweenService:Create(
-    bar,
-    TweenInfo.new(1),
-    {
-        BackgroundTransparency = 1
-    }
-):Play()
-
-TweenService:Create(
-    progressText,
-    TweenInfo.new(1),
-    {
-        TextTransparency = 1
-    }
-):Play()
-
-task.wait(1.5)
-
-gui:Destroy()
 local Notify
-pcall(function()
-    Notify = loadstring(game:HttpGet("https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/UI%20Libary/Nofication/BocusLuke.lua"))()
+local notifyOk, notifyErr = pcall(function()
+    local src = game:HttpGet("https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/UI%20Libary/Nofication/BocusLuke.lua")
+    if not src or #src == 0 then error("Empty notification library response") end
+    Notify = loadstring(src)()
 end)
+if not notifyOk then
+    warn("[VelocityX] Notification library failed to load: " .. tostring(notifyErr))
+end
 
 local function showNotification(title, desc, outlineColor, duration, imageId)
     if Notify then
@@ -596,6 +439,7 @@ MainBackground.Size = UDim2.new(0, 1, 0, 1)
 MainBackground.Image = "rbxassetid://7877641241"
 MainBackground.BackgroundColor3 = Color3.new(1, 1, 1)
 MainBackground.BorderSizePixel = 0
+MainBackground.ClipsDescendants = false
 MainBackground.Visible = false
 MainBackground.ImageTransparency = 1
 
@@ -694,15 +538,20 @@ Version.Visible = false
 
 local GreetingLabel = Instance.new("TextLabel", MainBackground)
 GreetingLabel.BackgroundTransparency = 1
-GreetingLabel.Position = UDim2.new(0.02, 0, 0.86, 0)
-GreetingLabel.Size = UDim2.new(0, 250, 0, 21)
+GreetingLabel.Position = UDim2.new(0.02, 0, 0.855, 0)
+GreetingLabel.Size = UDim2.new(0.6, 0, 0.14, 0)
 GreetingLabel.Font = Enum.Font.Arcade
-GreetingLabel.TextSize = 11
+GreetingLabel.TextScaled = true
 GreetingLabel.TextXAlignment = Enum.TextXAlignment.Left
 GreetingLabel.TextColor3 = Color3.fromRGB(0, 255, 150)
 GreetingLabel.TextStrokeTransparency = 0
 GreetingLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 GreetingLabel.Visible = false
+local GreetingScale = Instance.new("UIScale", GreetingLabel)
+GreetingScale.Scale = 0.85
+local GreetingConstraint = Instance.new("UITextSizeConstraint", GreetingLabel)
+GreetingConstraint.MinTextSize = 7
+GreetingConstraint.MaxTextSize = 13
 local GreetingStroke = Instance.new("UIStroke", GreetingLabel)
 GreetingStroke.Color = Color3.fromRGB(0, 200, 255)
 GreetingStroke.Thickness = 1
@@ -864,10 +713,11 @@ Instance.new("UIStroke", DeleteNoButton).Thickness = 1.5
 local SettingsPanel = Instance.new("ImageLabel", MainBackground)
 SettingsPanel.AnchorPoint = Vector2.new(1, 0)
 SettingsPanel.Position = UDim2.new(0.85, 0, 0.09, 0)
-SettingsPanel.Size = UDim2.new(0, 200, 0, 150)
+SettingsPanel.Size = UDim2.new(0, 200, 0, 220)
 SettingsPanel.Image = "rbxassetid://7877641241"
 SettingsPanel.BackgroundColor3 = Color3.new(1, 1, 1)
 SettingsPanel.BorderSizePixel = 0
+SettingsPanel.ClipsDescendants = true
 SettingsPanel.Visible = false
 SettingsPanel.ZIndex = 2
 
@@ -902,6 +752,7 @@ ScrollingFrame.Position = UDim2.new(0, 0, 0, 30)
 ScrollingFrame.Size = UDim2.new(1, 0, 1, -35)
 ScrollingFrame.BackgroundTransparency = 1
 ScrollingFrame.BorderSizePixel = 0
+ScrollingFrame.ClipsDescendants = true
 ScrollingFrame.ScrollBarThickness = 6
 ScrollingFrame.ScrollBarImageColor3 = Color3.fromRGB(0, 255, 150)
 ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
@@ -1026,7 +877,8 @@ local config = {
     autoExecutorLoader = false,
     antiAfk = false,
     antiFling = false,
-    antiGameplayPause = false
+    antiGameplayPause = false,
+    skipIntroUI = false,
 }
 
 local function loadConfig()
@@ -1040,6 +892,7 @@ local function loadConfig()
                 config.antiAfk = data.antiAfk or false
                 config.antiFling = data.antiFling or false
                 config.antiGameplayPause = data.antiGameplayPause or false
+                config.skipIntroUI = data.skipIntroUI or false
             end
         end)
     end
@@ -1054,7 +907,8 @@ local function saveConfig()
                 autoExecutorLoader = config.autoExecutorLoader,
                 antiAfk = config.antiAfk,
                 antiFling = config.antiFling,
-                antiGameplayPause = config.antiGameplayPause
+                antiGameplayPause = config.antiGameplayPause,
+                skipIntroUI = config.skipIntroUI,
             })
             writefile(CONFIG_FILE, data)
         end)
@@ -1116,31 +970,35 @@ end
 
 local gameId = tostring(game.GameId)
 
-pcall(function()
+local githubOk, githubErr = pcall(function()
     local githubData = fetch(GITHUB_JSON_URL .. "?nocache=" .. tick())
-    if githubData then
-        local json = HttpService:JSONDecode(githubData)
-        if json and json[gameId] then
-            scriptUrl = GITHUB_BASE .. json[gameId].Path
-            gameName = json[gameId].Name
-        end
+    if not githubData or #githubData == 0 then error("Empty response") end
+    local json = HttpService:JSONDecode(githubData)
+    if json and json[gameId] then
+        scriptUrl = GITHUB_BASE .. json[gameId].Path
+        gameName = json[gameId].Name
     end
 end)
+if not githubOk then
+    warn("[VelocityX] GitHub game list failed: " .. tostring(githubErr))
+end
 
 if not scriptUrl then
-    pcall(function()
+    local pastebinOk, pastebinErr = pcall(function()
         local pastebinData = fetch(PASTEBIN_JSON_URL .. "?nocache=" .. tick())
-        if pastebinData then
-            local rawJson = HttpService:JSONDecode(pastebinData)
-            local json = decode_obfuscated(rawJson)
-            if json and json[gameId] then
-                local path = json[gameId].Path
-                local randomstring = json[gameId].randomstring or ""
-                scriptUrl = path .. randomstring
-                gameName = json[gameId].Name
-            end
+        if not pastebinData or #pastebinData == 0 then error("Empty response") end
+        local rawJson = HttpService:JSONDecode(pastebinData)
+        local json = decode_obfuscated(rawJson)
+        if json and json[gameId] then
+            local path = json[gameId].Path
+            local randomstring = json[gameId].randomstring or ""
+            scriptUrl = path .. randomstring
+            gameName = json[gameId].Name
         end
     end)
+    if not pastebinOk then
+        warn("[VelocityX] Pastefy game list failed: " .. tostring(pastebinErr))
+    end
 end
 
 if not scriptUrl then
@@ -1153,10 +1011,15 @@ end
 
 InjectButton.Text = gameName .. ".lua"
 
-pcall(function()
+local versionOk, versionErr = pcall(function()
     local versionStr = game:HttpGet("https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/config/version.json")
+    if not versionStr or #versionStr == 0 then error("Empty version response") end
     Version.Text = "Version: " .. versionStr
 end)
+if not versionOk then
+    Version.Text = "Version: ?"
+    warn("[VelocityX] Version fetch failed: " .. tostring(versionErr))
+end
 
 local function clearText()
     for _, v in ipairs(MainBackground:GetDescendants()) do
@@ -1187,12 +1050,82 @@ local function cleanupAntiFeatures()
     end
 end
 
+local function shakeError()
+    pcall(function()
+        local orig = MainBackground.Position
+        local shakeInfo = TweenInfo.new(0.07, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, 4, true)
+        TweenService:Create(MainBackground, shakeInfo, {
+            Position = UDim2.new(orig.X.Scale, orig.X.Offset + 8, orig.Y.Scale, orig.Y.Offset)
+        }):Play()
+        task.wait(0.6)
+        TweenService:Create(MainBackground, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Position = orig
+        }):Play()
+    end)
+end
+
 local function injectScript()
     if injected then return end
     injected = true
-    pcall(function()
-        loadstring(game:HttpGet(scriptUrl))()
+
+    -- Attempt to fetch and run the resolved script URL
+    local fetchOk, fetchErr = pcall(function()
+        local scriptContent = game:HttpGet(scriptUrl)
+        if not scriptContent or #scriptContent == 0 then
+            error("Empty response from URL")
+        end
+        local loadOk, loadErr = pcall(loadstring(scriptContent))
+        if not loadOk then
+            error("Script runtime error: " .. tostring(loadErr))
+        end
     end)
+
+    if not fetchOk then
+        injected = false  -- allow retry
+        InjectButton.Text = gameName .. ".lua"
+
+        -- If game-specific script failed, fall back to Universal
+        if scriptUrl ~= UNIVERSAL_URL then
+            showNotification(
+                "⚠ Script Error",
+                "Game script failed — retrying with Universal.\n" .. tostring(fetchErr),
+                Color3.fromRGB(255, 150, 0), 6
+            )
+            task.spawn(shakeError)
+            scriptUrl = UNIVERSAL_URL
+            gameName  = "Universal"
+            InjectButton.Text = "Universal.lua"
+
+            -- Retry with universal
+            local retryOk, retryErr = pcall(function()
+                local content = game:HttpGet(UNIVERSAL_URL)
+                if not content or #content == 0 then error("Empty universal response") end
+                local ok, err = pcall(loadstring(content))
+                if not ok then error("Universal runtime error: " .. tostring(err)) end
+            end)
+            if retryOk then
+                injected = true
+            else
+                injected = false
+                showNotification(
+                    "✘ Universal Failed",
+                    "All scripts failed to load. Check your connection.\n" .. tostring(retryErr),
+                    Color3.fromRGB(255, 50, 50), 7
+                )
+                task.spawn(shakeError)
+                return  -- abort inject flow; UI stays open
+            end
+        else
+            -- Universal itself failed
+            showNotification(
+                "✘ Network Error",
+                "Failed to fetch Universal script. Check your connection.\n" .. tostring(fetchErr),
+                Color3.fromRGB(255, 50, 50), 7
+            )
+            task.spawn(shakeError)
+            return  -- abort inject flow; UI stays open
+        end
+    end
 end
 
 local function performAutoInject()
@@ -1327,6 +1260,36 @@ local antiGameplayPauseCtrl = addToggle(ScrollingFrame, "Anti Gameplay Pause", c
     showNotification("Anti Gameplay Pause", val and "Enabled" or "Disabled", Color3.fromRGB(0, 255, 120), 2)
 end)
 
+local skipIntroCtrl = addToggle(ScrollingFrame, "Skip Intro UI", config.skipIntroUI, function(val)
+    config.skipIntroUI = val
+    if config.autoSave then saveConfig() end
+    showNotification("Skip Intro UI", val and "Will skip next session" or "Intro restored", Color3.fromRGB(0, 255, 120), 2)
+end)
+
+-- Open Console button
+local openConsoleButton = Instance.new("TextButton")
+openConsoleButton.Name = "OpenConsoleButton"
+openConsoleButton.Size = UDim2.new(0, 180, 0, 30)
+openConsoleButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+openConsoleButton.BackgroundTransparency = 0.9
+openConsoleButton.BorderSizePixel = 0
+openConsoleButton.Font = Enum.Font.Arcade
+openConsoleButton.Text = "Open Console"
+openConsoleButton.TextColor3 = Color3.fromRGB(0, 200, 255)
+openConsoleButton.TextSize = 12
+openConsoleButton.ZIndex = 2
+Instance.new("UICorner", openConsoleButton).CornerRadius = UDim.new(0, 4)
+local consoleBtnStroke = Instance.new("UIStroke", openConsoleButton)
+consoleBtnStroke.Color = Color3.fromRGB(0, 200, 255)
+consoleBtnStroke.Thickness = 1.5
+consoleBtnStroke.Transparency = 0.5
+openConsoleButton.Parent = ScrollingFrame
+openConsoleButton.MouseButton1Click:Connect(function()
+    pcall(function()
+        game:GetService("StarterGui"):SetCore("DevConsoleVisible", true)
+    end)
+end)
+
 local deleteConfigButton = Instance.new("TextButton")
 deleteConfigButton.Name = "DeleteConfigButton"
 deleteConfigButton.Size = UDim2.new(0, 180, 0, 30)
@@ -1370,6 +1333,9 @@ if config.autoExecutorLoader then
 end
 
 UpdateGreeting()
+pcall(function()
+    TweenService:Create(GreetingScale, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+end)
 spawn(function()
     while RealZzHub and RealZzHub.Parent do
         task.wait(60)
@@ -1401,7 +1367,7 @@ SettingsIcon.MouseButton1Click:Connect(function()
         task.wait(0.15)
         if SettingsPanel then
             SettingsPanel.Visible = false
-            SettingsPanel.Size = UDim2.new(0, 200, 0, 150)
+            SettingsPanel.Size = UDim2.new(0, 200, 0, 220)
             SettingsPanel.ImageTransparency = 0
         end
         if ConfirmFrame and not ConfirmFrame.Visible and DeleteConfirmFrame and not DeleteConfirmFrame.Visible then
@@ -1412,7 +1378,7 @@ SettingsIcon.MouseButton1Click:Connect(function()
         SettingsPanel.Visible = true
         SettingsPanel.Size = UDim2.new(0, 0, 0, 0)
         TweenService:Create(SettingsPanel, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 200, 0, 150),
+            Size = UDim2.new(0, 200, 0, 220),
             ImageTransparency = 0
         }):Play()
         setButtonActive(InjectButton, false)
@@ -1460,7 +1426,7 @@ CloseButton.MouseButton1Click:Connect(function()
     setButtonActive(SettingsIcon, false)
     if SettingsPanel and SettingsPanel.Visible then
         SettingsPanel.Visible = false
-        SettingsPanel.Size = UDim2.new(0, 200, 0, 150)
+        SettingsPanel.Size = UDim2.new(0, 200, 0, 220)
         SettingsPanel.ImageTransparency = 0
     end
     ConfirmFrame.Visible = true
@@ -1553,6 +1519,7 @@ DeleteYesButton.MouseButton1Click:Connect(function()
             config.antiAfk = false
             config.antiFling = false
             config.antiGameplayPause = false
+            config.skipIntroUI = false
             
             autoSaveCtrl:Set(false)
             autoInjectCtrl:Set(false)
@@ -1560,6 +1527,7 @@ DeleteYesButton.MouseButton1Click:Connect(function()
             antiAfkCtrl:Set(false)
             antiFlingCtrl:Set(false)
             antiGameplayPauseCtrl:Set(false)
+            skipIntroCtrl:Set(false)
             
             showNotification("Config Deleted", "Settings file has been removed.", Color3.fromRGB(255, 100, 100), 3)
         end
@@ -1570,41 +1538,73 @@ DeleteNoButton.MouseButton1Click:Connect(function()
     closeDeleteConfirmDialog()
 end)
 
-local UIS = game:GetService("UserInputService")
-local dragging = false
-local dragInput, mousePos, framePos
+-- Safe drag system: wrapped in pcall so any error won't break the loader or greeting labels
+local _dragOk, _dragErr = pcall(function()
+    -- Verify UIDragDetector is supported before proceeding
+    if not pcall(function() Instance.new("UIDragDetector"):Destroy() end) then
+        warn("[VelocityX] UIDragDetector not supported on this client — drag disabled.")
+        return
+    end
 
-local function update(input)
-    local delta = input.Position - mousePos
-    MainBackground.Position = UDim2.new(
-        framePos.X.Scale,
-        framePos.X.Offset + delta.X,
-        framePos.Y.Scale,
-        framePos.Y.Offset + delta.Y
-    )
-end
+    local drag = Instance.new("UIDragDetector")
+    drag.Parent = MainBackground
 
-MainBackground.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        mousePos = input.Position
-        framePos = MainBackground.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
+    -- UIScale drives the grab-shrink without affecting layout
+    local dragScale = Instance.new("UIScale")
+    dragScale.Scale = 1
+    dragScale.Parent = MainBackground
+
+    -- Smooth press-down tween
+    local pressTweenInfo = TweenInfo.new(0.15, Enum.EasingStyle.Quad,    Enum.EasingDirection.Out)
+    -- Elastic snap-back on release
+    local snapTweenInfo  = TweenInfo.new(0.35, Enum.EasingStyle.Elastic,  Enum.EasingDirection.Out)
+
+    local function applyTween(obj, props, info)
+        local ok, err = pcall(function()
+            TweenService:Create(obj, info or pressTweenInfo, props):Play()
         end)
+        if not ok then
+            warn("[VelocityX] Drag tween error:", err)
+        end
     end
+
+    -- NOTE: No rotation applied — only scale + transparency + sway for clean drag feel.
+
+    local isDragging    = false
+    local lastSwayTime  = 0
+    local SWAY_THROTTLE = 0.06
+    local SWAY_SPEED    = 3.2
+    local SWAY_AMP      = 5  -- degrees, safe now that ClipsDescendants = false
+
+    local function settingsOpen()
+        return SettingsPanel and SettingsPanel.Visible
+    end
+
+    drag.DragStart:Connect(function()
+        if settingsOpen() then return end
+        isDragging   = true
+        lastSwayTime = tick()
+        applyTween(dragScale,      { Scale = 0.96 })
+        applyTween(MainBackground, { BackgroundTransparency = 0.5 })
+    end)
+
+    drag.DragContinue:Connect(function()
+        if not isDragging or settingsOpen() then return end
+        local now = tick()
+        if (now - lastSwayTime) < SWAY_THROTTLE then return end
+        lastSwayTime = now
+        local sway = math.sin(now * SWAY_SPEED) * SWAY_AMP
+        applyTween(MainBackground, { Rotation = sway })
+    end)
+
+    drag.DragEnd:Connect(function()
+        isDragging   = false
+        lastSwayTime = 0
+        applyTween(dragScale,      { Scale = 1 },    snapTweenInfo)
+        applyTween(MainBackground, { BackgroundTransparency = 0, Rotation = 0 }, snapTweenInfo)
+    end)
 end)
 
-MainBackground.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-        dragInput = input
-    end
-end)
-
-UIS.InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        pcall(update, input)
-    end
-end)
+if not _dragOk then
+    warn("[VelocityX] Drag system failed to initialise — loader continues normally. Error:", _dragErr)
+end
