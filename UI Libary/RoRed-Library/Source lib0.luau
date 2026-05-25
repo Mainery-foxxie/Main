@@ -1,0 +1,988 @@
+--!strict
+
+local TweenService = cloneref(game:GetService("TweenService"))
+local UIS          = cloneref(game:GetService("UserInputService"))
+local Players      = cloneref(game:GetService("Players"))
+local player       = Players.LocalPlayer
+
+-- ANTI-DUPE
+do
+	local pg: Instance = gethui()
+	local ex: Instance? = pg:FindFirstChild("4557HubGui")
+	if ex then ex:Destroy() end
+	if _G["4557Running"] then
+		_G["4557Running"] = false
+		if _G["4557Connection"] then
+			(_G["4557Connection"] :: RBXScriptConnection):Disconnect()
+			_G["4557Connection"] = nil
+		end
+	end
+	_G["4557Running"] = true
+end
+
+local Lib   = {}
+Lib.__index = Lib
+
+local _gui: ScreenGui = Instance.new("ScreenGui")
+_gui.Name           = "4557HubGui"
+_gui.ResetOnSpawn   = false
+_gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+_gui.Parent         = gethui()
+
+local WIN_W:             number = 220
+local WIN_MAR:           number = 15
+local WIN_Y:             number = 10
+local TITLE_H:           number = 40
+local MAX_ITEMS_VISIBLE: number = 4
+local ITEM_H:            number = 55
+local MAX_WIN_H:         number = TITLE_H + (ITEM_H * MAX_ITEMS_VISIBLE) + 16
+
+local _windows:     { any } = {}
+local _loaded:      boolean = false
+local _pendingShow: { () -> () } = {}
+local _flags:       { [string]: any } = {}
+
+local function _corner(obj: Instance, r: number?)
+	local c: UICorner = Instance.new("UICorner", obj)
+	c.CornerRadius = UDim.new(0, r or 6)
+end
+
+local function _stroke(obj: Instance, color: Color3?, thick: number?)
+	local s: UIStroke = Instance.new("UIStroke", obj)
+	s.Color     = color or Color3.fromRGB(50, 50, 50)
+	s.Thickness = thick or 1
+end
+
+local function _style(obj: Instance)
+	_corner(obj); _stroke(obj)
+end
+
+local function _tween(obj: Instance, t: number, props: { [string]: any })
+	TweenService:Create(obj,
+		TweenInfo.new(t, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
+		props
+	):Play()
+end
+
+local function _clampFrame(frame: Frame)
+	local sc  = workspace.CurrentCamera.ViewportSize
+	local pos = frame.Position
+	local x   = math.clamp(pos.X.Offset, 0, math.max(0, sc.X - frame.AbsoluteSize.X))
+	local y   = math.clamp(pos.Y.Offset, 0, math.max(0, sc.Y - frame.AbsoluteSize.Y))
+	if x ~= pos.X.Offset or y ~= pos.Y.Offset then
+		frame.Position = UDim2.new(0, x, 0, y)
+	end
+end
+
+local function _reposition()
+	local vis: { Frame } = {}
+	for _, w in ipairs(_windows) do
+		if w.shown then table.insert(vis, w.frame) end
+	end
+	local n: number = #vis
+	if n == 0 then return end
+	local sw: number = workspace.CurrentCamera.ViewportSize.X
+	local pos: { number } = {}
+	if n == 1 then
+		pos = { (sw / 2) - (WIN_W / 2) }
+	elseif n == 2 then
+		pos = { WIN_MAR, sw - WIN_W - WIN_MAR }
+	else
+		local gap: number = math.max((sw - WIN_MAR * 2 - WIN_W * n) / (n - 1), WIN_MAR)
+		for i = 1, n do pos[i] = WIN_MAR + (i - 1) * (WIN_W + gap) end
+	end
+	for i, frame in ipairs(vis) do
+		local x: number = math.clamp(pos[i] or WIN_MAR, 0, sw - WIN_W)
+		_tween(frame, 0.35, { Position = UDim2.new(0, x, 0, WIN_Y) })
+	end
+end
+
+function Lib:GetFlag(flag: string): any
+	return _flags[flag]
+end
+
+function Lib:CreateWindow(title: string?)
+
+	local winData: { shown: boolean, frame: Frame? } = { shown = false, frame = nil }
+	table.insert(_windows, winData)
+
+	local frame: Frame = Instance.new("Frame")
+	frame.Size             = UDim2.new(0, WIN_W, 0, TITLE_H)
+	frame.Position         = UDim2.new(0, (workspace.CurrentCamera.ViewportSize.X / 2) - (WIN_W / 2), 0, WIN_Y)
+	frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	frame.ClipsDescendants = true
+	frame.Active           = true
+	frame.Visible          = false
+	frame.ZIndex           = 10
+	frame.Parent           = _gui
+	_corner(frame)
+	_stroke(frame, Color3.fromRGB(40, 40, 40))
+	winData.frame = frame
+
+	local titleBar: TextLabel = Instance.new("TextLabel")
+	titleBar.Size             = UDim2.new(1, 0, 0, TITLE_H)
+	titleBar.Text             = string.upper(title or "Window")
+	titleBar.Font             = Enum.Font.LuckiestGuy
+	titleBar.TextSize         = 16
+	titleBar.TextColor3       = Color3.new(1, 1, 1)
+	titleBar.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	titleBar.Active           = true
+	titleBar.Parent           = frame
+	_corner(titleBar)
+
+	local colBtn: TextButton = Instance.new("TextButton")
+	colBtn.Size                   = UDim2.new(0, 30, 0, 30)
+	colBtn.Position               = UDim2.new(1, -35, 0.5, -15)
+	colBtn.Text                   = " "
+	colBtn.BackgroundTransparency = 1
+	colBtn.Font                   = Enum.Font.GothamBold
+	colBtn.TextSize               = 20
+	colBtn.TextColor3             = Color3.new(1, 1, 1)
+	colBtn.Parent                 = titleBar
+
+	-- FIXED BOTTOM LABEL
+	local bottomLabel: TextLabel = Instance.new("TextLabel")
+	bottomLabel.Size                   = UDim2.new(1, 0, 0, 0)
+	bottomLabel.AnchorPoint            = Vector2.new(0, 1)
+	bottomLabel.Position               = UDim2.new(0, 0, 1, 0)
+	bottomLabel.BackgroundColor3       = Color3.fromRGB(0, 0, 0)
+	bottomLabel.BackgroundTransparency = 0
+	bottomLabel.TextColor3             = Color3.fromRGB(255, 255, 255)
+	bottomLabel.Font                   = Enum.Font.GothamBlack
+	bottomLabel.TextSize               = 16
+	bottomLabel.Text                   = ""
+	bottomLabel.Visible                = false
+	bottomLabel.ZIndex                 = 11
+	bottomLabel.Parent                 = frame
+
+	local labelCorner: UICorner = Instance.new("UICorner")
+	labelCorner.CornerRadius = UDim.new(0, 6)
+	labelCorner.Parent       = bottomLabel
+
+	local line: Frame = Instance.new("Frame")
+	line.Size             = UDim2.new(1, 0, 0, 1)
+	line.Position         = UDim2.new(0, 0, 0, 0)
+	line.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	line.BorderSizePixel  = 0
+	line.Parent           = bottomLabel
+
+	local scrollH: number = MAX_WIN_H - TITLE_H
+
+	local scroll: ScrollingFrame = Instance.new("ScrollingFrame")
+	scroll.Size                 = UDim2.new(1, -4, 0, scrollH)
+	scroll.Position             = UDim2.new(0, 0, 0, TITLE_H)
+	scroll.BackgroundTransparency = 1
+	scroll.ScrollBarThickness   = 0
+	scroll.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
+	scroll.CanvasSize           = UDim2.new(0, 0, 0, 0)
+	scroll.AutomaticCanvasSize  = Enum.AutomaticSize.Y
+	scroll.ScrollingDirection   = Enum.ScrollingDirection.Y
+	scroll.Parent               = frame
+
+	local layout: UIListLayout = Instance.new("UIListLayout")
+	layout.Padding   = UDim.new(0, 6)
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Parent    = scroll
+
+	local pad: UIPadding = Instance.new("UIPadding")
+	pad.PaddingTop    = UDim.new(0, 5)
+	pad.PaddingBottom = UDim.new(0, 5)
+	pad.PaddingLeft   = UDim.new(0, 5)
+	pad.PaddingRight  = UDim.new(0, 5)
+	pad.Parent        = scroll
+
+	local collapsed: boolean = false
+	local contentH:  number  = 0
+	local labelH:    number  = 0
+
+	local function updateCanvas()
+		task.defer(function()
+			contentH = layout.AbsoluteContentSize.Y + 10
+			if collapsed then return end
+			scroll.ScrollBarThickness = 0
+			local targetH: number = math.clamp(contentH + TITLE_H + labelH, TITLE_H + 40, MAX_WIN_H)
+			frame.Size = UDim2.new(0, WIN_W, 0, targetH)
+		end)
+	end
+
+	layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvas)
+
+	colBtn.MouseButton1Click:Connect(function()
+		collapsed = not collapsed
+		if collapsed then
+			colBtn.Text = " "
+			_tween(frame, 0.25, { Size = UDim2.new(0, WIN_W, 0, TITLE_H + labelH) })
+		else
+			colBtn.Text = " "
+			local targetH: number = math.clamp(contentH + TITLE_H + labelH, TITLE_H + 40, MAX_WIN_H)
+			_tween(frame, 0.25, { Size = UDim2.new(0, WIN_W, 0, targetH) })
+		end
+	end)
+
+	local dragging:  boolean          = false
+	local dragStart: Vector3?         = nil
+	local startPos:  UDim2?           = nil
+
+	titleBar.InputBegan:Connect(function(i: InputObject)
+		if i.UserInputType == Enum.UserInputType.MouseButton1
+		or i.UserInputType == Enum.UserInputType.Touch then
+			dragging  = true
+			dragStart = i.Position
+			startPos  = frame.Position
+		end
+	end)
+
+	titleBar.InputEnded:Connect(function(i: InputObject)
+		if i.UserInputType == Enum.UserInputType.MouseButton1
+		or i.UserInputType == Enum.UserInputType.Touch then
+			dragging = false
+			_clampFrame(frame)
+		end
+	end)
+
+	UIS.InputChanged:Connect(function(i: InputObject)
+		if not dragging then return end
+		if i.UserInputType == Enum.UserInputType.MouseMovement
+		or i.UserInputType == Enum.UserInputType.Touch then
+			local sc    = workspace.CurrentCamera.ViewportSize
+			local delta = i.Position - (dragStart :: Vector3)
+			local newX: number = math.clamp((startPos :: UDim2).X.Offset + delta.X, 0, math.max(0, sc.X - frame.AbsoluteSize.X))
+			local newY: number = math.clamp((startPos :: UDim2).Y.Offset + delta.Y, 0, math.max(0, sc.Y - frame.AbsoluteSize.Y))
+			frame.Position = UDim2.new(0, newX, 0, newY)
+		end
+	end)
+
+	if _loaded then
+		winData.shown = true; frame.Visible = true; _reposition()
+	else
+		table.insert(_pendingShow, function()
+			winData.shown = true; frame.Visible = true
+		end)
+	end
+
+	local Win    = {}
+	local _order: number = 0
+	local function nxt(): number _order += 1; return _order end
+
+	function Win:SetTitle(text: string?)    titleBar.Text = string.upper(text or "Window") end
+	function Win:SetPosition(x: number, y: number) frame.Position = UDim2.new(0, x, 0, y) end
+
+	function Win:SetLabel(text: string?)
+		labelH               = TITLE_H
+		bottomLabel.Size     = UDim2.new(1, 0, 0, TITLE_H)
+		bottomLabel.Text     = text or ""
+		bottomLabel.Visible  = true
+
+		bottomLabel.BackgroundTransparency = 1
+		TweenService:Create(bottomLabel,
+			TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
+			{ BackgroundTransparency = 0 }
+		):Play()
+
+		scroll.Size = UDim2.new(1, 0, 0, MAX_WIN_H - TITLE_H - TITLE_H)
+		updateCanvas()
+	end
+
+	function Win:Destroy()
+		frame:Destroy()
+		for i, w in ipairs(_windows) do
+			if w.frame == frame then
+				table.remove(_windows, i)
+				break
+			end
+		end
+		_reposition()
+	end
+
+	function Win:AddSection(cfg: string | { text: string? })
+		local text: string = type(cfg) == "table" and (cfg :: { text: string? }).text or (cfg :: string)
+		local sec: Frame = Instance.new("Frame")
+		sec.Size                   = UDim2.new(1, 0, 0, 26)
+		sec.BackgroundTransparency = 1
+		sec.LayoutOrder            = nxt()
+		sec.Parent                 = scroll
+		local lineL: Frame = Instance.new("Frame")
+		lineL.Size             = UDim2.new(0.28, 0, 0, 1)
+		lineL.Position         = UDim2.new(0, 5, 0.5, 0)
+		lineL.BackgroundColor3 = Color3.fromRGB(65, 65, 65)
+		lineL.BorderSizePixel  = 0
+		lineL.Parent           = sec
+		local lineR: Frame = Instance.new("Frame")
+		lineR.Size             = UDim2.new(0.28, 0, 0, 1)
+		lineR.Position         = UDim2.new(0.72, 0, 0.5, 0)
+		lineR.BackgroundColor3 = Color3.fromRGB(65, 65, 65)
+		lineR.BorderSizePixel  = 0
+		lineR.Parent           = sec
+		local sLbl: TextLabel = Instance.new("TextLabel")
+		sLbl.Size                   = UDim2.new(0.4, 0, 1, 0)
+		sLbl.Position               = UDim2.new(0.3, 0, 0, 0)
+		sLbl.BackgroundTransparency = 1
+		sLbl.Text                   = text or ""
+		sLbl.TextColor3             = Color3.fromRGB(110, 110, 110)
+		sLbl.Font                   = Enum.Font.GothamBlack
+		sLbl.TextSize               = 13
+		sLbl.Parent                 = sec
+		updateCanvas()
+	end
+
+	function Win:AddButton(cfg: { text: string?, flag: string?, callback: (() -> ())? })
+		local text:     string        = cfg.text or "Button"
+		local flag:     string?       = cfg.flag
+		local callback: (() -> ())?   = cfg.callback
+		local btn: TextButton = Instance.new("TextButton")
+		btn.Size             = UDim2.new(1, 0, 0, 40)
+		btn.Text             = text
+		btn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+		btn.TextColor3       = Color3.fromRGB(255, 255, 255)
+		btn.Font             = Enum.Font.GothamBlack
+		btn.TextSize         = 16
+		btn.LayoutOrder      = nxt()
+		btn.TextXAlignment   = Enum.TextXAlignment.Center
+		btn.Parent           = scroll
+		_style(btn)
+		local bp: UIPadding = Instance.new("UIPadding")
+		bp.PaddingLeft  = UDim.new(0, 10)
+		bp.PaddingRight = UDim.new(0, 10)
+		bp.Parent       = btn
+
+		btn.MouseButton1Click:Connect(function()
+			_tween(btn, 0.2, { BackgroundColor3 = Color3.fromRGB(255, 65, 65) })
+			task.delay(0.1, function()
+				_tween(btn, 0.2, { BackgroundColor3 = Color3.fromRGB(25, 25, 25) })
+			end)
+			if callback then pcall(callback) end
+		end)
+		if flag then _flags[flag] = false end
+		updateCanvas()
+		return btn
+	end
+
+	function Win:AddToggle(cfg: { text: string?, flag: string?, default: boolean?, callback: ((boolean) -> ())? })
+		local text:     string              = cfg.text or "Toggle"
+		local flag:     string?             = cfg.flag
+		local default:  boolean             = cfg.default or false
+		local callback: ((boolean) -> ())?  = cfg.callback
+		local state:    boolean             = default
+		local row: TextButton = Instance.new("TextButton")
+		row.Size             = UDim2.new(1, 0, 0, 40)
+		row.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+		row.Text             = ""
+		row.LayoutOrder      = nxt()
+		row.Parent           = scroll
+		_style(row)
+		local lbl: TextLabel = Instance.new("TextLabel")
+		lbl.Size               = UDim2.new(1, -50, 1, 0)
+		lbl.Position           = UDim2.new(0, 10, 0, 0)
+		lbl.BackgroundTransparency = 1
+		lbl.Text               = text
+		lbl.Font               = Enum.Font.GothamBlack
+		lbl.TextSize           = 16
+		lbl.TextColor3         = Color3.new(1, 1, 1)
+		lbl.TextXAlignment     = Enum.TextXAlignment.Left
+		lbl.Parent             = row
+		local box: Frame = Instance.new("Frame")
+		box.Size             = UDim2.new(0, 24, 0, 24)
+		box.Position         = UDim2.new(1, -34, 0.5, -12)
+		box.BackgroundColor3 = state and Color3.fromRGB(255, 65, 65) or Color3.fromRGB(40, 40, 40)
+		box.Parent           = row
+		_corner(box)
+		if flag then _flags[flag] = state end
+		row.MouseButton1Click:Connect(function()
+			state = not state
+			_tween(box, 0.15, { BackgroundColor3 = state and Color3.fromRGB(255, 65, 65) or Color3.fromRGB(40, 40, 40) })
+			if flag then _flags[flag] = state end
+			if callback then pcall(callback, state) end
+		end)
+		updateCanvas()
+		local T = {}
+		function T:Set(v: boolean)
+			state = v
+			_tween(box, 0.15, { BackgroundColor3 = v and Color3.fromRGB(255, 65, 65) or Color3.fromRGB(40, 40, 40) })
+			if flag then _flags[flag] = v end
+		end
+		function T:Get(): boolean return state end
+		return T
+	end
+
+	function Win:AddSlider(cfg: { text: string?, flag: string?, min: number?, max: number?, default: number?, callback: ((number) -> ())? })
+		local text:     string            = cfg.text or "Slider"
+		local flag:     string?           = cfg.flag
+		local min:      number            = cfg.min or 0
+		local max:      number            = cfg.max or 100
+		local default:  number            = cfg.default or min
+		local callback: ((number) -> ())?  = cfg.callback
+		local val: number = math.clamp(default, min, max)
+		local cont: Frame = Instance.new("Frame")
+		cont.Size             = UDim2.new(1, 0, 0, 70)
+		cont.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+		cont.LayoutOrder      = nxt()
+		cont.Parent           = scroll
+		_style(cont)
+		local tLbl: TextLabel = Instance.new("TextLabel")
+		tLbl.Size               = UDim2.new(0.6, 0, 0, 20)
+		tLbl.Position           = UDim2.new(0, 10, 0, 5)
+		tLbl.Text               = text
+		tLbl.Font               = Enum.Font.GothamBlack
+		tLbl.TextSize           = 16
+		tLbl.TextXAlignment     = Enum.TextXAlignment.Left
+		tLbl.TextColor3         = Color3.new(1, 1, 1)
+		tLbl.BackgroundTransparency = 1
+		tLbl.Parent             = cont
+		local numBox: Frame = Instance.new("Frame")
+		numBox.Size             = UDim2.new(0.15, 0, 0, 24)
+		numBox.Position         = UDim2.new(0.85, 0, 0, 5)
+		numBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+		numBox.BorderSizePixel  = 0
+		numBox.Parent           = cont
+		_corner(numBox)
+		local valTxt: TextBox = Instance.new("TextBox")
+		valTxt.Size               = UDim2.new(1, 0, 1, 0)
+		valTxt.BackgroundTransparency = 1
+		valTxt.Text               = tostring(val)
+		valTxt.Font               = Enum.Font.GothamBlack
+		valTxt.TextSize           = 14
+		valTxt.TextColor3         = Color3.fromRGB(200, 200, 200)
+		valTxt.ClearTextOnFocus   = false
+		valTxt.TextXAlignment     = Enum.TextXAlignment.Center
+		valTxt.TextYAlignment     = Enum.TextYAlignment.Center
+		valTxt.Parent             = numBox
+		local bar: Frame = Instance.new("Frame")
+		bar.Size             = UDim2.new(0.95, -10, 0, 10)
+		bar.Position         = UDim2.new(0, 10, 0.6, 0)
+		bar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+		bar.Parent           = cont
+		_corner(bar)
+		local ip: number = (val - min) / (max - min)
+		local fill: Frame = Instance.new("Frame")
+		fill.Size             = UDim2.new(ip, 0, 1, 0)
+		fill.BackgroundColor3 = Color3.fromRGB(255, 65, 65)
+		fill.Parent           = bar
+		_corner(fill)
+		local knob: Frame = Instance.new("Frame")
+		knob.Size        = UDim2.new(0, 16, 0, 16)
+		knob.AnchorPoint = Vector2.new(0.5, 0.5)
+		knob.Position    = UDim2.new(ip, 0, 0.5, 0)
+		knob.BackgroundColor3 = Color3.fromRGB(255, 65, 65)
+		knob.Parent      = bar
+		_corner(knob)
+		if flag then _flags[flag] = val end
+		local sliderDrag: boolean = false
+		local function setPos(pos: number)
+			pos           = math.clamp(pos, 0, 1)
+			fill.Size     = UDim2.new(pos, 0, 1, 0)
+			knob.Position = UDim2.new(pos, 0, 0.5, 0)
+			val           = math.floor(min + pos * (max - min))
+			valTxt.Text   = tostring(val)
+			if flag then _flags[flag] = val end
+			if callback then pcall(callback, val) end
+		end
+		bar.InputBegan:Connect(function(i: InputObject)
+			if i.UserInputType == Enum.UserInputType.MouseButton1
+			or i.UserInputType == Enum.UserInputType.Touch then
+				sliderDrag = true
+				setPos((i.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X)
+			end
+		end)
+		UIS.InputChanged:Connect(function(i: InputObject)
+			if not sliderDrag then return end
+			if i.UserInputType == Enum.UserInputType.MouseMovement
+			or i.UserInputType == Enum.UserInputType.Touch then
+				setPos((i.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X)
+			end
+		end)
+		UIS.InputEnded:Connect(function(i: InputObject)
+			if i.UserInputType == Enum.UserInputType.MouseButton1
+			or i.UserInputType == Enum.UserInputType.Touch then
+				sliderDrag = false
+			end
+		end)
+		valTxt.FocusLost:Connect(function(enter: boolean)
+			if enter then
+				local v: number? = tonumber(valTxt.Text)
+				if v then
+					val = math.clamp(v, min, max)
+					local p: number = (val - min) / (max - min)
+					fill.Size     = UDim2.new(p, 0, 1, 0)
+					knob.Position = UDim2.new(p, 0, 0.5, 0)
+					valTxt.Text   = tostring(val)
+					if flag then _flags[flag] = val end
+					if callback then pcall(callback, val) end
+				else valTxt.Text = tostring(val) end
+			end
+		end)
+		updateCanvas()
+		local S = {}
+		function S:Set(v: number)
+			val = math.clamp(v, min, max)
+			local p: number = (val - min) / (max - min)
+			fill.Size     = UDim2.new(p, 0, 1, 0)
+			knob.Position = UDim2.new(p, 0, 0.5, 0)
+			valTxt.Text   = tostring(val)
+			if flag then _flags[flag] = val end
+		end
+		function S:Get(): number return val end
+		return S
+	end
+
+	function Win:AddDropdown(cfg: { text: string?, flag: string?, values: { string }?, callback: ((string) -> ())? })
+		local headerText: string         = cfg.text or "Dropdown"
+		local flag:       string?        = cfg.flag
+		local options:    { string }     = cfg.values or {}
+		local callback:   ((string) -> ())? = cfg.callback
+		local selected:   string         = "Select Option"
+		local dropBtn: TextButton = Instance.new("TextButton")
+		dropBtn.Size             = UDim2.new(1, 0, 0, 50)
+		dropBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+		dropBtn.Text             = ""
+		dropBtn.LayoutOrder      = nxt()
+		dropBtn.Parent           = scroll
+		_style(dropBtn)
+		local headLbl: TextLabel = Instance.new("TextLabel")
+		headLbl.Size               = UDim2.new(1, -10, 0, 18)
+		headLbl.Position           = UDim2.new(0, 5, 0, 2)
+		headLbl.BackgroundTransparency = 1
+		headLbl.Text               = headerText
+		headLbl.TextColor3         = Color3.fromRGB(170, 170, 170)
+		headLbl.Font               = Enum.Font.GothamBlack
+		headLbl.TextSize           = 13
+		headLbl.TextXAlignment     = Enum.TextXAlignment.Left
+		headLbl.Parent             = dropBtn
+		local selLbl: TextLabel = Instance.new("TextLabel")
+		selLbl.Size               = UDim2.new(1, -25, 1.3, 0)
+		selLbl.Position           = UDim2.new(0, 5, 0, 0)
+		selLbl.BackgroundTransparency = 1
+		selLbl.Text               = selected
+		selLbl.TextColor3         = Color3.new(1, 1, 1)
+		selLbl.Font               = Enum.Font.GothamBlack
+		selLbl.TextSize           = 16
+		selLbl.TextXAlignment     = Enum.TextXAlignment.Left
+		selLbl.Parent             = dropBtn
+		local arrowLbl: TextLabel = Instance.new("TextLabel")
+		arrowLbl.Size               = UDim2.new(0, 20, 1, 0)
+		arrowLbl.Position           = UDim2.new(1, -20, 0, 0)
+		arrowLbl.BackgroundTransparency = 1
+		arrowLbl.Text               = "▼"
+		arrowLbl.TextColor3         = Color3.fromRGB(200, 200, 200)
+		arrowLbl.Font               = Enum.Font.GothamBlack
+		arrowLbl.TextSize           = 20
+		arrowLbl.TextXAlignment     = Enum.TextXAlignment.Center
+		arrowLbl.Parent             = dropBtn
+		local dropFrame: Frame = Instance.new("Frame")
+		dropFrame.Size             = UDim2.new(1, 0, 0, 0)
+		dropFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+		dropFrame.ClipsDescendants = true
+		dropFrame.Active           = false
+		dropFrame.LayoutOrder      = nxt()
+		dropFrame.Parent           = scroll
+		_corner(dropFrame)
+		Instance.new("UIListLayout", dropFrame)
+		local open: boolean = false
+		if flag then _flags[flag] = selected end
+		for _, v in ipairs(options) do
+			local opt: TextButton = Instance.new("TextButton")
+			opt.Size             = UDim2.new(1, 0, 0, 30)
+			opt.Active           = true
+			opt.Text             = v
+			opt.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+			opt.TextColor3       = Color3.new(1, 1, 1)
+			opt.Font             = Enum.Font.GothamBlack
+			opt.TextSize         = 14
+			opt.Parent           = dropFrame
+			_style(opt)
+			opt.MouseButton1Click:Connect(function()
+				selected        = v
+				selLbl.Text     = v
+				open            = false
+				arrowLbl.Text   = "▼"
+				if flag then _flags[flag] = v end
+				_tween(dropFrame, 0.2, { Size = UDim2.new(1, 0, 0, 0) })
+				task.wait(0.21); updateCanvas()
+				if callback then pcall(callback, v) end
+			end)
+		end
+		dropBtn.MouseButton1Click:Connect(function()
+			open = not open
+			arrowLbl.Text = open and "▲" or "▼"
+			local h: number = open and (#options * 30) or 0
+			_tween(dropFrame, 0.25, { Size = UDim2.new(1, 0, 0, h) })
+			task.delay(0.26, updateCanvas)
+		end)
+		updateCanvas()
+		local D = {}
+		function D:Get(): string return selected end
+		function D:Set(v: string) selected = v; selLbl.Text = v; if flag then _flags[flag] = v end end
+		return D
+	end
+
+	function Win:CreateFolder(folderName: string?)
+		local tabBtn: TextButton = Instance.new("TextButton")
+		tabBtn.Size             = UDim2.new(1, 0, 0, 40)
+		tabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+		tabBtn.TextColor3       = Color3.fromRGB(180, 180, 180)
+		tabBtn.Font             = Enum.Font.GothamBlack
+		tabBtn.TextSize         = 16
+		tabBtn.Text             = "▶  " .. (folderName or "Folder")
+		tabBtn.TextXAlignment   = Enum.TextXAlignment.Left
+		tabBtn.LayoutOrder      = nxt()
+		tabBtn.Parent           = scroll
+		_style(tabBtn)
+		local tp: UIPadding = Instance.new("UIPadding")
+		tp.PaddingLeft = UDim.new(0, 10); tp.Parent = tabBtn
+
+		local content: Frame = Instance.new("Frame")
+		content.Size                   = UDim2.new(1, 0, 0, 0)
+		content.BackgroundTransparency = 1
+		content.ClipsDescendants       = true
+		content.LayoutOrder            = nxt()
+		content.Parent                 = scroll
+
+		local cLayout: UIListLayout = Instance.new("UIListLayout")
+		cLayout.Padding   = UDim.new(0, 4)
+		cLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		cLayout.Parent    = content
+
+		local cPad: UIPadding = Instance.new("UIPadding")
+		cPad.PaddingLeft   = UDim.new(0, 0)
+		cPad.PaddingRight  = UDim.new(0, 0)
+		cPad.PaddingBottom = UDim.new(0, 4)
+		cPad.Parent        = content
+
+		local folderOpen: boolean = false
+		local function updateFolder()
+			task.defer(function()
+				if folderOpen then
+					local h: number = cLayout.AbsoluteContentSize.Y + 8
+					_tween(content, 0.25, { Size = UDim2.new(1, 0, 0, h) })
+				else
+					for _, obj in ipairs(content:GetDescendants()) do
+						if obj:IsA("Frame") and (obj :: Frame).ClipsDescendants and obj ~= content then
+							(obj :: Frame).Size = UDim2.new(1, 0, 0, 0)
+						end
+					end
+					_tween(content, 0.25, { Size = UDim2.new(1, 0, 0, 0) })
+				end
+				task.wait(0.26)
+				updateCanvas()
+			end)
+		end
+
+		tabBtn.MouseButton1Click:Connect(function()
+			folderOpen = not folderOpen
+			tabBtn.Text       = (folderOpen and "▼  " or "▶  ") .. (folderName or "Folder")
+			tabBtn.TextColor3 = folderOpen and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(180, 180, 180)
+			updateFolder()
+		end)
+
+		local Folder  = {}
+		local _fOrder: number = 0
+		local function fnxt(): number _fOrder += 1; return _fOrder end
+
+		function Folder:AddButton(cfg: { text: string?, flag: string?, callback: (() -> ())? })
+			local text:     string       = cfg.text or "Button"
+			local flag:     string?      = cfg.flag
+			local callback: (() -> ())?  = cfg.callback
+			local btn: TextButton = Instance.new("TextButton")
+			btn.Size             = UDim2.new(1, 0, 0, 40)
+			btn.Text             = text
+			btn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+			btn.TextColor3       = Color3.fromRGB(255, 255, 255)
+			btn.Font             = Enum.Font.GothamBlack
+			btn.TextSize         = 16
+			btn.LayoutOrder      = fnxt()
+			btn.TextXAlignment   = Enum.TextXAlignment.Center
+			btn.Parent           = content
+			_style(btn)
+			local bp: UIPadding = Instance.new("UIPadding")
+			bp.PaddingLeft  = UDim.new(0, 10)
+			bp.PaddingRight = UDim.new(0, 10)
+			bp.Parent       = btn
+
+			btn.MouseButton1Click:Connect(function()
+				_tween(btn, 0.2, { BackgroundColor3 = Color3.fromRGB(255, 65, 65) })
+				task.delay(0.1, function()
+					_tween(btn, 0.2, { BackgroundColor3 = Color3.fromRGB(20, 20, 20) })
+				end)
+				if callback then pcall(callback) end
+			end)
+			if flag then _flags[flag] = false end
+			updateCanvas()
+			return btn
+		end
+
+		function Folder:AddToggle(cfg: { text: string?, flag: string?, default: boolean?, callback: ((boolean) -> ())? })
+			local text:     string             = cfg.text or "Toggle"
+			local flag:     string?            = cfg.flag
+			local default:  boolean            = cfg.default or false
+			local callback: ((boolean) -> ())? = cfg.callback
+			local state:    boolean            = default
+			local row: TextButton = Instance.new("TextButton")
+			row.Size             = UDim2.new(1, 0, 0, 36)
+			row.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+			row.Text             = ""
+			row.LayoutOrder      = fnxt()
+			row.Parent           = content
+			_style(row)
+			local lbl: TextLabel = Instance.new("TextLabel")
+			lbl.Size               = UDim2.new(1, -50, 1, 0)
+			lbl.Position           = UDim2.new(0, 10, 0, 0)
+			lbl.BackgroundTransparency = 1
+			lbl.Text               = text
+			lbl.Font               = Enum.Font.GothamBlack
+			lbl.TextSize           = 14
+			lbl.TextColor3         = Color3.new(1, 1, 1)
+			lbl.TextXAlignment     = Enum.TextXAlignment.Left
+			lbl.Parent             = row
+			local box: Frame = Instance.new("Frame")
+			box.Size             = UDim2.new(0, 22, 0, 22)
+			box.Position         = UDim2.new(1, -32, 0.5, -11)
+			box.BackgroundColor3 = state and Color3.fromRGB(255, 65, 65) or Color3.fromRGB(40, 40, 40)
+			box.Parent           = row
+			_corner(box)
+			if flag then _flags[flag] = state end
+			row.MouseButton1Click:Connect(function()
+				state = not state
+				_tween(box, 0.15, { BackgroundColor3 = state and Color3.fromRGB(255, 65, 65) or Color3.fromRGB(40, 40, 40) })
+				if flag then _flags[flag] = state end
+				if callback then pcall(callback, state) end
+			end)
+			updateCanvas()
+			local T = {}
+			function T:Set(v: boolean)
+				state = v
+				_tween(box, 0.15, { BackgroundColor3 = v and Color3.fromRGB(255, 65, 65) or Color3.fromRGB(40, 40, 40) })
+				if flag then _flags[flag] = v end
+			end
+			function T:Get(): boolean return state end
+			return T
+		end
+
+		function Folder:AddSlider(cfg: { text: string?, flag: string?, min: number?, max: number?, default: number?, callback: ((number) -> ())? })
+			local text:     string            = cfg.text or "Slider"
+			local flag:     string?           = cfg.flag
+			local min:      number            = cfg.min or 0
+			local max:      number            = cfg.max or 100
+			local default:  number            = cfg.default or min
+			local callback: ((number) -> ())?  = cfg.callback
+			local val: number = math.clamp(default, min, max)
+			local cont: Frame = Instance.new("Frame")
+			cont.Size             = UDim2.new(1, 0, 0, 65)
+			cont.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+			cont.LayoutOrder      = fnxt()
+			cont.Parent           = content
+			_style(cont)
+			local tLbl: TextLabel = Instance.new("TextLabel")
+			tLbl.Size               = UDim2.new(0.6, 0, 0, 20)
+			tLbl.Position           = UDim2.new(0, 10, 0, 5)
+			tLbl.Text               = text
+			tLbl.Font               = Enum.Font.GothamBlack
+			tLbl.TextSize           = 14
+			tLbl.TextXAlignment     = Enum.TextXAlignment.Left
+			tLbl.TextColor3         = Color3.new(1, 1, 1)
+			tLbl.BackgroundTransparency = 1
+			tLbl.Parent             = cont
+			local numBox: Frame = Instance.new("Frame")
+			numBox.Size             = UDim2.new(0.15, 0, 0, 22)
+			numBox.Position         = UDim2.new(0.85, 0, 0, 5)
+			numBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+			numBox.BorderSizePixel  = 0
+			numBox.Parent           = cont
+			_corner(numBox)
+			local valTxt: TextBox = Instance.new("TextBox")
+			valTxt.Size               = UDim2.new(1, 0, 1, 0)
+			valTxt.BackgroundTransparency = 1
+			valTxt.Text               = tostring(val)
+			valTxt.Font               = Enum.Font.GothamBlack
+			valTxt.TextSize           = 13
+			valTxt.TextColor3         = Color3.fromRGB(200, 200, 200)
+			valTxt.ClearTextOnFocus   = false
+			valTxt.TextXAlignment     = Enum.TextXAlignment.Center
+			valTxt.TextYAlignment     = Enum.TextYAlignment.Center
+			valTxt.Parent             = numBox
+			local bar: Frame = Instance.new("Frame")
+			bar.Size             = UDim2.new(0.95, -10, 0, 8)
+			bar.Position         = UDim2.new(0, 10, 0.62, 0)
+			bar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+			bar.Parent           = cont
+			_corner(bar)
+			local ip: number = (val - min) / (max - min)
+			local fill: Frame = Instance.new("Frame")
+			fill.Size             = UDim2.new(ip, 0, 1, 0)
+			fill.BackgroundColor3 = Color3.fromRGB(255, 65, 65)
+			fill.Parent           = bar
+			_corner(fill)
+			local knob: Frame = Instance.new("Frame")
+			knob.Size        = UDim2.new(0, 14, 0, 14)
+			knob.AnchorPoint = Vector2.new(0.5, 0.5)
+			knob.Position    = UDim2.new(ip, 0, 0.5, 0)
+			knob.BackgroundColor3 = Color3.fromRGB(255, 65, 65)
+			knob.Parent      = bar
+			_corner(knob)
+			if flag then _flags[flag] = val end
+			local sliderDrag: boolean = false
+			local function setPos(pos: number)
+				pos           = math.clamp(pos, 0, 1)
+				fill.Size     = UDim2.new(pos, 0, 1, 0)
+				knob.Position = UDim2.new(pos, 0, 0.5, 0)
+				val           = math.floor(min + pos * (max - min))
+				valTxt.Text   = tostring(val)
+				if flag then _flags[flag] = val end
+				if callback then pcall(callback, val) end
+			end
+			bar.InputBegan:Connect(function(i: InputObject)
+				if i.UserInputType == Enum.UserInputType.MouseButton1
+				or i.UserInputType == Enum.UserInputType.Touch then
+					sliderDrag = true
+					setPos((i.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X)
+				end
+			end)
+			UIS.InputChanged:Connect(function(i: InputObject)
+				if not sliderDrag then return end
+				if i.UserInputType == Enum.UserInputType.MouseMovement
+				or i.UserInputType == Enum.UserInputType.Touch then
+					setPos((i.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X)
+				end
+			end)
+			UIS.InputEnded:Connect(function(i: InputObject)
+				if i.UserInputType == Enum.UserInputType.MouseButton1
+				or i.UserInputType == Enum.UserInputType.Touch then
+					sliderDrag = false
+				end
+			end)
+			valTxt.FocusLost:Connect(function(enter: boolean)
+				if enter then
+					local v: number? = tonumber(valTxt.Text)
+					if v then
+						val = math.clamp(v, min, max)
+						local p: number = (val - min) / (max - min)
+						fill.Size     = UDim2.new(p, 0, 1, 0)
+						knob.Position = UDim2.new(p, 0, 0.5, 0)
+						valTxt.Text   = tostring(val)
+						if flag then _flags[flag] = val end
+						if callback then pcall(callback, val) end
+					else valTxt.Text = tostring(val) end
+				end
+			end)
+			updateCanvas()
+			local S = {}
+			function S:Set(v: number)
+				val = math.clamp(v, min, max)
+				local p: number = (val - min) / (max - min)
+				fill.Size     = UDim2.new(p, 0, 1, 0)
+				knob.Position = UDim2.new(p, 0, 0.5, 0)
+				valTxt.Text   = tostring(val)
+				if flag then _flags[flag] = val end
+			end
+			function S:Get(): number return val end
+			return S
+		end
+
+		function Folder:AddDropdown(cfg: { text: string?, flag: string?, values: { string }?, callback: ((string) -> ())? })
+			local headerText: string         = cfg.text or "Dropdown"
+			local flag:       string?        = cfg.flag
+			local options:    { string }     = cfg.values or {}
+			local callback:   ((string) -> ())? = cfg.callback
+			local selected:   string         = "=== Select Option ==="
+			local dropBtn: TextButton = Instance.new("TextButton")
+			dropBtn.Size             = UDim2.new(1, 0, 0, 46)
+			dropBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+			dropBtn.Text             = ""
+			dropBtn.LayoutOrder      = fnxt()
+			dropBtn.Parent           = content
+			_style(dropBtn)
+			local headLbl: TextLabel = Instance.new("TextLabel")
+			headLbl.Size               = UDim2.new(1, -10, 0, 16)
+			headLbl.Position           = UDim2.new(0, 5, 0, 2)
+			headLbl.BackgroundTransparency = 1
+			headLbl.Text               = headerText
+			headLbl.TextColor3         = Color3.fromRGB(170, 170, 170)
+			headLbl.Font               = Enum.Font.GothamBlack
+			headLbl.TextSize           = 12
+			headLbl.TextXAlignment     = Enum.TextXAlignment.Left
+			headLbl.Parent             = dropBtn
+			local selLbl: TextLabel = Instance.new("TextLabel")
+			selLbl.Size               = UDim2.new(1, -25, 1.3, 0)
+			selLbl.Position           = UDim2.new(0, 5, 0, 0)
+			selLbl.BackgroundTransparency = 1
+			selLbl.Text               = selected
+			selLbl.TextColor3         = Color3.new(1, 1, 1)
+			selLbl.Font               = Enum.Font.GothamBlack
+			selLbl.TextSize           = 14
+			selLbl.TextXAlignment     = Enum.TextXAlignment.Left
+			selLbl.Parent             = dropBtn
+			local arrowLbl: TextLabel = Instance.new("TextLabel")
+			arrowLbl.Size               = UDim2.new(0, 20, 1, 0)
+			arrowLbl.Position           = UDim2.new(1, -20, 0, 0)
+			arrowLbl.BackgroundTransparency = 1
+			arrowLbl.Text               = "▼"
+			arrowLbl.TextColor3         = Color3.fromRGB(200, 200, 200)
+			arrowLbl.Font               = Enum.Font.GothamBlack
+			arrowLbl.TextSize           = 18
+			arrowLbl.TextXAlignment     = Enum.TextXAlignment.Center
+			arrowLbl.Parent             = dropBtn
+			local dropFrame: Frame = Instance.new("Frame")
+			dropFrame.Size             = UDim2.new(1, 0, 0, 0)
+			dropFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+			dropFrame.ClipsDescendants = true
+			dropFrame.LayoutOrder      = fnxt()
+			dropFrame.Parent           = content
+			_corner(dropFrame)
+			Instance.new("UIListLayout", dropFrame)
+			local open: boolean = false
+			if flag then _flags[flag] = selected end
+			for _, v in ipairs(options) do
+				local opt: TextButton = Instance.new("TextButton")
+				opt.Size             = UDim2.new(1, 0, 0, 28)
+				opt.Text             = v
+				opt.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+				opt.TextColor3       = Color3.new(1, 1, 1)
+				opt.Font             = Enum.Font.GothamBlack
+				opt.TextSize         = 13
+				opt.Parent           = dropFrame
+				_style(opt)
+				opt.MouseButton1Click:Connect(function()
+					selected      = v
+					selLbl.Text   = v
+					open          = false
+					arrowLbl.Text = "▼"
+					if flag then _flags[flag] = v end
+					_tween(dropFrame, 0.2, { Size = UDim2.new(1, 0, 0, 0) })
+					task.wait(0.21)
+					updateFolder(); updateCanvas()
+					if callback then pcall(callback, v) end
+				end)
+			end
+			dropBtn.MouseButton1Click:Connect(function()
+				open = not open
+				arrowLbl.Text = open and "▲" or "▼"
+				local h: number = open and (#options * 28) or 0
+				_tween(dropFrame, 0.25, { Size = UDim2.new(1, 0, 0, h) })
+				task.delay(0.26, function()
+					updateFolder(); updateCanvas()
+				end)
+			end)
+			updateCanvas()
+			local D = {}
+			function D:Get(): string return selected end
+			function D:Set(v: string) selected = v; selLbl.Text = v; if flag then _flags[flag] = v end end
+			return D
+		end
+
+		return Folder
+	end
+
+	updateCanvas()
+	return Win
+end
+
+function Lib:Start()
+	_loaded = true
+	for _, fn in ipairs(_pendingShow) do fn() end
+	_pendingShow = {}
+	_reposition()
+end
+
+function Lib:GetFlag(flag: string): any
+	return _flags[flag]
+end
+
+return Lib
