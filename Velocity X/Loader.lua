@@ -70,7 +70,38 @@ if getgenv().Velocity_X_Loader then
 end
 
 getgenv().Velocity_X_Loader = true
+-- // cloneref polyfill for executors that don't support it
+if not cloneref then
+    local _probe: Part = Instance.new("Part")
+    local _instanceList: { [any]: any }? = nil
 
+    for _: any, _tbl: any in getreg() do
+        if type(_tbl) == "table" and #_tbl >= 0 then
+            if rawget(_tbl, "__mode") == "kvs" then
+                for _k: any, _v: any in _tbl do
+                    if _v == _probe then
+                        _instanceList = _tbl
+                        break
+                    end
+                end
+            end
+        end
+        if _instanceList then break end
+    end
+
+    local function _invalidate(obj: Instance): Instance?
+        if not _instanceList then return obj end
+        for k: any, v: any in _instanceList :: { [any]: any } do
+            if v == obj then
+                (_instanceList :: { [any]: any })[k] = nil
+                return obj
+            end
+        end
+        return obj
+    end
+
+    getgenv().cloneref = _invalidate
+end
 local cloneref: (obj: any) -> any = cloneref or function(obj: any): any return obj end
 local HttpService  = cloneref(game:GetService("HttpService"))
 local TweenService = game:GetService("TweenService")
