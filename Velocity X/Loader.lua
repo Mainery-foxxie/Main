@@ -357,8 +357,11 @@ local notifyOk: boolean, notifyErr: any = pcall(function()
     if not src or #src == 0 then error("Empty notification library response") end
     Notify = loadstring(src)()
 end)
+
 if not notifyOk then
-    warn("[VelocityX] Notification library failed to load: " .. tostring(notifyErr))
+    print("[VelocityX] ❌ Notification UI failed to load.")
+    print("[VelocityX] Reason: " .. tostring(notifyErr))
+    print("[VelocityX] Falling back to print-based notifications.")
 end
 
 local function showNotification(
@@ -383,7 +386,8 @@ local function showNotification(
             })
         end)
     else
-        warn(title .. ": " .. desc)
+        -- Notify UI not available — fall back to print
+        print("[VelocityX] 🔔 " .. title .. " | " .. desc)
     end
 end
 
