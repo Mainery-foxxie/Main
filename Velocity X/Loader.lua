@@ -555,11 +555,11 @@ Logo.Visible  = false
 
 local Name: TextLabel = Instance.new("TextLabel", MainBackground)
 Name.BackgroundTransparency = 1
-Name.Position             = UDim2.new(0.11, 0, 0.04, 0)
-Name.Size                 = UDim2.new(0, 78, 0, 25)
+Name.Position             = UDim2.new(0.11, 0, 0.035, 0)
+Name.Size                 = UDim2.new(0.72, 0, 0, 20)
 Name.Font                 = Enum.Font.Arcade
 Name.Text                 = "Velocity X Loader"
-Name.TextSize             = 15
+Name.TextSize             = 14
 Name.TextXAlignment       = Enum.TextXAlignment.Left
 Name.TextColor3           = Color3.fromRGB(0, 255, 150)
 Name.TextStrokeTransparency = 0
@@ -569,8 +569,9 @@ Name.Visible              = false
 local InjectButton: TextButton = Instance.new("TextButton", MainBackground)
 InjectButton.BackgroundColor3     = Color3.fromRGB(255, 255, 255)
 InjectButton.BackgroundTransparency = 1
-InjectButton.Position             = UDim2.new(0.11, 0, 0.33, 0)
-InjectButton.Size                 = UDim2.new(0, 252, 0, 47)
+InjectButton.AnchorPoint          = Vector2.new(0.5, 0.5)
+InjectButton.Position             = UDim2.new(0.5, 0, 0.46, 0)
+InjectButton.Size                 = UDim2.new(0.82, 0, 0, 48)
 InjectButton.Font                 = Enum.Font.Arcade
 InjectButton.Text                 = "Initializing..."
 InjectButton.TextScaled           = true
@@ -589,52 +590,228 @@ BtnStroke.Thickness = 1.5
 
 local Version: TextLabel = Instance.new("TextLabel", MainBackground)
 Version.BackgroundTransparency = 1
-Version.Position           = UDim2.new(0.26, 0, 0.86, 0)
-Version.Size               = UDim2.new(0, 227, 0, 21)
+Version.AnchorPoint        = Vector2.new(1, 1)
+Version.Position           = UDim2.new(0.99, 0, 0.985, 0)
+Version.Size               = UDim2.new(0.36, 0, 0, 14)
 Version.Font               = Enum.Font.Arcade
 Version.Text               = "Loading..."
-Version.TextSize           = 13
+Version.TextSize           = 11
 Version.TextXAlignment     = Enum.TextXAlignment.Right
 Version.TextColor3         = Color3.fromRGB(0, 200, 255)
-Version.TextStrokeTransparency = 0
+Version.TextStrokeTransparency = 0.4
 Version.TextStrokeColor3   = Color3.fromRGB(0, 0, 0)
 Version.Visible            = false
 
-local GreetingLabel: TextLabel = Instance.new("TextLabel", MainBackground)
+-- ── Greeting card (greeting ↔ Discord, clickable) ───────────────────────────
+local DISCORD_LINK: string = "https://discord.gg/jc6SAYtVNf"
+
+local GreetingCard: Frame = Instance.new("Frame", MainBackground)
+GreetingCard.Name                   = "GreetingCard"
+GreetingCard.AnchorPoint            = Vector2.new(0, 1)
+GreetingCard.Position               = UDim2.new(0.01, 0, 0.99, 0)
+-- Occupies left 60% of the bottom bar, right 40% is Version label
+GreetingCard.Size                   = UDim2.new(0.60, 0, 0, 24)
+GreetingCard.BackgroundColor3       = Color3.fromRGB(15, 15, 20)
+GreetingCard.BackgroundTransparency = 0.30
+GreetingCard.BorderSizePixel        = 0
+GreetingCard.ClipsDescendants       = true
+GreetingCard.Visible                = false
+
+Instance.new("UICorner", GreetingCard).CornerRadius = UDim.new(0, 5)
+
+-- Left colour accent bar
+local GCardBar: Frame = Instance.new("Frame", GreetingCard)
+GCardBar.Size             = UDim2.new(0, 2, 1, 0)
+GCardBar.Position         = UDim2.new(0, 0, 0, 0)
+GCardBar.BackgroundColor3 = Color3.fromRGB(0, 255, 150)
+GCardBar.BorderSizePixel  = 0
+Instance.new("UICorner", GCardBar).CornerRadius = UDim.new(0, 2)
+
+local GCardStroke: UIStroke = Instance.new("UIStroke", GreetingCard)
+GCardStroke.Thickness    = 1
+GCardStroke.Transparency = 0.55
+GCardStroke.Color        = Color3.fromRGB(0, 200, 255)
+
+-- Discord icon (hidden in greeting mode)
+local GCardIcon: ImageLabel = Instance.new("ImageLabel", GreetingCard)
+GCardIcon.AnchorPoint           = Vector2.new(0, 0.5)
+GCardIcon.Position              = UDim2.new(0, 5, 0.5, 0)
+GCardIcon.Size                  = UDim2.new(0, 13, 0, 13)
+GCardIcon.BackgroundTransparency = 1
+GCardIcon.Image                 = "rbxassetid://94937742565147"
+GCardIcon.ImageTransparency     = 1
+GCardIcon.ScaleType             = Enum.ScaleType.Fit
+
+-- Main greeting / title line
+local GreetingLabel: TextLabel = Instance.new("TextLabel", GreetingCard)
+GreetingLabel.AnchorPoint            = Vector2.new(0, 0.5)
+GreetingLabel.Position               = UDim2.new(0, 6, 0.5, 0)
+GreetingLabel.Size                   = UDim2.new(1, -8, 1, 0)
 GreetingLabel.BackgroundTransparency = 1
-GreetingLabel.Position          = UDim2.new(0.02, 0, 0.855, 0)
-GreetingLabel.Size              = UDim2.new(0.6, 0, 0.14, 0)
-GreetingLabel.Font              = Enum.Font.Arcade
-GreetingLabel.TextScaled        = true
-GreetingLabel.TextXAlignment    = Enum.TextXAlignment.Left
-GreetingLabel.TextColor3        = Color3.fromRGB(0, 255, 150)
-GreetingLabel.TextStrokeTransparency = 0
-GreetingLabel.TextStrokeColor3  = Color3.fromRGB(0, 0, 0)
-GreetingLabel.Visible           = false
+GreetingLabel.Font                   = Enum.Font.Arcade
+GreetingLabel.TextScaled             = true
+GreetingLabel.TextXAlignment         = Enum.TextXAlignment.Left
+GreetingLabel.TextColor3             = Color3.fromRGB(0, 255, 150)
+GreetingLabel.TextStrokeTransparency = 0.5
+GreetingLabel.TextStrokeColor3       = Color3.fromRGB(0, 0, 0)
 
-local GreetingScale: UIScale = Instance.new("UIScale", GreetingLabel)
-GreetingScale.Scale = 0.85
 local GreetingConstraint: UITextSizeConstraint = Instance.new("UITextSizeConstraint", GreetingLabel)
-GreetingConstraint.MinTextSize = 7
-GreetingConstraint.MaxTextSize = 13
-local GreetingStroke: UIStroke = Instance.new("UIStroke", GreetingLabel)
-GreetingStroke.Color        = Color3.fromRGB(0, 200, 255)
-GreetingStroke.Thickness    = 1
-GreetingStroke.Transparency = 0.4
+GreetingConstraint.MinTextSize = 6
+GreetingConstraint.MaxTextSize = 11
 
-local function UpdateGreeting()
-    local ok: boolean, err: any = pcall(function()
+-- Sub label (Discord link, only in Discord mode)
+local GCardSub: TextLabel = Instance.new("TextLabel", GreetingCard)
+GCardSub.AnchorPoint            = Vector2.new(0, 1)
+GCardSub.Position               = UDim2.new(0, 22, 1, -1)
+GCardSub.Size                   = UDim2.new(1, -24, 0, 9)
+GCardSub.BackgroundTransparency = 1
+GCardSub.Font                   = Enum.Font.Arcade
+GCardSub.TextScaled             = true
+GCardSub.TextXAlignment         = Enum.TextXAlignment.Left
+GCardSub.TextColor3             = Color3.fromRGB(160, 160, 255)
+GCardSub.TextTransparency       = 1
+GCardSub.Text                   = DISCORD_LINK
+
+local GCardSubConstraint: UITextSizeConstraint = Instance.new("UITextSizeConstraint", GCardSub)
+GCardSubConstraint.MinTextSize = 5
+GCardSubConstraint.MaxTextSize = 8
+
+-- Ripple circle
+local GCardRipple: Frame = Instance.new("Frame", GreetingCard)
+GCardRipple.AnchorPoint            = Vector2.new(0.5, 0.5)
+GCardRipple.Position               = UDim2.new(0.5, 0, 0.5, 0)
+GCardRipple.Size                   = UDim2.new(0, 0, 0, 0)
+GCardRipple.BackgroundColor3       = Color3.fromRGB(88, 101, 242)
+GCardRipple.BackgroundTransparency = 0.5
+GCardRipple.BorderSizePixel        = 0
+GCardRipple.ZIndex                 = 10
+Instance.new("UICorner", GCardRipple).CornerRadius = UDim.new(1, 0)
+
+-- Invisible click overlay
+local GCardClick: TextButton = Instance.new("TextButton", GreetingCard)
+GCardClick.Size                   = UDim2.new(1, 0, 1, 0)
+GCardClick.BackgroundTransparency = 1
+GCardClick.Text                   = ""
+GCardClick.ZIndex                 = 11
+
+-- Scale spring on the card itself
+local GreetingScale: UIScale = Instance.new("UIScale", GreetingCard)
+GreetingScale.Scale = 0.85
+
+-- ── State & helpers ───────────────────────────────────────────────────────────
+local _greetingShowDiscord: boolean = false
+
+local function GetNormalGreetingText(): string
+    local ok: boolean, result: string = pcall(function(): string
         local playerName: string = Players.LocalPlayer.DisplayName
         local greeting: string, emoji: string, timeStr: string = GetGreetingAndTime()
-        GreetingLabel.Text = string.format("%s, %s %s %s", greeting, playerName, emoji, timeStr)
+        return string.format("%s, %s %s %s", greeting, playerName, emoji, timeStr)
     end)
-    if not ok then
-        GreetingLabel.Text = "Hello, " .. tostring(Players.LocalPlayer.DisplayName)
-        warn("[VelocityX] UpdateGreeting error:", err)
+    if ok then return result end
+    return "Hello, " .. tostring(Players.LocalPlayer.DisplayName)
+end
+
+-- Switches visual state (no animation — caller handles that)
+local function ApplyGreetingState()
+    if _greetingShowDiscord then
+        -- Discord mode: taller card, icon visible, sub-link visible
+        GreetingCard.Size          = UDim2.new(0.60, 0, 0, 34)
+        GreetingLabel.Position     = UDim2.new(0, 22, 0.30, 0)
+        GreetingLabel.Size         = UDim2.new(1, -24, 0.45, 0)
+        GreetingLabel.Text         = "Need help? Join Discord!"
+        GreetingLabel.TextColor3   = Color3.fromRGB(160, 150, 255)
+        GCardBar.BackgroundColor3  = Color3.fromRGB(88, 101, 242)
+        GCardStroke.Color          = Color3.fromRGB(88, 101, 242)
+        GCardStroke.Transparency   = 0.4
+    else
+        -- Normal greeting mode: single line, no icon
+        GreetingCard.Size          = UDim2.new(0.60, 0, 0, 24)
+        GreetingLabel.Position     = UDim2.new(0, 6, 0.5, 0)
+        GreetingLabel.Size         = UDim2.new(1, -8, 1, 0)
+        GreetingLabel.Text         = GetNormalGreetingText()
+        GreetingLabel.TextColor3   = Color3.fromRGB(0, 255, 150)
+        GCardBar.BackgroundColor3  = Color3.fromRGB(0, 255, 150)
+        GCardStroke.Color          = Color3.fromRGB(0, 200, 255)
+        GCardStroke.Transparency   = 0.55
     end
 end
 
+local function UpdateGreeting()
+    pcall(ApplyGreetingState)
+end
+
 pcall(UpdateGreeting)
+
+-- ── Click → copy to clipboard + ripple + press bounce ────────────────────────
+GCardClick.MouseButton1Click:Connect(function()
+    if not _greetingShowDiscord then return end  -- only copy when showing Discord
+    pcall(setclipboard, DISCORD_LINK)
+
+    -- Ripple from center
+    GCardRipple.Size                 = UDim2.new(0, 0, 0, 0)
+    GCardRipple.BackgroundTransparency = 0.55
+    GCardRipple.Position             = UDim2.new(0.5, 0, 0.5, 0)
+    pcall(function()
+        TweenService:Create(GCardRipple, TweenInfo.new(0.55, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Size = UDim2.new(2.5, 0, 6, 0),
+            BackgroundTransparency = 1,
+        }):Play()
+    end)
+
+    -- Press-down squeeze → spring back
+    pcall(function()
+        TweenService:Create(GreetingScale, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Scale = 0.93,
+        }):Play()
+    end)
+    task.delay(0.12, function()
+        pcall(function()
+            TweenService:Create(GreetingScale, TweenInfo.new(0.4, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {
+                Scale = 1,
+            }):Play()
+        end)
+    end)
+
+    -- Icon wiggle (brand-phone style)
+    pcall(function()
+        TweenService:Create(GCardIcon, TweenInfo.new(0.1, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Rotation = -18,
+        }):Play()
+    end)
+    task.delay(0.12, function()
+        pcall(function()
+            TweenService:Create(GCardIcon, TweenInfo.new(0.15, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out), {
+                Rotation = 18,
+            }):Play()
+        end)
+        task.delay(0.16, function()
+            pcall(function()
+                TweenService:Create(GCardIcon, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                    Rotation = 0,
+                }):Play()
+            end)
+        end)
+    end)
+
+    -- Brief label flash: "Copied!" → restore
+    GreetingLabel.Text = "Copied! ✓"
+    GreetingLabel.TextColor3 = Color3.fromRGB(100, 255, 160)
+    task.delay(1.2, function()
+        pcall(function()
+            if _greetingShowDiscord then
+                TweenService:Create(GreetingLabel, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+                    TextTransparency = 1,
+                }):Play()
+                task.wait(0.32)
+                GreetingLabel.Text = "Need help? Join our Discord!"
+                GreetingLabel.TextColor3 = Color3.fromRGB(170, 160, 255)
+                TweenService:Create(GreetingLabel, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+                    TextTransparency = 0,
+                }):Play()
+            end
+        end)
+    end)
+end)
 
 local CloseButton: TextButton = Instance.new("TextButton", MainBackground)
 CloseButton.BackgroundTransparency = 1
@@ -1176,6 +1353,164 @@ local function cleanupAntiFeatures()
     end
 end
 
+-- ── Error UI panel ────────────────────────────────────────────────────────────
+-- Slides up from the bottom of MainBackground when inject fails.
+-- Shows error type icon, message, and a Retry button.
+local ErrorPanel: Frame = Instance.new("Frame", MainBackground)
+ErrorPanel.Name                   = "ErrorPanel"
+ErrorPanel.AnchorPoint            = Vector2.new(0, 1)
+ErrorPanel.Position               = UDim2.new(0, 0, 1.05, 0)   -- starts hidden below
+ErrorPanel.Size                   = UDim2.new(1, 0, 0, 60)
+ErrorPanel.BackgroundColor3       = Color3.fromRGB(20, 8, 8)
+ErrorPanel.BackgroundTransparency = 0.10
+ErrorPanel.BorderSizePixel        = 0
+ErrorPanel.ClipsDescendants       = true
+ErrorPanel.ZIndex                 = 5
+ErrorPanel.Visible                = false
+
+Instance.new("UICorner", ErrorPanel).CornerRadius = UDim.new(0, 8)
+
+local ErrStroke: UIStroke = Instance.new("UIStroke", ErrorPanel)
+ErrStroke.Color       = Color3.fromRGB(255, 60, 60)
+ErrStroke.Thickness   = 1.5
+ErrStroke.Transparency = 0.3
+
+-- Top red accent line
+local ErrTopBar: Frame = Instance.new("Frame", ErrorPanel)
+ErrTopBar.Size             = UDim2.new(1, 0, 0, 2)
+ErrTopBar.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+ErrTopBar.BorderSizePixel  = 0
+local ErrTopGrad: UIGradient = Instance.new("UIGradient", ErrTopBar)
+ErrTopGrad.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0,   Color3.fromRGB(255, 80, 80)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 160, 60)),
+    ColorSequenceKeypoint.new(1,   Color3.fromRGB(255, 80, 80)),
+}
+
+-- Warning icon
+local ErrIcon: TextLabel = Instance.new("TextLabel", ErrorPanel)
+ErrIcon.AnchorPoint            = Vector2.new(0, 0.5)
+ErrIcon.Position               = UDim2.new(0, 8, 0.38, 0)
+ErrIcon.Size                   = UDim2.new(0, 18, 0, 18)
+ErrIcon.BackgroundTransparency = 1
+ErrIcon.Font                   = Enum.Font.GothamBold
+ErrIcon.Text                   = "⚠"
+ErrIcon.TextScaled             = true
+ErrIcon.TextColor3             = Color3.fromRGB(255, 140, 40)
+ErrIcon.ZIndex                 = 6
+
+-- Error title
+local ErrTitle: TextLabel = Instance.new("TextLabel", ErrorPanel)
+ErrTitle.AnchorPoint            = Vector2.new(0, 0)
+ErrTitle.Position               = UDim2.new(0, 30, 0, 6)
+ErrTitle.Size                   = UDim2.new(0.7, 0, 0, 16)
+ErrTitle.BackgroundTransparency = 1
+ErrTitle.Font                   = Enum.Font.Arcade
+ErrTitle.Text                   = "Network Error"
+ErrTitle.TextSize               = 12
+ErrTitle.TextXAlignment         = Enum.TextXAlignment.Left
+ErrTitle.TextColor3             = Color3.fromRGB(255, 100, 100)
+ErrTitle.TextStrokeTransparency = 0.4
+ErrTitle.TextStrokeColor3       = Color3.fromRGB(0, 0, 0)
+ErrTitle.ZIndex                 = 6
+
+-- Error description (shorter message)
+local ErrDesc: TextLabel = Instance.new("TextLabel", ErrorPanel)
+ErrDesc.AnchorPoint            = Vector2.new(0, 0)
+ErrDesc.Position               = UDim2.new(0, 30, 0, 23)
+ErrDesc.Size                   = UDim2.new(0.68, 0, 0, 22)
+ErrDesc.BackgroundTransparency = 1
+ErrDesc.Font                   = Enum.Font.Arcade
+ErrDesc.Text                   = "Failed to fetch script."
+ErrDesc.TextSize               = 9
+ErrDesc.TextWrapped            = true
+ErrDesc.TextXAlignment         = Enum.TextXAlignment.Left
+ErrDesc.TextYAlignment         = Enum.TextYAlignment.Top
+ErrDesc.TextColor3             = Color3.fromRGB(220, 180, 180)
+ErrDesc.ZIndex                 = 6
+
+-- Retry button
+local ErrRetryBtn: TextButton = Instance.new("TextButton", ErrorPanel)
+ErrRetryBtn.AnchorPoint            = Vector2.new(1, 0.5)
+ErrRetryBtn.Position               = UDim2.new(0.98, 0, 0.55, 0)
+ErrRetryBtn.Size                   = UDim2.new(0, 54, 0, 22)
+ErrRetryBtn.BackgroundColor3       = Color3.fromRGB(255, 255, 255)
+ErrRetryBtn.BackgroundTransparency = 1
+ErrRetryBtn.BorderSizePixel        = 0
+ErrRetryBtn.Font                   = Enum.Font.Arcade
+ErrRetryBtn.Text                   = "Retry"
+ErrRetryBtn.TextSize               = 11
+ErrRetryBtn.TextColor3             = Color3.fromRGB(255, 255, 255)
+ErrRetryBtn.ZIndex                 = 7
+Instance.new("UICorner", ErrRetryBtn).CornerRadius = UDim.new(0, 4)
+local ErrRetryGrad: UIGradient = Instance.new("UIGradient", ErrRetryBtn)
+ErrRetryGrad.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 80, 80)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 40, 40)),
+}
+ErrRetryGrad.Rotation = 90
+Instance.new("UIStroke", ErrRetryBtn).Color     = Color3.fromRGB(255, 80, 80)
+Instance.new("UIStroke", ErrRetryBtn).Thickness = 1
+
+-- Dismiss (×) button
+local ErrDismissBtn: TextButton = Instance.new("TextButton", ErrorPanel)
+ErrDismissBtn.AnchorPoint            = Vector2.new(1, 0)
+ErrDismissBtn.Position               = UDim2.new(1, -2, 0, 2)
+ErrDismissBtn.Size                   = UDim2.new(0, 14, 0, 14)
+ErrDismissBtn.BackgroundTransparency = 1
+ErrDismissBtn.BorderSizePixel        = 0
+ErrDismissBtn.Font                   = Enum.Font.GothamBold
+ErrDismissBtn.Text                   = "×"
+ErrDismissBtn.TextSize               = 13
+ErrDismissBtn.TextColor3             = Color3.fromRGB(180, 100, 100)
+ErrDismissBtn.ZIndex                 = 8
+
+-- Helper: slide the error panel up into view / back down
+local _errPanelOpen: boolean = false
+local function showErrorPanel(title: string, desc: string, onRetry: (() -> ())?)
+    if not ErrorPanel or not ErrorPanel.Parent then return end
+    ErrTitle.Text = title
+    ErrDesc.Text  = desc
+    _errPanelOpen  = true
+    ErrorPanel.Visible  = true
+    ErrorPanel.Position = UDim2.new(0, 0, 1.05, 0)
+    TweenService:Create(ErrorPanel, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Position = UDim2.new(0, 0, 0.62, 0),
+    }):Play()
+
+    -- Retry wires up fresh each call
+    local retryConn: RBXScriptConnection
+    retryConn = ErrRetryBtn.MouseButton1Click:Connect(function()
+        retryConn:Disconnect()
+        pcall(function()
+            TweenService:Create(ErrorPanel, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+                Position = UDim2.new(0, 0, 1.05, 0),
+            }):Play()
+        end)
+        task.wait(0.22)
+        ErrorPanel.Visible = false
+        _errPanelOpen = false
+        if onRetry then task.spawn(onRetry) end
+    end)
+end
+
+local function hideErrorPanel()
+    if not _errPanelOpen then return end
+    _errPanelOpen = false
+    pcall(function()
+        TweenService:Create(ErrorPanel, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            Position = UDim2.new(0, 0, 1.05, 0),
+        }):Play()
+    end)
+    task.delay(0.22, function()
+        if not _errPanelOpen and ErrorPanel then ErrorPanel.Visible = false end
+    end)
+end
+
+ErrDismissBtn.MouseButton1Click:Connect(function()
+    hideErrorPanel()
+end)
+
 local function shakeError()
     pcall(function()
         local orig: UDim2 = MainBackground.Position
@@ -1267,7 +1602,7 @@ end
 MainBackground.Visible = true
 MainBackground.Size    = UDim2.new(0, 0, 0, 0)
 TweenService:Create(MainBackground, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-    Size = UDim2.new(0, 318, 0, 150), ImageTransparency = 0.2
+    Size = UDim2.new(0, 318, 0, 162), ImageTransparency = 0.2
 }):Play()
 task.wait(0.4)
 
@@ -1277,7 +1612,7 @@ Name.Visible          = true
 Logo.Visible          = true
 Version.Visible       = true
 SettingsIcon.Visible  = true
-GreetingLabel.Visible = true
+GreetingCard.Visible  = true
 
 loadConfig()
 
@@ -1452,10 +1787,62 @@ UpdateGreeting()
 pcall(function()
     TweenService:Create(GreetingScale, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
 end)
+
 task.spawn(function()
     while RealZzHub and RealZzHub.Parent do
-        task.wait(60)
-        pcall(UpdateGreeting)
+        task.wait(3)
+        if not (RealZzHub and RealZzHub.Parent) then break end
+
+        -- 1. Slide + fade out (card slides left, shrinks, fades)
+        pcall(function()
+            TweenService:Create(GreetingScale, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+                Scale = 0.88,
+            }):Play()
+            TweenService:Create(GreetingLabel, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+                TextTransparency = 1,
+                TextStrokeTransparency = 1,
+            }):Play()
+            TweenService:Create(GCardSub, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+                TextTransparency = 1,
+            }):Play()
+            TweenService:Create(GCardIcon, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+                ImageTransparency = 1,
+            }):Play()
+        end)
+        task.wait(0.25)
+
+        -- 2. Swap state
+        _greetingShowDiscord = not _greetingShowDiscord
+        pcall(ApplyGreetingState)
+
+        -- 3. Slide + fade in (Back easing = overshoot bounce like a brand phone notification)
+        if _greetingShowDiscord then
+            -- Discord mode: show icon + sub link
+            pcall(function()
+                TweenService:Create(GCardIcon, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                    ImageTransparency = 0,
+                }):Play()
+                TweenService:Create(GCardSub, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    TextTransparency = 0.2,
+                }):Play()
+            end)
+        else
+            -- Normal mode: hide icon + sub
+            pcall(function()
+                GCardIcon.ImageTransparency = 1
+                GCardSub.TextTransparency   = 1
+            end)
+        end
+
+        pcall(function()
+            TweenService:Create(GreetingScale, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                Scale = 1,
+            }):Play()
+            TweenService:Create(GreetingLabel, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                TextTransparency = 0,
+                TextStrokeTransparency = 0.6,
+            }):Play()
+        end)
     end
 end)
 
