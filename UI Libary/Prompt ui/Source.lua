@@ -1,5 +1,4 @@
 local cloneref = cloneref or function(i) return i end
-
 local RunService = cloneref(game:GetService("RunService"))
 local CoreGui = cloneref(game:GetService("CoreGui"))
 
@@ -15,22 +14,10 @@ local function NewScreen(ScreenName)
     return Screen
 end
 
-local ErrorPrompt = nil
-local useOriginal = false
-
-local ok = pcall(function()
-    ErrorPrompt = getrenv().require(CoreGui.RobloxGui.Modules.ErrorPrompt)
-    useOriginal = true
-end)
-
-if useOriginal then
-    warn("Using original ErrorPrompt UI")
-else
-    warn("⚠ ErrorPrompt failed, using fallback UI")
-end
-
 local function BuildFallbackPrompt(Title, Message, Buttons, RichText)
     local Screen = NewScreen("Prompt")
+
+    -- Overlay
     local Overlay = Instance.new("Frame")
     Overlay.Size = UDim2.new(1, 0, 1, 0)
     Overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
@@ -38,6 +25,7 @@ local function BuildFallbackPrompt(Title, Message, Buttons, RichText)
     Overlay.BorderSizePixel = 0
     Overlay.Parent = Screen
 
+    -- Main Frame
     local Frame = Instance.new("Frame")
     Frame.Size = UDim2.new(0, 420, 0, 220)
     Frame.Position = UDim2.new(0.5, -210, 0.5, -110)
@@ -45,6 +33,8 @@ local function BuildFallbackPrompt(Title, Message, Buttons, RichText)
     Frame.BorderSizePixel = 0
     Frame.Parent = Screen
     Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 10)
+
+    -- Title Bar
     local TitleBar = Instance.new("Frame")
     TitleBar.Size = UDim2.new(1, 0, 0, 48)
     TitleBar.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
@@ -62,7 +52,8 @@ local function BuildFallbackPrompt(Title, Message, Buttons, RichText)
     TitleLabel.Font = Enum.Font.GothamBold
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
     TitleLabel.Parent = TitleBar
-    
+
+    -- Message
     local MsgLabel = Instance.new("TextLabel")
     MsgLabel.Size = UDim2.new(1, -20, 0, 110)
     MsgLabel.Position = UDim2.new(0, 10, 0, 55)
@@ -76,7 +67,7 @@ local function BuildFallbackPrompt(Title, Message, Buttons, RichText)
     MsgLabel.TextXAlignment = Enum.TextXAlignment.Left
     MsgLabel.Parent = Frame
 
-  
+    -- Button Row
     local ButtonFrame = Instance.new("Frame")
     ButtonFrame.Size = UDim2.new(1, -20, 0, 38)
     ButtonFrame.Position = UDim2.new(0, 10, 1, -48)
@@ -125,49 +116,6 @@ local function BuildFallbackPrompt(Title, Message, Buttons, RichText)
     return Screen
 end
 
-local function BuildOriginalPrompt(Title, Message, Buttons, RichText)
-    local Screen = NewScreen("Prompt")
-    local Prompt = ErrorPrompt.new(
-        "Default",
-        {
-            MessageTextScaled = false,
-            PlayAnimation = false,
-            HideErrorCode = true
-        }
-    )
-
-    if RichText then
-        Prompt._frame.MessageArea.ErrorFrame.ErrorMessage.RichText = true
-    end
-
-    for _, Button in pairs(Buttons) do
-        local Old = Button.Callback
-        Button.Callback = function(...)
-            RunService:SetRobloxGuiFocused(false)
-            Prompt:_close()
-            Screen:Destroy()
-            return Old(...)
-        end
-    end
-
-    Prompt:setErrorTitle(Title)
-    Prompt:updateButtons(Buttons)
-    Prompt:setParent(Screen)
-    RunService:SetRobloxGuiFocused(true)
-    Prompt:_open(Message)
-    return Prompt, Screen
-end
-
 return function(Title, Message, Buttons, RichText)
-    if useOriginal then
-        local ok, result, screen = pcall(function()
-            return BuildOriginalPrompt(Title, Message, Buttons, RichText)
-        end)
-        if ok then
-            return result, screen
-        else
-            warn("⚠️ Original ErrorPrompt call failed, switching to fallback: " .. tostring(result))
-        end
-    end
     return BuildFallbackPrompt(Title, Message, Buttons, RichText)
 end
