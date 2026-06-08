@@ -266,11 +266,16 @@ if not _earlySkipIntro then
     progressGradient.Color = goldGradient
 
     task.spawn(function()
+        local _gradFrame: number = 0
         while gui.Parent do
-            barGradient.Rotation      += 1
-            progressGradient.Rotation += 1
-            barGradient.Offset        = Vector2.new(math.sin(tick()) * 0.3, 0)
-            progressGradient.Offset   = Vector2.new(math.sin(tick()) * 0.3, 0)
+            _gradFrame += 1
+            if _gradFrame % 4 == 0 then  -- update every 4 frames (~15 fps) – plenty for a gradient
+                local t: number = tick()
+                barGradient.Rotation      += 4
+                progressGradient.Rotation += 4
+                barGradient.Offset        = Vector2.new(math.sin(t) * 0.3, 0)
+                progressGradient.Offset   = Vector2.new(math.sin(t) * 0.3, 0)
+            end
             task.wait()
         end
     end)
@@ -444,39 +449,60 @@ local function GetGreetingAndTime(): (string, string, string)
     return greeting, emoji, timeStr
 end
 
--- ── Base64 decoder ───────────────────────────────────────────────────────────
-local b: string = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+-- ── Base64 decoder (fast lookup-table, no per-char string ops) ───────────────
+-- Pre-built decode table: char → 6-bit value
+local _b64chars: string = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+local _b64lut: { [number]: number } = {}
+for i: number = 1, #_b64chars do
+    _b64lut[string.byte(_b64chars, i)] = i - 1
+end
 
 local function base64_decode(data: string): string
-    data = string.gsub(data, "[^" .. b .. "=]", "")
-    return (data:gsub(".", function(x: string): string
-        if x == "=" then return "" end
-        local r: string = ""
-        local f: number = (b:find(x) :: number) - 1
-        for i: number = 6, 1, -1 do
-            r ..= (f % 2 ^ i - f % 2 ^ (i - 1) > 0) and "1" or "0"
-        end
-        return r
-    end):gsub("%d%d%d?%d?%d?%d?%d?%d?", function(x: string): string
-        if #x ~= 8 then return "" end
-        local c: number = 0
-        for i: number = 1, 8 do
-            c += (x:sub(i, i) == "1") and 2 ^ (8 - i) or 0
-        end
-        return string.char(c)
-    end))
+    -- Strip any character not in the base64 alphabet (including whitespace / newlines)
+    data = data:gsub("[^A-Za-z0-9+/=]", "")
+    local out: { string } = {}
+    local len: number = #data
+    local i:   number = 1
+    while i <= len do
+        local b0: number = _b64lut[string.byte(data, i)]     or 0
+        local b1: number = _b64lut[string.byte(data, i + 1)] or 0
+        local b2: number = _b64lut[string.byte(data, i + 2)] or 0
+        local b3: number = _b64lut[string.byte(data, i + 3)] or 0
+        local n:  number = (b0 * 0x40000) + (b1 * 0x1000) + (b2 * 0x40) + b3
+        out[#out + 1] = string.char(
+            math.floor(n / 0x10000) % 256,
+            math.floor(n / 0x100)   % 256,
+            n % 256
+        )
+        i += 4
+    end
+    local result: string = table.concat(out)
+    -- Trim padding bytes introduced by "=" characters
+    local pad: number = 0
+    if data:sub(-1) == "=" then pad += 1 end
+    if data:sub(-2, -2) == "=" then pad += 1 end
+    return pad > 0 and result:sub(1, #result - pad) or result
+end
+
+-- Only attempt decode on strings that look like valid base64 (length multiple of 4,
+-- contains only b64 alphabet). This avoids pointlessly decoding plain-text values.
+local _b64Pattern: string = "^[A-Za-z0-9+/]+=?=?$"
+local function _isBase64(s: string): boolean
+    return (#s > 0) and (#s % 4 == 0) and (s:match(_b64Pattern) ~= nil)
 end
 
 local function decode_obfuscated(obj: any): any
     if type(obj) == "table" then
-        local new: { [string]: any } = {}
+        local new: { [any]: any } = {}
         for k: any, v: any in obj do
-            local dec_key: string = base64_decode(tostring(k))
-            new[dec_key] = decode_obfuscated(v)
+            local sk: string = tostring(k)
+            local dk: string = _isBase64(sk) and base64_decode(sk) or sk
+            new[dk] = decode_obfuscated(v)
         end
         return new
     elseif type(obj) == "string" then
-        return base64_decode(obj :: string)
+        local s: string = obj :: string
+        return _isBase64(s) and base64_decode(s) or s
     end
     return obj
 end
@@ -531,15 +557,19 @@ local startTime:  number = tick()
 local cycleDuration: number = 4
 
 task.spawn(function()
+    local _strokeFrame: number = 0
     while MainBackground and MainBackground.Parent do
-        pcall(function()
-            local t: number      = (tick() - startTime) / cycleDuration
-            local factor: number = (math.sin(t * math.pi * 2) + 1) / 2
-            local r: number = colorGreen.R + (colorBlue.R - colorGreen.R) * factor
-            local g: number = colorGreen.G + (colorBlue.G - colorGreen.G) * factor
-            local bv: number = colorGreen.B + (colorBlue.B - colorGreen.B) * factor
-            EdgeStroke.Color = Color3.new(r, g, bv)
-        end)
+        _strokeFrame += 1
+        if _strokeFrame % 3 == 0 then  -- ~20 fps is more than enough for a smooth color cycle
+            pcall(function()
+                local t: number      = (tick() - startTime) / cycleDuration
+                local factor: number = (math.sin(t * math.pi * 2) + 1) / 2
+                local r: number = colorGreen.R + (colorBlue.R - colorGreen.R) * factor
+                local g: number = colorGreen.G + (colorBlue.G - colorGreen.G) * factor
+                local bv: number = colorGreen.B + (colorBlue.B - colorGreen.B) * factor
+                EdgeStroke.Color = Color3.new(r, g, bv)
+            end)
+        end
         RunService.Heartbeat:Wait()
     end
 end)
@@ -1271,34 +1301,70 @@ end
 
 local gameId: string = tostring(game.GameId)
 
-local githubOk: boolean, githubErr: any = pcall(function()
-    local githubData: string? = fetch(GITHUB_JSON_URL .. "?nocache=" .. tick())
-    if not githubData or #(githubData :: string) == 0 then error("Empty response") end
-    local json: any = HttpService:JSONDecode(githubData :: string)
-    if json and json[gameId] then
-        scriptUrl = GITHUB_BASE .. json[gameId].Path
-        gameName  = json[gameId].Name
-    end
-end)
-if not githubOk then
-    warn("[VelocityX] GitHub game list failed: " .. tostring(githubErr))
-end
+-- ── Parallel fetch: GitHub + Pastefy run at the same time ───────────────────
+-- We fire both in task.spawn, collect results into shared state,
+-- then pick the winner once both finish (or one succeeds early).
+do
+    local githubResult:  { url: string, name: string }? = nil
+    local pastebinResult: { url: string, name: string }? = nil
+    local done1: boolean = false
+    local done2: boolean = false
 
-if not scriptUrl then
-    local pastebinOk: boolean, pastebinErr: any = pcall(function()
-        local pastebinData: string? = fetch(PASTEBIN_JSON_URL .. "?nocache=" .. tick())
-        if not pastebinData or #(pastebinData :: string) == 0 then error("Empty response") end
-        local rawJson: any = HttpService:JSONDecode(pastebinData :: string)
-        local json: any    = decode_obfuscated(rawJson)
-        if json and json[gameId] then
-            local path:         string = json[gameId].Path
-            local randomstring: string = json[gameId].randomstring or ""
-            scriptUrl = path .. randomstring
-            gameName  = json[gameId].Name
-        end
-    end)
-    if not pastebinOk then
-        warn("[VelocityX] Pastefy game list failed: " .. tostring(pastebinErr))
+    -- Cache-bust token shared between both so they're in the same fetch round
+    local cacheBust: string = tostring(math.floor(tick()))
+
+    local function tryGithub()
+        local ok: boolean = pcall(function()
+            local data: string? = fetch(GITHUB_JSON_URL .. "?t=" .. cacheBust)
+            if not data or #(data :: string) == 0 then error("Empty") end
+            local json: any = HttpService:JSONDecode(data :: string)
+            if json and json[gameId] then
+                githubResult = {
+                    url  = GITHUB_BASE .. json[gameId].Path,
+                    name = json[gameId].Name,
+                }
+            end
+        end)
+        if not ok then warn("[VelocityX] GitHub game list failed") end
+        done1 = true
+    end
+
+    local function tryPastebin()
+        local ok: boolean = pcall(function()
+            local data: string? = fetch(PASTEBIN_JSON_URL .. "?t=" .. cacheBust)
+            if not data or #(data :: string) == 0 then error("Empty") end
+            local rawJson: any = HttpService:JSONDecode(data :: string)
+            local json: any    = decode_obfuscated(rawJson)
+            if json and json[gameId] then
+                local path:         string = json[gameId].Path
+                local randomstring: string = json[gameId].randomstring or ""
+                pastebinResult = {
+                    url  = path .. randomstring,
+                    name = json[gameId].Name,
+                }
+            end
+        end)
+        if not ok then warn("[VelocityX] Pastefy game list failed") end
+        done2 = true
+    end
+
+    -- Fire both in parallel
+    task.spawn(tryGithub)
+    task.spawn(tryPastebin)
+
+    -- Wait until BOTH are done (each takes ~0.5-1 s; parallel = no extra wait)
+    local deadline: number = tick() + 8  -- safety timeout
+    while (not done1 or not done2) and tick() < deadline do
+        task.wait(0.05)
+    end
+
+    -- GitHub wins if it found the game; Pastebin is fallback
+    if githubResult then
+        scriptUrl = githubResult.url
+        gameName  = githubResult.name
+    elseif pastebinResult then
+        scriptUrl = pastebinResult.url
+        gameName  = pastebinResult.name
     end
 end
 
@@ -1312,17 +1378,20 @@ end
 
 InjectButton.Text = gameName .. ".lua"
 
-local versionOk: boolean, versionErr: any = pcall(function()
-    local versionStr: string = game:HttpGet(
-        "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/config/version.json"
-    )
-    if not versionStr or #versionStr == 0 then error("Empty version response") end
-    Version.Text = "Version: " .. versionStr
+-- Version fetch is fire-and-forget; no need to block the UI for it
+task.spawn(function()
+    local ok: boolean = pcall(function()
+        local versionStr: string = game:HttpGet(
+            "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/config/version.json"
+        )
+        if not versionStr or #versionStr == 0 then error("Empty version response") end
+        Version.Text = "Version: " .. versionStr
+    end)
+    if not ok then
+        Version.Text = "Version: ?"
+        warn("[VelocityX] Version fetch failed")
+    end
 end)
-if not versionOk then
-    Version.Text = "Version: ?"
-    warn("[VelocityX] Version fetch failed: " .. tostring(versionErr))
-end
 
 local function clearText()
     for _, v: Instance in MainBackground:GetDescendants() do
