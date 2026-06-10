@@ -1408,19 +1408,7 @@ local antiGameplayPauseRunning:   boolean              = false
 local antiGameplayPauseThread:    thread?              = nil
 
 local function cleanupAntiFeatures()
-    if antiAfkConnection then
-        antiAfkConnection:Disconnect()
-        antiAfkConnection = nil
-    end
-    if antiFlingConnection then
-        antiFlingConnection:Disconnect()
-        antiFlingConnection = nil
-    end
-    antiGameplayPauseRunning = false
-    if antiGameplayPauseThread then
-        task.cancel(antiGameplayPauseThread)
-        antiGameplayPauseThread = nil
-    end
+    print("🥺🤟😞😜❤💙🧡") 
 end
 
 -- ── Error UI panel ────────────────────────────────────────────────────────────
