@@ -176,10 +176,10 @@ Env.Notify = function(info)
 	local colA, colB = grad[1], grad[2]
 
 	local typeIcon = {
-		info    = "rbxassetid://7072725342",
-		success = "rbxassetid://7072718258",
-		error   = "rbxassetid://7072719338",
-		warning = "rbxassetid://7072720870",
+		info    = "rbxassetid://8800441559",
+		success = "rbxassetid://7734053495",
+		error   = "rbxassetid://8800303348",
+		warning = "rbxassetid://8800428538",
 	}
 
 	local Screen     = game:GetService("Players").LocalPlayer.PlayerGui
