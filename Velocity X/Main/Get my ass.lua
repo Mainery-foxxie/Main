@@ -20,6 +20,7 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
 getgenv().SelectedDog = nil
+getgenv().PromptCooldown = 0.5
 getgenv().AutoPetDog = false
 getgenv().AutoCollect = false
 getgenv().TweenSpeed = 40
@@ -42,11 +43,21 @@ local function GetDogs()
     return dogs
 end
 
-DogSection:Dropdown({
+local DogDropdown = DogSection:Dropdown({
     Title = "Select Dog",
     List = GetDogs(),
     Callback = function(v)
         getgenv().SelectedDog = v
+    end,
+})
+DogSection:Slider({
+    Title = "Prompt Cooldown",
+    Min = 0.5,
+    Max = 2,
+    Value = 0.5,
+    Rounding = 1,
+    CallBack = function(v)
+        getgenv().PromptCooldown = v
     end,
 })
 
@@ -72,10 +83,7 @@ DogSection:Toggle({
 DogSection:Button({
     Title = "Refresh Dogs",
     Callback = function()
-        print("Available Dogs:")
-        for _, name in ipairs(GetDogs()) do
-            print(name)
-        end
+        DogDropdown:Refresh(GetDogs())
     end,
 })
 
@@ -132,8 +140,10 @@ task.spawn(function()
         tween.Completed:Wait()
 
         pcall(function()
-            fireproximityprompt(prompt)
+        fireproximityprompt(prompt)
         end)
+
+        task.wait(getgenv().PromptCooldown)
     end
 end)
 
