@@ -23,7 +23,7 @@ getgenv().SelectedDog = nil
 getgenv().PromptCooldown = 0
 getgenv().AutoPetDog = false
 getgenv().AutoCollect = false
-getgenv().TweenSpeed = 40
+getgenv().TweenSpeed = 30
 
 local General  = Window:Add({ Title = "General",  Desc = "General features",   Banner = 101849161408766 })
 local DogSection = General:Section({
@@ -64,8 +64,8 @@ DogSection:Slider({
 DogSection:Slider({
     Title = "Tween Speed",
     Min = 10,
-    Max = 200,
-    Value = 40,
+    Max = 30,
+    Value = 30,
     Rounding = 0,
     CallBack = function(v)
         getgenv().TweenSpeed = v
@@ -83,7 +83,12 @@ DogSection:Toggle({
 DogSection:Button({
     Title = "Refresh Dogs",
     Callback = function()
-        DogDropdown:Refresh(GetDogs())
+        DogList = GetDogs()
+
+        print("=== Dogs Found ===")
+        for _, v in ipairs(DogList) do
+          print(v)
+	  end
     end,
 })
 
