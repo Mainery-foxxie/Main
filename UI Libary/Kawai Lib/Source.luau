@@ -188,8 +188,8 @@ Env.Notify = function(info)
 	local hasDesc    = desc ~= ""
 	local hasButtons = type(buttons) == "table" and #buttons > 0
 
-	local baseH  = hasDesc and 68 or 50
-	local totalH = baseH + (hasButtons and 44 or 0)
+	local baseH  = hasDesc and 72 or 50
+	local totalH = baseH + (hasButtons and 46 or 0)
 
 	local NotifHolder = Screen:FindFirstChild("KawaiNotifHolder")
 	if not NotifHolder then
@@ -309,7 +309,7 @@ Env.Notify = function(info)
 	IconBg.BackgroundTransparency    = 0.7
 	IconBg.BorderSizePixel           = 0
 	IconBg.AnchorPoint               = Vector2.new(0, 0.5)
-	IconBg.Position                  = UDim2.new(0, iconX, hasDesc and 0.36 or 0.5, 0)
+	IconBg.Position                  = hasDesc and UDim2.new(0, iconX, 0, 11) or UDim2.new(0, iconX, 0.5, -(iconSz//2 + 4))
 	IconBg.Size                      = UDim2.new(0, iconSz + 8, 0, iconSz + 8)
 	IconBg.ZIndex                    = 5
 	IconBg.Parent                    = Card
@@ -349,8 +349,8 @@ Env.Notify = function(info)
 	local TitleL                     = Instance.new("TextLabel")
 	TitleL.BackgroundTransparency    = 1
 	TitleL.BorderSizePixel           = 0
-	TitleL.AnchorPoint               = Vector2.new(0, 0.5)
-	TitleL.Position                  = UDim2.new(0, textX, hasDesc and 0.32 or 0.5, 0)
+	TitleL.AnchorPoint               = Vector2.new(0, 0)
+	TitleL.Position                  = hasDesc and UDim2.new(0, textX, 0, 10) or UDim2.new(0, textX, 0.5, -8)
 	TitleL.Size                      = UDim2.new(1, -(textX + 10), 0, 16)
 	TitleL.Font                      = Enum.Font.GothamBold
 	TitleL.Text                      = title
@@ -366,14 +366,14 @@ Env.Notify = function(info)
 		DescL.BackgroundTransparency = 1
 		DescL.BorderSizePixel        = 0
 		DescL.AnchorPoint            = Vector2.new(0, 0.5)
-		DescL.Position               = UDim2.new(0, textX, 0.65, 0)
-		DescL.Size                   = UDim2.new(1, -(textX + 10), 0, 13)
+		DescL.Position               = UDim2.new(0, textX, 0, 34)
+		DescL.Size                   = UDim2.new(1, -(textX + 10), 0, 26)
 		DescL.Font                   = Enum.Font.Gotham
 		DescL.Text                   = desc
 		DescL.TextColor3             = Color3.fromRGB(160, 160, 160)
 		DescL.TextSize               = 11
 		DescL.TextXAlignment         = Enum.TextXAlignment.Left
-		DescL.TextTruncate           = Enum.TextTruncate.AtEnd
+		DescL.TextWrapped            = true
 		DescL.ZIndex                 = 5
 		DescL.Parent                 = Card
 	end
@@ -1536,22 +1536,24 @@ function Env:Window(meta)
 					ButtonImage.Size = UDim2.new(0.97, 0,0, 50)
 					ButtonImage.ClipsDescendants = true
 
+					local hasDesc = Desc ~= ""
+
 					Title_1.Name = "Title"
 					Title_1.Parent = ButtonImage
-					Title_1.AnchorPoint = Vector2.new(0.5, 0.5)
+					Title_1.AnchorPoint = Vector2.new(0, 0.5)
 					Title_1.BackgroundColor3 = Color3.fromRGB(255,255,255)
 					Title_1.BackgroundTransparency = 1
 					Title_1.BorderColor3 = Color3.fromRGB(0,0,0)
 					Title_1.BorderSizePixel = 0
-					Title_1.Position = UDim2.new(0.575679302, 0,0.35, 0)
-					Title_1.Size = UDim2.new(0.68, 0, 0, 20)
+					Title_1.Position = UDim2.new(0, 52, hasDesc and 0.34 or 0.5, 0)
+					Title_1.Size = UDim2.new(1, -80, 0, 16)
 					Title_1.Font = Enum.Font.GothamBold
 					Title_1.RichText = true
 					Title_1.Text = tostring(Title or "")
 					Title_1.TextColor3 = Color3.fromRGB(255,255,255)
-					Title_1.TextSize = 14
-					Title_1.TextScaled = true
+					Title_1.TextSize = 13
 					Title_1.TextXAlignment = Enum.TextXAlignment.Left
+					Title_1.TextTruncate = Enum.TextTruncate.AtEnd
 
 					UICorner_1.Parent = ButtonImage
 					UICorner_1.CornerRadius = UDim.new(0,5)
@@ -1578,57 +1580,59 @@ function Env:Window(meta)
 					icon_1.BackgroundTransparency = 1
 					icon_1.BorderColor3 = Color3.fromRGB(0,0,0)
 					icon_1.BorderSizePixel = 0
-					icon_1.Position = UDim2.new(0, 25,0.5, 0)
-					icon_1.Size = UDim2.new(0, 35,0, 35)
+					icon_1.Position = UDim2.new(0, 25, 0.5, 0)
+					icon_1.Size = UDim2.new(0, 30, 0, 30)
 					icon_1.Image = GetIcon(Icon)
-					icon_1.ScaleType = Enum.ScaleType.Crop
+					icon_1.ScaleType = Enum.ScaleType.Fit
 
 					Desc_1.Name = "Desc"
 					Desc_1.Parent = ButtonImage
-					Desc_1.AnchorPoint = Vector2.new(0.5, 0.5)
+					Desc_1.AnchorPoint = Vector2.new(0, 0.5)
 					Desc_1.BackgroundColor3 = Color3.fromRGB(255,255,255)
 					Desc_1.BackgroundTransparency = 1
 					Desc_1.BorderColor3 = Color3.fromRGB(0,0,0)
 					Desc_1.BorderSizePixel = 0
-					Desc_1.Position = UDim2.new(0, 58, 0.65, 0)
-					Desc_1.Size = UDim2.new(1, -100, 0, 13)
+					Desc_1.Position = UDim2.new(0, 52, 0.66, 0)
+					Desc_1.Size = UDim2.new(1, -80, 0, 13)
 					Desc_1.Font = Enum.Font.Gotham
 					Desc_1.RichText = true
 					Desc_1.Text = tostring(Desc or "")
-					Desc_1.TextColor3 = Color3.fromRGB(200,200,200)
+					Desc_1.TextColor3 = Color3.fromRGB(180, 180, 180)
 					Desc_1.TextSize = 11
-					Desc_1.TextTransparency = 0.5
+					Desc_1.TextTransparency = 0.4
 					Desc_1.TextXAlignment = Enum.TextXAlignment.Left
-					Desc_1.Visible = Desc ~= ""
+					Desc_1.TextTruncate = Enum.TextTruncate.AtEnd
+					Desc_1.Visible = hasDesc
 
 					next_1.Name = "next"
 					next_1.Parent = ButtonImage
-					next_1.AnchorPoint = Vector2.new(0.5, 0.5)
+					next_1.AnchorPoint = Vector2.new(1, 0.5)
 					next_1.BackgroundColor3 = Color3.fromRGB(255,255,255)
 					next_1.BackgroundTransparency = 1
 					next_1.BorderColor3 = Color3.fromRGB(0,0,0)
 					next_1.BorderSizePixel = 0
-					next_1.Position = UDim2.new(0, 245,0.5, 0)
-					next_1.Size = UDim2.new(0, 20,0, 20)
+					next_1.Position = UDim2.new(1, -12, 0.5, 0)
+					next_1.Size = UDim2.new(0, 18, 0, 18)
 					next_1.Image = "rbxassetid://108028847031522"
-					next_1.ScaleType = Enum.ScaleType.Crop
+					next_1.ImageTransparency = 0.3
+					next_1.ScaleType = Enum.ScaleType.Fit
 
 					ClickButton.MouseButton1Click:Connect(function()
 						Callback()
 						tw({
 							v = next_1,
-							t = 0.15,
+							t = 0.12,
 							s = "Bounce",
 							d = "Out",
-							g = {Position = UDim2.new(0, 252,0.5, 0)}
+							g = {Position = UDim2.new(1, -8, 0.5, 0)}
 						}):Play()
-						delay(0.06, function()
+						delay(0.08, function()
 							tw({
 								v = next_1,
-								t = 0.15,
+								t = 0.18,
 								s = "Bounce",
 								d = "Out",
-								g = {Position = UDim2.new(0, 245,0.5, 0)}
+								g = {Position = UDim2.new(1, -12, 0.5, 0)}
 							}):Play()
 						end)
 						EffectClick2(ClickButton, ButtonImage)
