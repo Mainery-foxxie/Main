@@ -389,7 +389,6 @@ Env.Notify = function(info)
 	DescL.Text                     = desc
 	DescL.TextColor3               = Color3.fromRGB(160, 160, 160)
 	DescL.TextSize                 = 11
-	DescL.TextWrapped              = true
 	DescL.TextTruncate             = Enum.TextTruncate.AtEnd
 	DescL.ZIndex                   = 5
 	DescL.Visible                  = hasDesc
@@ -611,7 +610,6 @@ Env.Notify = function(info)
 			BtnLabel.Text                   = label
 			BtnLabel.TextColor3             = Color3.fromRGB(255, 255, 255)
 			BtnLabel.TextSize               = 12
-			BtnLabel.TextScaled             = true
 			BtnLabel.ZIndex                 = 6
 			BtnLabel.Parent                 = BtnFrame
 
@@ -1595,7 +1593,6 @@ function Env:Window(meta)
 					Title_1.Text = tostring(Title or "")
 					Title_1.TextColor3 = Color3.fromRGB(255,255,255)
 					Title_1.TextSize = 14
-					Title_1.TextScaled = true
 
 					UICorner_1.Parent = Button
 					UICorner_1.CornerRadius = UDim.new(0,5)
@@ -1970,7 +1967,6 @@ function Env:Window(meta)
 				Desc_1.Text = Link
 				Desc_1.TextColor3 = Color3.fromRGB(255,255,255)
 				Desc_1.TextSize = 13
-				Desc_1.TextScaled = true
 				Desc_1.TextTransparency = 0.5
 				Desc_1.TextXAlignment = Enum.TextXAlignment.Left
 
@@ -2622,7 +2618,6 @@ function Env:Window(meta)
 				Title_1.Text = tostring(Title or "")
 				Title_1.TextColor3 = Color3.fromRGB(255,255,255)
 				Title_1.TextSize = 14
-				Title_1.TextScaled = true
 				Title_1.TextXAlignment = Enum.TextXAlignment.Left
 
 				Desc_1.Name = "Desc"
@@ -3087,7 +3082,6 @@ function Env:Window(meta)
 				Title_1.Text = tostring(Title or "")
 				Title_1.TextColor3 = Color3.fromRGB(255,255,255)
 				Title_1.TextSize = 14
-				Title_1.TextScaled = true
 				Title_1.TextXAlignment = Enum.TextXAlignment.Left
 
 				Desc_1.Name = "Desc"
@@ -3703,7 +3697,6 @@ function Env:Window(meta)
 				Title_1.TextColor3 = Color3.fromRGB(255,255,255)
 				Title_1.TextSize = 14
 				Title_1.TextTransparency = 0.5
-				Title_1.TextScaled = true
 				Title_1.TextXAlignment = Enum.TextXAlignment.Left
 
 				Bin_1.Name = "Bin"
