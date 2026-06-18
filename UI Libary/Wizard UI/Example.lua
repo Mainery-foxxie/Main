@@ -1,6 +1,6 @@
 -- Main Library Source
 
-local Library = loadstring(Game:HttpGet("https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/UI%20Libary/Wizard%20UI/Source.lua"))()
+local Library = loadstring(Game:HttpGet("https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/UI%20Libary/Wizard%20UI/Original%20source.lua"))()
  
 -- Window or baseplate Make tab or section
 
