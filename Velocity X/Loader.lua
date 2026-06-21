@@ -80,52 +80,48 @@ local http_request_fn: ((req: {[string]:any}) -> {[string]:any})?
     or nil
 
 -- ── Robust avatar-thumbnail fetch ────────────────────────────────────────────
--- Tries roproxy → official Roblox API → native rbxthumb:// in that order.
+-- Chain: http_request (roproxy) → http_request (roblox) → game:HttpGet (roproxy)
+-- → game:HttpGet (roblox) → rbxthumb:// native (always works).
 -- Never throws; always returns a usable image string.
 local function getThumbnail(userId: string): string
-    local function tryHttp(url: string): string?
-        if not http_request_fn then return nil end
-        local ok: boolean, resp: any = pcall(http_request_fn, {
-            Url     = url,
-            Method  = "GET",
-            Headers = { ["Content-Type"] = "application/json" },
-        })
-        if not ok or not resp then return nil end
-        -- Accept 200 or missing status (some executors omit it)
-        if resp.StatusCode and resp.StatusCode ~= 200 then return nil end
-        local dataOk: boolean, data: any = pcall(function()
-            return game:GetService("HttpService"):JSONDecode(resp.Body or "")
-        end)
-        if dataOk and data and data.data and data.data[1] then
-            local imgUrl: string? = data.data[1].imageUrl
-            if imgUrl and #imgUrl > 4 then return imgUrl end
+    local HS = game:GetService("HttpService")
+
+    local function parseThumbJson(body: string): string?
+        local ok, data = pcall(HS.JSONDecode, HS, body)
+        if ok and data and data.data and data.data[1] then
+            local url: string? = data.data[1].imageUrl
+            if url and #url > 10 then return url end
         end
         return nil
     end
 
-    -- Method 1 – roproxy (fastest, no auth needed)
-    local r1: string? = tryHttp(
-        "https://thumbnails.roproxy.com/v1/users/avatar-headshot?userIds=" ..
-        userId .. "&size=75x75&format=Png"
-    )
-    if r1 then return r1 end
+    local URLS: {string} = {
+        "https://thumbnails.roproxy.com/v1/users/avatar-headshot?userIds=" .. userId .. "&size=75x75&format=Png",
+        "https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds="  .. userId .. "&size=75x75&format=Png",
+    }
 
-    -- Method 2 – official Roblox thumbnail API
-    local r2: string? = tryHttp(
-        "https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=" ..
-        userId .. "&size=75x75&format=Png"
-    )
-    if r2 then return r2 end
+    -- Method A – http_request (some executors need this for external HTTP)
+    if http_request_fn then
+        for _, url in URLS do
+            local ok, resp = pcall(http_request_fn, { Url = url, Method = "GET" })
+            if ok and resp and (not resp.StatusCode or resp.StatusCode == 200) then
+                local img = parseThumbJson(resp.Body or "")
+                if img then return img end
+            end
+        end
+    end
 
-    -- Method 3 – alternative proxy endpoint
-    local r3: string? = tryHttp(
-        "https://api.roproxy.com/v1/avatar/avatar-headshot?userId=" ..
-        userId .. "&thumbnailType=headshot&size=75x75&format=Png&isCircular=false"
-    )
-    if r3 then return r3 end
+    -- Method B – game:HttpGet (available in virtually every executor)
+    for _, url in URLS do
+        local ok, body = pcall(game.HttpGet, game, url)
+        if ok and body and #body > 10 then
+            local img = parseThumbJson(body)
+            if img then return img end
+        end
+    end
 
-    -- Fallback – native Roblox rbxthumb:// (always works, no HTTP needed)
-    return "rbxthumb://type=AvatarHeadShot&id=" .. userId .. "&w=60&h=60"
+    -- Method C – native rbxthumb:// (no HTTP call; Roblox engine loads it directly)
+    return "rbxthumb://type=AvatarHeadShot&id=" .. userId .. "&w=150&h=150"
 end
 
 -- // cloneref polyfill for executors that don't support it
@@ -1052,8 +1048,8 @@ Instance.new("UIStroke", DeleteNoButton).Color     = Color3.fromRGB(255, 100, 10
 Instance.new("UIStroke", DeleteNoButton).Thickness = 1.5
 
 -- ── Settings panel  (tabbed: ⚙ Settings | ℹ Info | ★ Credit) ─────────────────
-local PANEL_W: number = 215
-local PANEL_H: number = 242
+local PANEL_W: number = 222
+local PANEL_H: number = 245
 
 local SettingsPanel: ImageLabel = Instance.new("ImageLabel", MainBackground)
 SettingsPanel.AnchorPoint      = Vector2.new(1, 0)
@@ -1140,9 +1136,9 @@ local function makeTabButton(
     return btn
 end
 
-local TabBtnSettings: TextButton = makeTabButton("⚙ Settings", 5,  65)
-local TabBtnInfo:     TextButton = makeTabButton("ℹ Info",    75,  55)
-local TabBtnCredit:   TextButton = makeTabButton("★ Credit",  135, 60)
+local TabBtnSettings: TextButton = makeTabButton("⚙ Settings",    4,  66)
+local TabBtnInfo:     TextButton = makeTabButton("ℹ Information", 73,  82)
+local TabBtnCredit:   TextButton = makeTabButton("★ Credit",     158,  60)
 
 -- ── Content frames (one per tab, all same region below the tab bar) ───────────
 local CONTENT_Y: number = 28  -- pixels below SettingsPanel top
@@ -1165,48 +1161,213 @@ local ToggleList: UIListLayout = Instance.new("UIListLayout", ScrollingFrame)
 ToggleList.Padding             = UDim.new(0, 8)
 ToggleList.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
--- ─ Info content ─
-local InfoContent: Frame = Instance.new("Frame", SettingsPanel)
-InfoContent.Name                  = "InfoContent"
-InfoContent.Position              = UDim2.new(0, 0, 0, CONTENT_Y)
-InfoContent.Size                  = UDim2.new(1, 0, 1, -CONTENT_Y - 4)
+-- ─ Information content (scrollable) ─
+local InfoContent: ScrollingFrame = Instance.new("ScrollingFrame", SettingsPanel)
+InfoContent.Name                   = "InfoContent"
+InfoContent.Position               = UDim2.new(0, 0, 0, CONTENT_Y)
+InfoContent.Size                   = UDim2.new(1, 0, 1, -CONTENT_Y - 4)
 InfoContent.BackgroundTransparency = 1
-InfoContent.BorderSizePixel       = 0
-InfoContent.ClipsDescendants      = true
-InfoContent.ZIndex                = 3
-InfoContent.Visible               = false
+InfoContent.BorderSizePixel        = 0
+InfoContent.ClipsDescendants       = true
+InfoContent.ScrollBarThickness     = 4
+InfoContent.ScrollBarImageColor3   = Color3.fromRGB(0, 200, 255)
+InfoContent.CanvasSize             = UDim2.new(0, 0, 0, 0)
+InfoContent.ZIndex                 = 3
+InfoContent.Visible                = false
+InfoContent.ScrollingDirection     = Enum.ScrollingDirection.Y
+InfoContent.AutomaticCanvasSize    = Enum.AutomaticSize.Y   -- auto-grow canvas
 
 local InfoList: UIListLayout = Instance.new("UIListLayout", InfoContent)
-InfoList.Padding             = UDim.new(0, 5)
+InfoList.Padding             = UDim.new(0, 2)
 InfoList.HorizontalAlignment = Enum.HorizontalAlignment.Center
 InfoList.VerticalAlignment   = Enum.VerticalAlignment.Top
-local InfoPad: UIPadding = Instance.new("UIPadding", InfoContent)
-InfoPad.PaddingTop    = UDim.new(0, 6)
-InfoPad.PaddingLeft   = UDim.new(0, 8)
-InfoPad.PaddingRight  = UDim.new(0, 8)
+InfoList.SortOrder           = Enum.SortOrder.LayoutOrder
 
-local function addInfoRow(icon: string, txt: string, color: Color3?): TextLabel
-    local lbl: TextLabel = Instance.new("TextLabel", InfoContent)
+local InfoPad: UIPadding = Instance.new("UIPadding", InfoContent)
+InfoPad.PaddingTop    = UDim.new(0, 5)
+InfoPad.PaddingLeft   = UDim.new(0, 6)
+InfoPad.PaddingRight  = UDim.new(0, 8)
+InfoPad.PaddingBottom = UDim.new(0, 5)
+
+-- ── Info row helpers ──────────────────────────────────────────────────────────
+local _infoOrder: number = 0
+local function addInfoRow(icon: string, label: string, value: string, col: Color3?): TextLabel
+    _infoOrder += 1
+    local row: Frame = Instance.new("Frame", InfoContent)
+    row.Size                  = UDim2.new(1, -6, 0, 17)
+    row.BackgroundTransparency = 1
+    row.BorderSizePixel       = 0
+    row.ZIndex                = 4
+    row.LayoutOrder           = _infoOrder
+
+    local lbl: TextLabel = Instance.new("TextLabel", row)
     lbl.BackgroundTransparency = 1
-    lbl.Size          = UDim2.new(1, 0, 0, 18)
-    lbl.Font          = Enum.Font.Arcade
-    lbl.TextSize      = 9
+    lbl.Position  = UDim2.new(0, 0, 0, 0)
+    lbl.Size      = UDim2.new(0.46, 0, 1, 0)
+    lbl.Font      = Enum.Font.Arcade
+    lbl.TextSize  = 8
     lbl.TextXAlignment = Enum.TextXAlignment.Left
-    lbl.TextColor3    = color or Color3.fromRGB(220, 220, 220)
-    lbl.TextWrapped   = true
-    lbl.ZIndex        = 4
-    lbl.Text          = icon .. "  " .. txt
-    return lbl
+    lbl.TextColor3     = Color3.fromRGB(140, 140, 140)
+    lbl.ZIndex         = 4
+    lbl.Text           = icon .. " " .. label
+
+    local val: TextLabel = Instance.new("TextLabel", row)
+    val.BackgroundTransparency = 1
+    val.Position  = UDim2.new(0.46, 0, 0, 0)
+    val.Size      = UDim2.new(0.54, 0, 1, 0)
+    val.Font      = Enum.Font.Arcade
+    val.TextSize  = 8
+    val.TextXAlignment = Enum.TextXAlignment.Right
+    val.TextTruncate   = Enum.TextTruncate.AtEnd
+    val.TextColor3     = col or Color3.fromRGB(0, 220, 180)
+    val.ZIndex         = 4
+    val.Text           = value
+
+    return val
 end
 
-local InfoDivider: Frame = Instance.new("Frame", InfoContent)
-InfoDivider.Size               = UDim2.new(1, -8, 0, 1)
-InfoDivider.BackgroundColor3   = Color3.fromRGB(0, 200, 255)
-InfoDivider.BackgroundTransparency = 0.6
-InfoDivider.BorderSizePixel    = 0
-InfoDivider.ZIndex             = 4
+local function addInfoDivider(layoutOrder: number)
+    local d: Frame = Instance.new("Frame", InfoContent)
+    d.Size               = UDim2.new(1, -10, 0, 1)
+    d.BackgroundColor3   = Color3.fromRGB(0, 200, 255)
+    d.BackgroundTransparency = 0.65
+    d.BorderSizePixel    = 0
+    d.ZIndex             = 4
+    d.LayoutOrder        = layoutOrder
+    _infoOrder           = layoutOrder
+end
 
-addInfoRow("Hero", "Ah (´⊙ω⊙`) nothing here soon", Color3.fromRGB(160, 160, 160))
+local function addInfoHeader(txt: string): TextLabel
+    _infoOrder += 1
+    local h: TextLabel = Instance.new("TextLabel", InfoContent)
+    h.Size                  = UDim2.new(1, -6, 0, 16)
+    h.BackgroundTransparency = 1
+    h.Font                  = Enum.Font.Arcade
+    h.TextSize              = 9
+    h.TextXAlignment        = Enum.TextXAlignment.Left
+    h.TextColor3            = Color3.fromRGB(0, 255, 150)
+    h.ZIndex                = 4
+    h.LayoutOrder           = _infoOrder
+    h.Text                  = txt
+    return h
+end
+
+-- Copyable row (button that copies its value)
+local function addCopyRow(icon: string, label: string, value: string, col: Color3?)
+    _infoOrder += 1
+    local row: Frame = Instance.new("Frame", InfoContent)
+    row.Size                  = UDim2.new(1, -6, 0, 17)
+    row.BackgroundTransparency = 1
+    row.BorderSizePixel       = 0
+    row.ZIndex                = 4
+    row.LayoutOrder           = _infoOrder
+
+    local lbl: TextLabel = Instance.new("TextLabel", row)
+    lbl.BackgroundTransparency = 1
+    lbl.Position  = UDim2.new(0, 0, 0, 0)
+    lbl.Size      = UDim2.new(0.45, 0, 1, 0)
+    lbl.Font      = Enum.Font.Arcade
+    lbl.TextSize  = 8
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.TextColor3     = Color3.fromRGB(140, 140, 140)
+    lbl.ZIndex         = 4
+    lbl.Text           = icon .. " " .. label
+
+    local copyBtn: TextButton = Instance.new("TextButton", row)
+    copyBtn.BackgroundColor3  = Color3.fromRGB(0, 150, 200)
+    copyBtn.BackgroundTransparency = 0.75
+    copyBtn.BorderSizePixel   = 0
+    copyBtn.AnchorPoint       = Vector2.new(1, 0.5)
+    copyBtn.Position          = UDim2.new(1, 0, 0.5, 0)
+    copyBtn.Size              = UDim2.new(0.52, 0, 0, 13)
+    copyBtn.Font              = Enum.Font.Arcade
+    copyBtn.TextSize          = 7
+    copyBtn.TextColor3        = col or Color3.fromRGB(0, 230, 200)
+    copyBtn.ZIndex            = 5
+    copyBtn.TextTruncate      = Enum.TextTruncate.AtEnd
+    Instance.new("UICorner", copyBtn).CornerRadius = UDim.new(0, 3)
+
+    local shortVal: string = #value > 16 and value:sub(1, 13) .. "…" or value
+    copyBtn.Text = shortVal
+
+    copyBtn.MouseButton1Click:Connect(function()
+        pcall(setclipboard, value)
+        copyBtn.Text = "✓ Copied!"
+        task.delay(1.5, function()
+            pcall(function() copyBtn.Text = shortVal end)
+        end)
+    end)
+end
+
+-- ── Gather system information (all pcall-wrapped) ─────────────────────────────
+local function safeStr(fn: () -> any, fallback: string?): string
+    local ok, r = pcall(fn)
+    return (ok and r ~= nil) and tostring(r) or (fallback or "N/A")
+end
+
+local function checkPremium(): string
+    local ok, mt = pcall(function() return Players.LocalPlayer.MembershipType end)
+    if ok then return mt == Enum.MembershipType.None and "✗ None" or "✓ Premium" end
+    return "N/A"
+end
+
+local infoDeviceType = safeStr(function()
+    local plat = game:GetService("UserInputService"):GetPlatform()
+    return plat == Enum.Platform.Windows  and "💻 PC"
+        or plat == Enum.Platform.OSX      and "🍎 Mac"
+        or plat == Enum.Platform.Android  and "📱 Android"
+        or plat == Enum.Platform.IOS      and "📱 iOS"
+        or "❓ Unknown"
+end, "❓ Unknown")
+
+local infoExe  = safeStr(function() return identifyexecutor() end, "Unknown")
+local infoTime = safeStr(function() return os.date("%Y-%m-%d %H:%M:%S") end, "N/A")
+
+local infoGameName = safeStr(function()
+    return game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
+end, "Unknown Game")
+
+local infoGameId   = tostring(game.PlaceId)
+local infoJobId    = tostring(game.JobId)
+local infoPlrName  = safeStr(function() return Players.LocalPlayer.Name end, "?")
+local infoPlrId    = safeStr(function() return tostring(Players.LocalPlayer.UserId) end, "?")
+local infoPremium  = checkPremium()
+local infoHwid     = safeStr(function()
+    return game:GetService("RbxAnalyticsService"):GetClientId()
+end, "N/A")
+
+local infoTeleport = "game:GetService('TeleportService'):TeleportToPlaceInstance("
+    .. infoGameId .. ", '" .. infoJobId .. "', game.Players.LocalPlayer)"
+
+-- ── Populate rows ─────────────────────────────────────────────────────────────
+addInfoHeader("📊 Session Information")
+addInfoDivider(_infoOrder + 1)
+
+addInfoRow("🕐", "Time",       infoTime,       Color3.fromRGB(200, 200, 100))
+addInfoRow(infoDeviceType:sub(1,2), "Device", infoDeviceType:sub(4), Color3.fromRGB(150, 210, 255))
+addInfoRow("⚙",  "Executor",  infoExe,        Color3.fromRGB(180, 180, 255))
+addInfoRow("👑",  "Premium",   infoPremium,    Color3.fromRGB(255, 215, 0))
+
+addInfoDivider(_infoOrder + 1)
+addInfoHeader("🎮 Game")
+addInfoDivider(_infoOrder + 1)
+
+addInfoRow("📛", "Name",      infoGameName,   Color3.fromRGB(0, 220, 180))
+addInfoRow("🆔", "Place ID",  infoGameId,     Color3.fromRGB(200, 200, 200))
+addCopyRow( "🔗", "Job ID",   infoJobId,      Color3.fromRGB(100, 200, 255))
+
+addInfoDivider(_infoOrder + 1)
+addInfoHeader("👤 Player")
+addInfoDivider(_infoOrder + 1)
+
+addInfoRow("📛", "Name",      infoPlrName,    Color3.fromRGB(0, 220, 180))
+addInfoRow("🆔", "User ID",   infoPlrId,      Color3.fromRGB(200, 200, 200))
+addCopyRow( "🔑", "HWID",     infoHwid,       Color3.fromRGB(255, 150, 100))
+
+addInfoDivider(_infoOrder + 1)
+addInfoHeader("📋 Teleport Statement")
+addInfoDivider(_infoOrder + 1)
+addCopyRow("🚀", "Copy cmd", infoTeleport,    Color3.fromRGB(0, 255, 150))
 
 -- ─ Credit content ─
 local CREATOR_USER_ID: string = "8099364004"
@@ -1269,7 +1430,7 @@ CreatorName.Position           = UDim2.new(0, 62, 0, 6)
 CreatorName.Size               = UDim2.new(1, -68, 0, 16)
 CreatorName.BackgroundTransparency = 1
 CreatorName.Font               = Enum.Font.Arcade
-CreatorName.Text               = "zachparson1 (Alwi)"
+CreatorName.Text               = "zachparson1 (alwi)"
 CreatorName.TextSize           = 13
 CreatorName.TextXAlignment     = Enum.TextXAlignment.Left
 CreatorName.TextColor3         = Color3.fromRGB(0, 255, 150)
@@ -1378,42 +1539,56 @@ FoxPaw.TextSize           = 14
 FoxPaw.TextTransparency   = 0.3
 FoxPaw.ZIndex             = 5
 
--- Tags row
-local TagsCard: Frame = Instance.new("Frame", CreditContent)
-TagsCard.AnchorPoint          = Vector2.new(0.5, 0)
-TagsCard.Position             = UDim2.new(0.5, 0, 0, 150)
-TagsCard.Size                 = UDim2.new(1, -12, 0, 22)
-TagsCard.BackgroundTransparency = 1
-TagsCard.BorderSizePixel      = 0
-TagsCard.ZIndex               = 4
+-- Tags (2 rows to fit all)
+local TagsOuter: Frame = Instance.new("Frame", CreditContent)
+TagsOuter.AnchorPoint           = Vector2.new(0.5, 0)
+TagsOuter.Position              = UDim2.new(0.5, 0, 0, 150)
+TagsOuter.Size                  = UDim2.new(1, -12, 0, 40)
+TagsOuter.BackgroundTransparency = 1
+TagsOuter.BorderSizePixel       = 0
+TagsOuter.ZIndex                = 4
 
-local TagList: UIListLayout = Instance.new("UIListLayout", TagsCard)
-TagList.FillDirection         = Enum.FillDirection.Horizontal
-TagList.HorizontalAlignment   = Enum.HorizontalAlignment.Left
-TagList.VerticalAlignment     = Enum.VerticalAlignment.Center
-TagList.Padding               = UDim.new(0, 4)
+local function makeTagsRow(parent: Frame, yOffset: number): Frame
+    local row: Frame = Instance.new("Frame", parent)
+    row.Position              = UDim2.new(0, 0, 0, yOffset)
+    row.Size                  = UDim2.new(1, 0, 0, 16)
+    row.BackgroundTransparency = 1
+    row.BorderSizePixel       = 0
+    row.ZIndex                = 4
+    local ll: UIListLayout = Instance.new("UIListLayout", row)
+    ll.FillDirection          = Enum.FillDirection.Horizontal
+    ll.HorizontalAlignment    = Enum.HorizontalAlignment.Left
+    ll.VerticalAlignment      = Enum.VerticalAlignment.Center
+    ll.Padding                = UDim.new(0, 4)
+    return row
+end
 
-local function addTag(txt: string, col: Color3)
-    local tag: TextLabel = Instance.new("TextLabel", TagsCard)
-    tag.BackgroundColor3  = col
-    tag.BackgroundTransparency = 0.55
-    tag.BorderSizePixel   = 0
-    tag.Font              = Enum.Font.Arcade
-    tag.Text              = txt
-    tag.TextSize          = 7
-    tag.TextColor3        = Color3.fromRGB(255, 255, 255)
-    tag.ZIndex            = 5
-    local tc: UICorner = Instance.new("UICorner", tag)
-    tc.CornerRadius = UDim.new(1, 0)
-    local sz: Vector2 = game:GetService("TextService"):GetTextSize(
-        txt, 7, Enum.Font.Arcade, Vector2.new(200, 20)
-    )
+local TagRow1: Frame = makeTagsRow(TagsOuter, 0)
+local TagRow2: Frame = makeTagsRow(TagsOuter, 22)
+
+local TS = game:GetService("TextService")
+local function addTag(parent: Frame, txt: string, col: Color3)
+    local tag: TextLabel = Instance.new("TextLabel", parent)
+    tag.BackgroundColor3       = col
+    tag.BackgroundTransparency = 0.5
+    tag.BorderSizePixel        = 0
+    tag.Font                   = Enum.Font.Arcade
+    tag.Text                   = txt
+    tag.TextSize               = 7
+    tag.TextColor3             = Color3.fromRGB(255, 255, 255)
+    tag.ZIndex                 = 5
+    Instance.new("UICorner", tag).CornerRadius = UDim.new(1, 0)
+    local sz: Vector2 = TS:GetTextSize(txt, 7, Enum.Font.Arcade, Vector2.new(200, 20))
     tag.Size = UDim2.new(0, sz.X + 10, 0, 14)
 end
 
-addTag("Like Fabolous beast",        Color3.fromRGB(0, 160, 220))
-addTag("3+ Years Skidding Lua/luau",        Color3.fromRGB(0, 255, 220))
-addTag("Introvert :3",        Color3.fromRGB(0, 160, 255))
+-- Row 1: personality / fursona tags
+addTag(TagRow1, "🦊 fox",      Color3.fromRGB(255, 115, 15))
+addTag(TagRow1, "kenomo",       Color3.fromRGB(110, 70, 210))
+addTag(TagRow1, "furry",        Color3.fromRGB(190, 55, 115))
+addTag(TagRow2, "📚 lua 3yr",   Color3.fromRGB(30,  160, 100))
+addTag(TagRow2, "🔇 Introvert", Color3.fromRGB(60,  90,  180))
+addTag(TagRow2, "😤 Ragebait",  Color3.fromRGB(200, 50,  50))
 
 -- ── Tab switching logic ───────────────────────────────────────────────────────
 local ACTIVE_COL:   Color3 = Color3.fromRGB(0, 255, 150)
@@ -1421,9 +1596,9 @@ local INACTIVE_COL: Color3 = Color3.fromRGB(140, 140, 140)
 
 -- Tab positions for the sliding indicator
 local TAB_POSITIONS: {[string]: {xPos: number, width: number, btn: TextButton}} = {
-    settings = { xPos = 5,   width = 65, btn = TabBtnSettings },
-    info     = { xPos = 75,  width = 55, btn = TabBtnInfo     },
-    credit   = { xPos = 135, width = 60, btn = TabBtnCredit   },
+    settings = { xPos = 4,   width = 66, btn = TabBtnSettings },
+    info     = { xPos = 73,  width = 82, btn = TabBtnInfo     },
+    credit   = { xPos = 158, width = 60, btn = TabBtnCredit   },
 }
 
 local currentTab: string = "settings"
@@ -1459,8 +1634,8 @@ local function resetToSettingsTab()
     TabBtnSettings.TextColor3 = ACTIVE_COL
     TabBtnInfo.TextColor3     = INACTIVE_COL
     TabBtnCredit.TextColor3   = INACTIVE_COL
-    TabIndicator.Position     = UDim2.new(0, 5, 1, 0)
-    TabIndicator.Size         = UDim2.new(0, 65, 0, 2)
+    TabIndicator.Position     = UDim2.new(0, 4, 1, 0)
+    TabIndicator.Size         = UDim2.new(0, 66, 0, 2)
 end
 
 -- Wire tab buttons
@@ -1475,10 +1650,15 @@ TabBtnSettings.TextColor3 = ACTIVE_COL
 task.spawn(function()
     local imgUrl: string = getThumbnail(CREATOR_USER_ID)
     pcall(function()
+        -- Set image first (engine starts loading it in background)
         AvatarImg.Image = imgUrl
+        -- Wait a frame so the engine can acknowledge the image
+        task.wait()
+        AvatarLoadingLbl.Text    = ""
         AvatarLoadingLbl.Visible = false
+        -- Fade in
         TweenService:Create(AvatarImg,
-            TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
             { ImageTransparency = 0 }
         ):Play()
     end)
@@ -1849,7 +2029,26 @@ local antiGameplayPauseRunning:   boolean              = false
 local antiGameplayPauseThread:    thread?              = nil
 
 local function cleanupAntiFeatures()
-    --no
+    -- Disconnect all anti-feature listeners so they don't run after the loader closes
+    pcall(function()
+        if antiAfkConnection then
+            antiAfkConnection:Disconnect()
+            antiAfkConnection = nil
+        end
+    end)
+    pcall(function()
+        if antiFlingConnection then
+            antiFlingConnection:Disconnect()
+            antiFlingConnection = nil
+        end
+    end)
+    pcall(function()
+        antiGameplayPauseRunning = false
+        if antiGameplayPauseThread then
+            task.cancel(antiGameplayPauseThread)
+            antiGameplayPauseThread = nil
+        end
+    end)
 end
 
 -- ── Error UI panel ────────────────────────────────────────────────────────────
