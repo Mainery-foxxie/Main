@@ -2482,32 +2482,8 @@ local function clearText()
     end
 end
 
-local antiAfkConnection:          RBXScriptConnection? = nil
-local antiFlingConnection:        RBXScriptConnection? = nil
-local antiGameplayPauseRunning:   boolean              = false
-local antiGameplayPauseThread:    thread?              = nil
-
 local function cleanupAntiFeatures()
-
-    pcall(function()
-        if antiAfkConnection then
-            antiAfkConnection:Disconnect()
-            antiAfkConnection = nil
-        end
-    end)
-    pcall(function()
-        if antiFlingConnection then
-            antiFlingConnection:Disconnect()
-            antiFlingConnection = nil
-        end
-    end)
-    pcall(function()
-        antiGameplayPauseRunning = false
-        if antiGameplayPauseThread then
-            task.cancel(antiGameplayPauseThread)
-            antiGameplayPauseThread = nil
-        end
-    end)
+-- this kinda useless
 end
 
 local ErrorPanel: Frame = Instance.new("Frame", MainBackground)
