@@ -212,8 +212,13 @@ return {
         TitleLabel.Font = Enum.Font.SourceSansBold
         TitleLabel.Text = windowTitle
         TitleLabel.TextColor3 = Color3.new(1, 1, 1)
-        TitleLabel.TextSize = 17
+        TitleLabel.TextSize = 13
         TitleLabel.TextScaled = true
+
+        local TitleConstraint = Instance.new("UITextSizeConstraint")
+        TitleConstraint.MaxTextSize = 13
+        TitleConstraint.MinTextSize = 6
+        TitleConstraint.Parent = TitleLabel
 
         -- Cover that hides the bottom round corners of the topbar
         BottomCover.Name = "BottomRoundCover"
