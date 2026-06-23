@@ -1,4 +1,3 @@
---!nonstrict
 if getgenv().Velocity_X_Loader then
     local Notify: any = nil
     pcall(function()
@@ -79,7 +78,7 @@ local http_request_fn: ((req: {[string]:any}) -> {[string]:any})?
 
 local function getThumbnail(userId: number): string
     local ok, url = pcall(function()
-        return Players:GetUserThumbnailAsync(
+        return game:GetService("Players"):GetUserThumbnailAsync(
             userId,
             Enum.ThumbnailType.HeadShot,
             Enum.ThumbnailSize.Size150x150
@@ -90,8 +89,7 @@ local function getThumbnail(userId: number): string
         return url
     end
     local fallback = string.format(
-        "rbxthumb://type=AvatarHeadShot&id=%d&w=150&h=150", userId
-    )
+        "rbxthumb://type=AvatarHeadShot&id=%d&w=150&h=150", userId)
     warn(string.format("[VelocityX] Thumb fallback → %s", fallback))
     return fallback
 end
@@ -422,6 +420,7 @@ local function showNotification(
             })
         end)
     else
+
         print("[VelocityX] 🔔 " .. title .. " | " .. desc)
     end
 end
@@ -475,6 +474,7 @@ for i: number = 1, #_b64chars do
 end
 
 local function base64_decode(data: string): string
+
     data = data:gsub("[^A-Za-z0-9+/=]", "")
     local out: { string } = {}
     local len: number = #data
@@ -493,6 +493,7 @@ local function base64_decode(data: string): string
         i += 4
     end
     local result: string = table.concat(out)
+
     local pad: number = 0
     if data:sub(-1) == "=" then pad += 1 end
     if data:sub(-2, -2) == "=" then pad += 1 end
@@ -562,31 +563,35 @@ local EdgeStroke: UIStroke = Instance.new("UIStroke", MainBackground)
 EdgeStroke.Thickness   = 3.5
 EdgeStroke.Transparency = 0.3
 
-local colorGreen: Color3 = Color3.fromRGB(0, 255, 120)
-local colorBlue:  Color3 = Color3.fromRGB(0, 170, 255)
-local startTime:  number = tick()
-local cycleDuration: number = 4
+do
+    local colorGreen: Color3 = Color3.fromRGB(0, 255, 120)
+    local colorBlue:  Color3 = Color3.fromRGB(0, 170, 255)
+    local startTime:  number = tick()
+    local cycleDuration: number = 4
 
-task.spawn(function()
-    local _strokeFrame: number = 0
-    while MainBackground and MainBackground.Parent do
-        _strokeFrame += 1
-        if _strokeFrame % 3 == 0 then
-            pcall(function()
-                local t: number      = (tick() - startTime) / cycleDuration
-                local factor: number = (math.sin(t * math.pi * 2) + 1) / 2
-                local r: number = colorGreen.R + (colorBlue.R - colorGreen.R) * factor
-                local g: number = colorGreen.G + (colorBlue.G - colorGreen.G) * factor
-                local bv: number = colorGreen.B + (colorBlue.B - colorGreen.B) * factor
-                EdgeStroke.Color = Color3.new(r, g, bv)
-            end)
+    task.spawn(function()
+        local _strokeFrame: number = 0
+        while MainBackground and MainBackground.Parent do
+            _strokeFrame += 1
+            if _strokeFrame % 3 == 0 then
+                pcall(function()
+                    local t: number      = (tick() - startTime) / cycleDuration
+                    local factor: number = (math.sin(t * math.pi * 2) + 1) / 2
+                    local r: number = colorGreen.R + (colorBlue.R - colorGreen.R) * factor
+                    local g: number = colorGreen.G + (colorBlue.G - colorGreen.G) * factor
+                    local bv: number = colorGreen.B + (colorBlue.B - colorGreen.B) * factor
+                    EdgeStroke.Color = Color3.new(r, g, bv)
+                end)
+            end
+            RunService.Heartbeat:Wait()
         end
-        RunService.Heartbeat:Wait()
-    end
-end)
+    end)
+end
 
-local Corner: UICorner = Instance.new("UICorner", MainBackground)
-Corner.CornerRadius = UDim.new(0, 8)
+do
+    local Corner: UICorner = Instance.new("UICorner", MainBackground)
+    Corner.CornerRadius = UDim.new(0, 8)
+end
 
 local Logo: ImageButton = Instance.new("ImageButton", MainBackground)
 Logo.BackgroundTransparency = 1
@@ -622,13 +627,15 @@ InjectButton.Visible              = false
 
 Instance.new("UICorner", InjectButton).CornerRadius = UDim.new(0, 4)
 
-local BtnGradient: UIGradient = Instance.new("UIGradient", InjectButton)
-BtnGradient.Color    = Gradient.Color
-BtnGradient.Rotation = 90
+do
+    local BtnGradient: UIGradient = Instance.new("UIGradient", InjectButton)
+    BtnGradient.Color    = Gradient.Color
+    BtnGradient.Rotation = 90
 
-local BtnStroke: UIStroke = Instance.new("UIStroke", InjectButton)
-BtnStroke.Color     = Color3.fromRGB(0, 255, 150)
-BtnStroke.Thickness = 1.5
+    local BtnStroke: UIStroke = Instance.new("UIStroke", InjectButton)
+    BtnStroke.Color     = Color3.fromRGB(0, 255, 150)
+    BtnStroke.Thickness = 1.5
+end
 
 local Version: TextLabel = Instance.new("TextLabel", MainBackground)
 Version.BackgroundTransparency = 1
@@ -650,6 +657,7 @@ local GreetingCard: Frame = Instance.new("Frame", MainBackground)
 GreetingCard.Name                   = "GreetingCard"
 GreetingCard.AnchorPoint            = Vector2.new(0, 1)
 GreetingCard.Position               = UDim2.new(0.01, 0, 0.99, 0)
+
 GreetingCard.Size                   = UDim2.new(0.60, 0, 0, 24)
 GreetingCard.BackgroundColor3       = Color3.fromRGB(15, 15, 20)
 GreetingCard.BackgroundTransparency = 0.30
@@ -692,9 +700,11 @@ GreetingLabel.TextColor3             = Color3.fromRGB(0, 255, 150)
 GreetingLabel.TextStrokeTransparency = 0.5
 GreetingLabel.TextStrokeColor3       = Color3.fromRGB(0, 0, 0)
 
-local GreetingConstraint: UITextSizeConstraint = Instance.new("UITextSizeConstraint", GreetingLabel)
-GreetingConstraint.MinTextSize = 6
-GreetingConstraint.MaxTextSize = 11
+do
+    local GreetingConstraint: UITextSizeConstraint = Instance.new("UITextSizeConstraint", GreetingLabel)
+    GreetingConstraint.MinTextSize = 6
+    GreetingConstraint.MaxTextSize = 11
+end
 
 local GCardSub: TextLabel = Instance.new("TextLabel", GreetingCard)
 GCardSub.AnchorPoint            = Vector2.new(0, 1)
@@ -708,9 +718,11 @@ GCardSub.TextColor3             = Color3.fromRGB(160, 160, 255)
 GCardSub.TextTransparency       = 1
 GCardSub.Text                   = DISCORD_LINK
 
-local GCardSubConstraint: UITextSizeConstraint = Instance.new("UITextSizeConstraint", GCardSub)
-GCardSubConstraint.MinTextSize = 5
-GCardSubConstraint.MaxTextSize = 8
+do
+    local GCardSubConstraint: UITextSizeConstraint = Instance.new("UITextSizeConstraint", GCardSub)
+    GCardSubConstraint.MinTextSize = 5
+    GCardSubConstraint.MaxTextSize = 8
+end
 
 local GCardRipple: Frame = Instance.new("Frame", GreetingCard)
 GCardRipple.AnchorPoint            = Vector2.new(0.5, 0.5)
@@ -745,6 +757,7 @@ end
 
 local function ApplyGreetingState()
     if _greetingShowDiscord then
+
         GreetingCard.Size          = UDim2.new(0.60, 0, 0, 34)
         GreetingLabel.Position     = UDim2.new(0, 22, 0.30, 0)
         GreetingLabel.Size         = UDim2.new(1, -24, 0.45, 0)
@@ -754,6 +767,7 @@ local function ApplyGreetingState()
         GCardStroke.Color          = Color3.fromRGB(88, 101, 242)
         GCardStroke.Transparency   = 0.4
     else
+
         GreetingCard.Size          = UDim2.new(0.60, 0, 0, 24)
         GreetingLabel.Position     = UDim2.new(0, 6, 0.5, 0)
         GreetingLabel.Size         = UDim2.new(1, -8, 1, 0)
@@ -855,6 +869,9 @@ SettingsIcon.Image             = "rbxassetid://101339235267993"
 SettingsIcon.Visible           = false
 SettingsIcon.ImageTransparency = 0.2
 
+local SettingsIconScale: UIScale = Instance.new("UIScale", SettingsIcon)
+SettingsIconScale.Scale = 1
+
 local ConfirmFrame: ImageLabel = Instance.new("ImageLabel", MainBackground)
 ConfirmFrame.AnchorPoint        = Vector2.new(0.5, 0.5)
 ConfirmFrame.Position           = UDim2.new(0.5, 0, 0.5, 0)
@@ -876,16 +893,18 @@ Instance.new("UIStroke", ConfirmFrame).Thickness   = 2
 Instance.new("UIStroke", ConfirmFrame).Transparency = 0.3
 Instance.new("UICorner", ConfirmFrame).CornerRadius = UDim.new(0, 8)
 
-local ConfirmText: TextLabel = Instance.new("TextLabel", ConfirmFrame)
-ConfirmText.BackgroundTransparency = 1
-ConfirmText.Position           = UDim2.new(0, 0, 0.2, 0)
-ConfirmText.Size               = UDim2.new(1, 0, 0.3, 0)
-ConfirmText.Font               = Enum.Font.Arcade
-ConfirmText.Text               = "Are you sure you want\nto close Velocity X?"
-ConfirmText.TextSize           = 12
-ConfirmText.TextColor3         = Color3.fromRGB(0, 255, 150)
-ConfirmText.TextStrokeTransparency = 0
-ConfirmText.TextStrokeColor3   = Color3.fromRGB(0, 0, 0)
+do
+    local ConfirmText: TextLabel = Instance.new("TextLabel", ConfirmFrame)
+    ConfirmText.BackgroundTransparency = 1
+    ConfirmText.Position           = UDim2.new(0, 0, 0.2, 0)
+    ConfirmText.Size               = UDim2.new(1, 0, 0.3, 0)
+    ConfirmText.Font               = Enum.Font.Arcade
+    ConfirmText.Text               = "Are you sure you want\nto close Velocity X?"
+    ConfirmText.TextSize           = 12
+    ConfirmText.TextColor3         = Color3.fromRGB(0, 255, 150)
+    ConfirmText.TextStrokeTransparency = 0
+    ConfirmText.TextStrokeColor3   = Color3.fromRGB(0, 0, 0)
+end
 
 local YesButton: TextButton = Instance.new("TextButton", ConfirmFrame)
 YesButton.BackgroundColor3     = Color3.fromRGB(255, 255, 255)
@@ -897,9 +916,11 @@ YesButton.Text                 = "Yes"
 YesButton.TextScaled           = true
 YesButton.TextColor3           = Color3.new(0, 0, 0)
 Instance.new("UICorner", YesButton).CornerRadius = UDim.new(0, 4)
-local YesGradient: UIGradient = Instance.new("UIGradient", YesButton)
-YesGradient.Color    = ConfirmGradient.Color
-YesGradient.Rotation = 90
+do
+    local YesGradient: UIGradient = Instance.new("UIGradient", YesButton)
+    YesGradient.Color    = ConfirmGradient.Color
+    YesGradient.Rotation = 90
+end
 Instance.new("UIStroke", YesButton).Color     = Color3.fromRGB(0, 255, 150)
 Instance.new("UIStroke", YesButton).Thickness = 1.5
 
@@ -913,9 +934,11 @@ NoButton.Text                 = "No"
 NoButton.TextScaled           = true
 NoButton.TextColor3           = Color3.new(0, 0, 0)
 Instance.new("UICorner", NoButton).CornerRadius = UDim.new(0, 4)
-local NoGradient: UIGradient = Instance.new("UIGradient", NoButton)
-NoGradient.Color    = ConfirmGradient.Color
-NoGradient.Rotation = 90
+do
+    local NoGradient: UIGradient = Instance.new("UIGradient", NoButton)
+    NoGradient.Color    = ConfirmGradient.Color
+    NoGradient.Rotation = 90
+end
 Instance.new("UIStroke", NoButton).Color     = Color3.fromRGB(0, 255, 150)
 Instance.new("UIStroke", NoButton).Thickness = 1.5
 
@@ -930,27 +953,29 @@ DeleteConfirmFrame.BorderSizePixel  = 0
 DeleteConfirmFrame.Visible          = false
 DeleteConfirmFrame.ZIndex           = 3
 
-local DeleteConfirmGradient: UIGradient = Instance.new("UIGradient", DeleteConfirmFrame)
-DeleteConfirmGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 100, 100)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 50, 50)),
-}
-DeleteConfirmGradient.Rotation = 45
-Instance.new("UIStroke", DeleteConfirmFrame).Color       = Color3.fromRGB(255, 100, 100)
-Instance.new("UIStroke", DeleteConfirmFrame).Thickness   = 2
-Instance.new("UIStroke", DeleteConfirmFrame).Transparency = 0.3
-Instance.new("UICorner", DeleteConfirmFrame).CornerRadius = UDim.new(0, 8)
+do
+    local DeleteConfirmGradient: UIGradient = Instance.new("UIGradient", DeleteConfirmFrame)
+    DeleteConfirmGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 100, 100)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 50, 50)),
+    }
+    DeleteConfirmGradient.Rotation = 45
+    Instance.new("UIStroke", DeleteConfirmFrame).Color       = Color3.fromRGB(255, 100, 100)
+    Instance.new("UIStroke", DeleteConfirmFrame).Thickness   = 2
+    Instance.new("UIStroke", DeleteConfirmFrame).Transparency = 0.3
+    Instance.new("UICorner", DeleteConfirmFrame).CornerRadius = UDim.new(0, 8)
 
-local DeleteConfirmText: TextLabel = Instance.new("TextLabel", DeleteConfirmFrame)
-DeleteConfirmText.BackgroundTransparency = 1
-DeleteConfirmText.Position           = UDim2.new(0, 0, 0.2, 0)
-DeleteConfirmText.Size               = UDim2.new(1, 0, 0.3, 0)
-DeleteConfirmText.Font               = Enum.Font.Arcade
-DeleteConfirmText.Text               = "Delete config file?"
-DeleteConfirmText.TextSize           = 12
-DeleteConfirmText.TextColor3         = Color3.fromRGB(255, 255, 255)
-DeleteConfirmText.TextStrokeTransparency = 0
-DeleteConfirmText.TextStrokeColor3   = Color3.fromRGB(0, 0, 0)
+    local DeleteConfirmText: TextLabel = Instance.new("TextLabel", DeleteConfirmFrame)
+    DeleteConfirmText.BackgroundTransparency = 1
+    DeleteConfirmText.Position           = UDim2.new(0, 0, 0.2, 0)
+    DeleteConfirmText.Size               = UDim2.new(1, 0, 0.3, 0)
+    DeleteConfirmText.Font               = Enum.Font.Arcade
+    DeleteConfirmText.Text               = "Delete config file?"
+    DeleteConfirmText.TextSize           = 12
+    DeleteConfirmText.TextColor3         = Color3.fromRGB(255, 255, 255)
+    DeleteConfirmText.TextStrokeTransparency = 0
+    DeleteConfirmText.TextStrokeColor3   = Color3.fromRGB(0, 0, 0)
+end
 
 local DeleteYesButton: TextButton = Instance.new("TextButton", DeleteConfirmFrame)
 DeleteYesButton.BackgroundColor3     = Color3.fromRGB(255, 255, 255)
@@ -962,9 +987,14 @@ DeleteYesButton.Text                 = "Yes"
 DeleteYesButton.TextScaled           = true
 DeleteYesButton.TextColor3           = Color3.new(0, 0, 0)
 Instance.new("UICorner", DeleteYesButton).CornerRadius = UDim.new(0, 4)
-local DeleteYesGradient: UIGradient = Instance.new("UIGradient", DeleteYesButton)
-DeleteYesGradient.Color    = DeleteConfirmGradient.Color
-DeleteYesGradient.Rotation = 90
+do
+    local DeleteYesGradient: UIGradient = Instance.new("UIGradient", DeleteYesButton)
+    DeleteYesGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 100, 100)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 50, 50)),
+    }
+    DeleteYesGradient.Rotation = 90
+end
 Instance.new("UIStroke", DeleteYesButton).Color     = Color3.fromRGB(255, 100, 100)
 Instance.new("UIStroke", DeleteYesButton).Thickness = 1.5
 
@@ -978,9 +1008,14 @@ DeleteNoButton.Text                 = "No"
 DeleteNoButton.TextScaled           = true
 DeleteNoButton.TextColor3           = Color3.new(0, 0, 0)
 Instance.new("UICorner", DeleteNoButton).CornerRadius = UDim.new(0, 4)
-local DeleteNoGradient: UIGradient = Instance.new("UIGradient", DeleteNoButton)
-DeleteNoGradient.Color    = DeleteConfirmGradient.Color
-DeleteNoGradient.Rotation = 90
+do
+    local DeleteNoGradient: UIGradient = Instance.new("UIGradient", DeleteNoButton)
+    DeleteNoGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 100, 100)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 50, 50)),
+    }
+    DeleteNoGradient.Rotation = 90
+end
 Instance.new("UIStroke", DeleteNoButton).Color     = Color3.fromRGB(255, 100, 100)
 Instance.new("UIStroke", DeleteNoButton).Thickness = 1.5
 
@@ -998,20 +1033,22 @@ SettingsPanel.ClipsDescendants = true
 SettingsPanel.Visible          = false
 SettingsPanel.ZIndex           = 2
 
-local PanelGradient: UIGradient = Instance.new("UIGradient", SettingsPanel)
-PanelGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 120)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 170, 255)),
-}
-PanelGradient.Rotation = 45
+do
+    local PanelGradient: UIGradient = Instance.new("UIGradient", SettingsPanel)
+    PanelGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 120)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 170, 255)),
+    }
+    PanelGradient.Rotation = 45
 
-local PanelStroke: UIStroke = Instance.new("UIStroke", SettingsPanel)
-PanelStroke.Color        = Color3.fromRGB(0, 200, 255)
-PanelStroke.Thickness    = 2
-PanelStroke.Transparency = 0.3
+    local PanelStroke: UIStroke = Instance.new("UIStroke", SettingsPanel)
+    PanelStroke.Color        = Color3.fromRGB(0, 200, 255)
+    PanelStroke.Thickness    = 2
+    PanelStroke.Transparency = 0.3
 
-local PanelCorner: UICorner = Instance.new("UICorner", SettingsPanel)
-PanelCorner.CornerRadius = UDim.new(0, 8)
+    local PanelCorner: UICorner = Instance.new("UICorner", SettingsPanel)
+    PanelCorner.CornerRadius = UDim.new(0, 8)
+end
 
 local TabBar: Frame = Instance.new("Frame", SettingsPanel)
 TabBar.Size               = UDim2.new(1, 0, 0, 28)
@@ -1022,17 +1059,19 @@ TabBar.BorderSizePixel    = 0
 TabBar.ZIndex             = 4
 TabBar.ClipsDescendants   = false
 
-local TabBarCorner: UICorner = Instance.new("UICorner", TabBar)
-TabBarCorner.CornerRadius = UDim.new(0, 8)
+do
+    local TabBarCorner: UICorner = Instance.new("UICorner", TabBar)
+    TabBarCorner.CornerRadius = UDim.new(0, 8)
 
-local TabSep: Frame = Instance.new("Frame", TabBar)
-TabSep.Size               = UDim2.new(1, 0, 0, 1)
-TabSep.AnchorPoint        = Vector2.new(0, 1)
-TabSep.Position           = UDim2.new(0, 0, 1, 0)
-TabSep.BackgroundColor3   = Color3.fromRGB(0, 200, 255)
-TabSep.BackgroundTransparency = 0.55
-TabSep.BorderSizePixel    = 0
-TabSep.ZIndex             = 5
+    local TabSep: Frame = Instance.new("Frame", TabBar)
+    TabSep.Size               = UDim2.new(1, 0, 0, 1)
+    TabSep.AnchorPoint        = Vector2.new(0, 1)
+    TabSep.Position           = UDim2.new(0, 0, 1, 0)
+    TabSep.BackgroundColor3   = Color3.fromRGB(0, 200, 255)
+    TabSep.BackgroundTransparency = 0.55
+    TabSep.BorderSizePixel    = 0
+    TabSep.ZIndex             = 5
+end
 
 local TabIndicator: Frame = Instance.new("Frame", TabBar)
 TabIndicator.AnchorPoint        = Vector2.new(0, 1)
@@ -1041,11 +1080,13 @@ TabIndicator.Position           = UDim2.new(0, 5, 1, 0)
 TabIndicator.BackgroundColor3   = Color3.fromRGB(0, 255, 150)
 TabIndicator.BorderSizePixel    = 0
 TabIndicator.ZIndex             = 6
-local TabIndGrad: UIGradient = Instance.new("UIGradient", TabIndicator)
-TabIndGrad.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 120)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 200, 255)),
-}
+do
+    local TabIndGrad: UIGradient = Instance.new("UIGradient", TabIndicator)
+    TabIndGrad.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 120)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 200, 255)),
+    }
+end
 Instance.new("UICorner", TabIndicator).CornerRadius = UDim.new(1, 0)
 
 local TAB_BTN_Y: number = 5
@@ -1098,7 +1139,7 @@ InfoContent.Size                   = UDim2.new(1, 0, 1, -CONTENT_Y - 4)
 InfoContent.BackgroundTransparency = 1
 InfoContent.BorderSizePixel        = 0
 InfoContent.ClipsDescendants       = true
-InfoContent.ScrollBarThickness     = 4
+InfoContent.ScrollBarThickness     = 5
 InfoContent.ScrollBarImageColor3   = Color3.fromRGB(0, 200, 255)
 InfoContent.CanvasSize             = UDim2.new(0, 0, 0, 0)
 InfoContent.ZIndex                 = 3
@@ -1106,17 +1147,19 @@ InfoContent.Visible                = false
 InfoContent.ScrollingDirection     = Enum.ScrollingDirection.Y
 InfoContent.AutomaticCanvasSize    = Enum.AutomaticSize.Y
 
-local InfoList: UIListLayout = Instance.new("UIListLayout", InfoContent)
-InfoList.Padding             = UDim.new(0, 2)
-InfoList.HorizontalAlignment = Enum.HorizontalAlignment.Center
-InfoList.VerticalAlignment   = Enum.VerticalAlignment.Top
-InfoList.SortOrder           = Enum.SortOrder.LayoutOrder
+do
+    local InfoList: UIListLayout = Instance.new("UIListLayout", InfoContent)
+    InfoList.Padding             = UDim.new(0, 2)
+    InfoList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    InfoList.VerticalAlignment   = Enum.VerticalAlignment.Top
+    InfoList.SortOrder           = Enum.SortOrder.LayoutOrder
 
-local InfoPad: UIPadding = Instance.new("UIPadding", InfoContent)
-InfoPad.PaddingTop    = UDim.new(0, 5)
-InfoPad.PaddingLeft   = UDim.new(0, 6)
-InfoPad.PaddingRight  = UDim.new(0, 8)
-InfoPad.PaddingBottom = UDim.new(0, 5)
+    local InfoPad: UIPadding = Instance.new("UIPadding", InfoContent)
+    InfoPad.PaddingTop    = UDim.new(0, 5)
+    InfoPad.PaddingLeft   = UDim.new(0, 6)
+    InfoPad.PaddingRight  = UDim.new(0, 8)
+    InfoPad.PaddingBottom = UDim.new(0, 5)
+end
 
 local _infoOrder: number = 0
 local function addInfoRow(icon: string, label: string, value: string, col: Color3?): TextLabel
@@ -1226,6 +1269,48 @@ local function addCopyRow(icon: string, label: string, value: string, col: Color
     end)
 end
 
+local function addActionCopyRow(icon: string, label: string, fn: () -> string, col: Color3?)
+    _infoOrder += 1
+    local row: Frame = Instance.new("Frame", InfoContent)
+    row.Size                  = UDim2.new(1, -6, 0, 17)
+    row.BackgroundTransparency = 1
+    row.BorderSizePixel       = 0
+    row.ZIndex                = 4
+    row.LayoutOrder           = _infoOrder
+
+    local lbl: TextLabel = Instance.new("TextLabel", row)
+    lbl.BackgroundTransparency = 1
+    lbl.Position  = UDim2.new(0, 0, 0, 0)
+    lbl.Size      = UDim2.new(0.42, 0, 1, 0)
+    lbl.Font      = Enum.Font.Arcade
+    lbl.TextSize  = 8
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.TextColor3     = Color3.fromRGB(140, 140, 140)
+    lbl.ZIndex         = 4
+    lbl.Text           = icon .. " " .. label
+
+    local copyBtn: TextButton = Instance.new("TextButton", row)
+    copyBtn.BackgroundColor3  = Color3.fromRGB(0, 150, 200)
+    copyBtn.BackgroundTransparency = 0.70
+    copyBtn.BorderSizePixel   = 0
+    copyBtn.AnchorPoint       = Vector2.new(1, 0.5)
+    copyBtn.Position          = UDim2.new(1, 0, 0.5, 0)
+    copyBtn.Size              = UDim2.new(0.55, 0, 0, 13)
+    copyBtn.Font              = Enum.Font.Arcade
+    copyBtn.TextSize          = 7
+    copyBtn.TextColor3        = col or Color3.fromRGB(0, 230, 200)
+    copyBtn.ZIndex            = 5
+    copyBtn.Text              = "📋 Copy"
+    Instance.new("UICorner", copyBtn).CornerRadius = UDim.new(0, 3)
+
+    copyBtn.MouseButton1Click:Connect(function()
+        local content = fn()
+        pcall(setclipboard, content)
+        copyBtn.Text = "✓ Copied!"
+        task.delay(1.5, function() pcall(function() copyBtn.Text = "📋 Copy" end) end)
+    end)
+end
+
 local function safeStr(fn: () -> any, fallback: string?): string
     local ok, r = pcall(fn)
     return (ok and r ~= nil) and tostring(r) or (fallback or "N/A")
@@ -1268,57 +1353,120 @@ local infoTeleport = "game:GetService('TeleportService'):TeleportToPlaceInstance
 addInfoHeader("📊 Session Information")
 addInfoDivider(_infoOrder + 1)
 
-addInfoRow("🕐", "Time",       infoTime,       Color3.fromRGB(200, 200, 100))
+local timeValLbl = addInfoRow("🕐", "Time",    infoTime,     Color3.fromRGB(200, 200, 100))
 addInfoRow(infoDeviceType:sub(1,2), "Device", infoDeviceType:sub(4), Color3.fromRGB(150, 210, 255))
 addInfoRow("⚙",  "Executor",  infoExe,        Color3.fromRGB(180, 180, 255))
-local premiumValLbl = addInfoRow("👑",  "Premium",   infoPremium,    Color3.fromRGB(255, 215, 0))
+local premiumValLbl = addInfoRow("👑", "Premium", infoPremium, Color3.fromRGB(255, 215, 0))
+
+addInfoDivider(_infoOrder + 1)
+addInfoHeader("📈 Performance")
+addInfoDivider(_infoOrder + 1)
+
+local fpsValLbl  = addInfoRow("⚡", "FPS",  "—",    Color3.fromRGB(80,  255, 120))
+local pingValLbl = addInfoRow("📡", "Ping", "— ms", Color3.fromRGB(80,  200, 255))
 
 addInfoDivider(_infoOrder + 1)
 addInfoHeader("🎮 Game")
 addInfoDivider(_infoOrder + 1)
 
-addInfoRow("📛", "Name",      infoGameName,   Color3.fromRGB(0, 220, 180))
-addInfoRow("🆔", "Place ID",  infoGameId,     Color3.fromRGB(200, 200, 200))
-addCopyRow( "🔗", "Job ID",   infoJobId,      Color3.fromRGB(100, 200, 255))
+addInfoRow("📛", "Name",     infoGameName,  Color3.fromRGB(0, 220, 180))
+addInfoRow("🆔", "Place ID", infoGameId,    Color3.fromRGB(200, 200, 200))
+addCopyRow( "🔗", "Job ID",  infoJobId,     Color3.fromRGB(100, 200, 255))
 
 addInfoDivider(_infoOrder + 1)
 addInfoHeader("👤 Player")
 addInfoDivider(_infoOrder + 1)
 
-addInfoRow("📛", "Name",      infoPlrName,    Color3.fromRGB(0, 220, 180))
-addInfoRow("🆔", "User ID",   infoPlrId,      Color3.fromRGB(200, 200, 200))
-addCopyRow( "🔑", "HWID",     infoHwid,       Color3.fromRGB(255, 150, 100))
+addInfoRow("📛", "Name",    infoPlrName,  Color3.fromRGB(0, 220, 180))
+addInfoRow("🆔", "User ID", infoPlrId,    Color3.fromRGB(200, 200, 200))
+addCopyRow( "🔑", "HWID",   infoHwid,     Color3.fromRGB(255, 150, 100))
+
+addInfoDivider(_infoOrder + 1)
+addInfoHeader("📍 Position  (live)")
+addInfoDivider(_infoOrder + 1)
+
+local posXLbl = addInfoRow("➡", "X", "—", Color3.fromRGB(255, 100, 100))
+local posYLbl = addInfoRow("⬆", "Y", "—", Color3.fromRGB(100, 255, 100))
+local posZLbl = addInfoRow("🔵", "Z", "—", Color3.fromRGB(100, 150, 255))
+
+local function _tweenCopyFn(): string
+    local ok, po = pcall(function()
+        return Players.LocalPlayer.Character.HumanoidRootPart.CFrame
+    end)
+    if not ok then return "" end
+    local x, y, z = math.floor(po.X), math.floor(po.Y), math.floor(po.Z)
+    return string.format(
+        "local tweenInfo = TweenInfo.new(2)\n"
+        .. "local goal = {CFrame = CFrame.new(%d, %d, %d)}\n"
+        .. "local tween = game:GetService('TweenService')"
+        .. ":Create(game.Players.LocalPlayer.Character.HumanoidRootPart, tweenInfo, goal)\n"
+        .. "tween:Play()",
+        x, y, z)
+end
+addActionCopyRow("🎬", "Copy Tween", _tweenCopyFn, Color3.fromRGB(100, 200, 255))
+
+local function _cfCopyFn(): string
+    local ok, pos = pcall(function()
+        return Players.LocalPlayer.Character.HumanoidRootPart.CFrame
+    end)
+    if not ok then return "" end
+    local o = string.format("%d, %d, %d",
+        math.floor(pos.X + 0.5), math.floor(pos.Y + 0.5), math.floor(pos.Z + 0.5))
+    return string.format(
+        "game.Players.LocalPlayer.Character:PivotTo(CFrame.new(Vector3.new(%s)))", o)
+end
+addActionCopyRow("📌", "Copy CFrame", _cfCopyFn, Color3.fromRGB(0, 255, 150))
 
 addInfoDivider(_infoOrder + 1)
 addInfoHeader("📋 Teleport Statement")
 addInfoDivider(_infoOrder + 1)
-addCopyRow("🚀", "Copy cmd", infoTeleport,    Color3.fromRGB(0, 255, 150))
+addCopyRow("🚀", "Copy cmd", infoTeleport, Color3.fromRGB(0, 255, 150))
 
 local CREATOR_USER_ID: number = 1291925
 
-local CreditContent: Frame = Instance.new("Frame", SettingsPanel)
-CreditContent.Name                  = "CreditContent"
-CreditContent.Position              = UDim2.new(0, 0, 0, CONTENT_Y)
-CreditContent.Size                  = UDim2.new(1, 0, 1, -CONTENT_Y - 4)
+local CreditContent: ScrollingFrame = Instance.new("ScrollingFrame", SettingsPanel)
+CreditContent.Name                   = "CreditContent"
+CreditContent.Position               = UDim2.new(0, 0, 0, CONTENT_Y)
+CreditContent.Size                   = UDim2.new(1, 0, 1, -CONTENT_Y - 4)
 CreditContent.BackgroundTransparency = 1
-CreditContent.BorderSizePixel       = 0
-CreditContent.ClipsDescendants      = true
-CreditContent.ZIndex                = 3
-CreditContent.Visible               = false
+CreditContent.BorderSizePixel        = 0
+CreditContent.ClipsDescendants       = true
+CreditContent.ScrollBarThickness     = 4
+CreditContent.ScrollBarImageColor3   = Color3.fromRGB(0, 255, 150)
+CreditContent.ScrollingDirection     = Enum.ScrollingDirection.Y
+CreditContent.AutomaticCanvasSize    = Enum.AutomaticSize.Y
+CreditContent.CanvasSize             = UDim2.new(0, 0, 0, 0)
+CreditContent.ZIndex                 = 3
+CreditContent.Visible                = false
+
+do
+    local CreditList: UIListLayout = Instance.new("UIListLayout", CreditContent)
+    CreditList.Padding             = UDim.new(0, 6)
+    CreditList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    CreditList.VerticalAlignment   = Enum.VerticalAlignment.Top
+    CreditList.SortOrder           = Enum.SortOrder.LayoutOrder
+
+    local CreditPad: UIPadding = Instance.new("UIPadding", CreditContent)
+    CreditPad.PaddingTop    = UDim.new(0, 6)
+    CreditPad.PaddingLeft   = UDim.new(0, 6)
+    CreditPad.PaddingRight  = UDim.new(0, 6)
+    CreditPad.PaddingBottom = UDim.new(0, 8)
+end
 
 local AvatarCard: Frame = Instance.new("Frame", CreditContent)
-AvatarCard.AnchorPoint        = Vector2.new(0.5, 0)
-AvatarCard.Position           = UDim2.new(0.5, 0, 0, 6)
-AvatarCard.Size               = UDim2.new(1, -12, 0, 62)
+AvatarCard.LayoutOrder        = 1
+AvatarCard.Size               = UDim2.new(1, 0, 0, 62)
 AvatarCard.BackgroundColor3   = Color3.fromRGB(10, 10, 18)
 AvatarCard.BackgroundTransparency = 0.3
 AvatarCard.BorderSizePixel    = 0
 AvatarCard.ZIndex             = 4
 Instance.new("UICorner", AvatarCard).CornerRadius = UDim.new(0, 6)
-local AvatarCardStroke: UIStroke = Instance.new("UIStroke", AvatarCard)
-AvatarCardStroke.Color        = Color3.fromRGB(0, 200, 255)
-AvatarCardStroke.Thickness    = 1
-AvatarCardStroke.Transparency = 0.5
+do
+    local AvatarCardStroke: UIStroke = Instance.new("UIStroke", AvatarCard)
+    AvatarCardStroke.Color        = Color3.fromRGB(0, 200, 255)
+    AvatarCardStroke.Thickness    = 1
+    AvatarCardStroke.Transparency = 0.5
+end
 
 local AvatarImg: ImageLabel = Instance.new("ImageLabel", AvatarCard)
 AvatarImg.AnchorPoint        = Vector2.new(0, 0.5)
@@ -1330,10 +1478,12 @@ AvatarImg.Image              = ""
 AvatarImg.ImageTransparency  = 1
 AvatarImg.ZIndex             = 5
 Instance.new("UICorner", AvatarImg).CornerRadius = UDim.new(1, 0)
-local AvatarStroke: UIStroke = Instance.new("UIStroke", AvatarImg)
-AvatarStroke.Color        = Color3.fromRGB(0, 255, 150)
-AvatarStroke.Thickness    = 1.5
-AvatarStroke.Transparency = 0.2
+do
+    local AvatarStroke: UIStroke = Instance.new("UIStroke", AvatarImg)
+    AvatarStroke.Color        = Color3.fromRGB(0, 255, 150)
+    AvatarStroke.Thickness    = 1.5
+    AvatarStroke.Transparency = 0.2
+end
 
 local AvatarLoadingLbl: TextLabel = Instance.new("TextLabel", AvatarImg)
 AvatarLoadingLbl.Size              = UDim2.new(1, 0, 1, 0)
@@ -1350,7 +1500,7 @@ CreatorName.Position           = UDim2.new(0, 62, 0, 6)
 CreatorName.Size               = UDim2.new(1, -68, 0, 16)
 CreatorName.BackgroundTransparency = 1
 CreatorName.Font               = Enum.Font.Arcade
-CreatorName.Text               = "zachparson1 (alwi) "
+CreatorName.Text               = "zachparsons1 (alwi)"
 CreatorName.TextSize           = 13
 CreatorName.TextXAlignment     = Enum.TextXAlignment.Left
 CreatorName.TextColor3         = Color3.fromRGB(0, 255, 150)
@@ -1383,13 +1533,77 @@ RobloxBadge.TextSize          = 8
 RobloxBadge.TextColor3        = Color3.fromRGB(255, 255, 255)
 RobloxBadge.ZIndex            = 5
 Instance.new("UICorner", RobloxBadge).CornerRadius = UDim.new(0, 4)
-local RobloxBadgeStroke: UIStroke = Instance.new("UIStroke", RobloxBadge)
-RobloxBadgeStroke.Color        = Color3.fromRGB(255, 80, 80)
-RobloxBadgeStroke.Thickness    = 1
-RobloxBadgeStroke.Transparency = 0.4
+do
+    local RobloxBadgeStroke: UIStroke = Instance.new("UIStroke", RobloxBadge)
+    RobloxBadgeStroke.Color        = Color3.fromRGB(255, 80, 80)
+    RobloxBadgeStroke.Thickness    = 1
+    RobloxBadgeStroke.Transparency = 0.4
+end
+
+local RobloxBadgeScale: UIScale = Instance.new("UIScale", RobloxBadge)
+RobloxBadgeScale.Scale = 1
+
+EffectClick2 = function(c, p)
+	local Mouse = game.Players.LocalPlayer:GetMouse()
+
+	local relativeX = Mouse.X - c.AbsolutePosition.X
+	local relativeY = Mouse.Y - c.AbsolutePosition.Y
+
+	if relativeX < 0 or relativeY < 0 or relativeX > c.AbsoluteSize.X or relativeY > c.AbsoluteSize.Y then
+		return
+	end
+
+	local ClickButtonCircle = Instance.new("Frame")
+	ClickButtonCircle.Parent = p
+	ClickButtonCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	ClickButtonCircle.BackgroundTransparency = 0.5
+	ClickButtonCircle.BorderSizePixel = 0
+	ClickButtonCircle.AnchorPoint = Vector2.new(0.5, 0.5)
+	ClickButtonCircle.Position = UDim2.new(0, relativeX, 0, relativeY)
+	ClickButtonCircle.Size = UDim2.new(0, 0, 0, 0)
+	ClickButtonCircle.ZIndex = 10
+
+	local UIGradient_2 = Instance.new("UIGradient")
+	UIGradient_2.Parent = ClickButtonCircle
+	UIGradient_2.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 127)), ColorSequenceKeypoint.new(0.482699, Color3.fromRGB(0, 170, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(85, 85, 255))}
+	UIGradient_2.Rotation = 48
+
+	local UICorner = Instance.new("UICorner")
+	UICorner.CornerRadius = UDim.new(1, 0)
+	UICorner.Parent = ClickButtonCircle
+
+	local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+	local goal = {
+		Size = UDim2.new(0, c.AbsoluteSize.X * 1.5, 0, c.AbsoluteSize.X * 1.5),
+		BackgroundTransparency = 1
+	}
+
+	local expandTween = TweenService:Create(ClickButtonCircle, tweenInfo, goal)
+
+	expandTween.Completed:Connect(function()
+		ClickButtonCircle:Destroy()
+	end)
+
+	expandTween:Play()
+end
+
 
 RobloxBadge.MouseButton1Click:Connect(function()
-    pcall(setclipboard, "https://www.roblox.com/users/8099364004/profile")
+    pcall(setclipboard, "https://www.roblox.com/users/1291925/profile")
+
+    task.spawn(function()
+        pcall(function()
+            TweenService:Create(RobloxBadgeScale,
+                TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+                { Scale = 0.88 }):Play()
+            task.wait(0.09)
+            TweenService:Create(RobloxBadgeScale,
+                TweenInfo.new(0.45, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
+                { Scale = 1 }):Play()
+        end)
+    end)
+
     RobloxBadge.Text = "✓ Copied!"
     task.delay(2, function()
         pcall(function() RobloxBadge.Text = "Roblox Profile" end)
@@ -1397,113 +1611,399 @@ RobloxBadge.MouseButton1Click:Connect(function()
 end)
 
 local BioCard: Frame = Instance.new("Frame", CreditContent)
-BioCard.AnchorPoint           = Vector2.new(0.5, 0)
-BioCard.Position              = UDim2.new(0.5, 0, 0, 74)
-BioCard.Size                  = UDim2.new(1, -12, 0, 70)
+BioCard.LayoutOrder           = 2
+BioCard.Size                  = UDim2.new(1, 0, 0, 70)
 BioCard.BackgroundColor3      = Color3.fromRGB(10, 10, 18)
 BioCard.BackgroundTransparency = 0.3
 BioCard.BorderSizePixel       = 0
 BioCard.ZIndex                = 4
 BioCard.ClipsDescendants      = true
 Instance.new("UICorner", BioCard).CornerRadius = UDim.new(0, 6)
-local BioCardStroke: UIStroke = Instance.new("UIStroke", BioCard)
-BioCardStroke.Color        = Color3.fromRGB(0, 200, 255)
-BioCardStroke.Thickness    = 1
-BioCardStroke.Transparency = 0.5
+do
+    local BioCardStroke: UIStroke = Instance.new("UIStroke", BioCard)
+    BioCardStroke.Color        = Color3.fromRGB(0, 200, 255)
+    BioCardStroke.Thickness    = 1
+    BioCardStroke.Transparency = 0.5
 
-local BioTitle: TextLabel = Instance.new("TextLabel", BioCard)
-BioTitle.Position          = UDim2.new(0, 6, 0, 4)
-BioTitle.Size              = UDim2.new(1, -8, 0, 12)
-BioTitle.BackgroundTransparency = 1
-BioTitle.Font              = Enum.Font.Arcade
-BioTitle.Text              = "About"
-BioTitle.TextSize          = 9
-BioTitle.TextXAlignment    = Enum.TextXAlignment.Left
-BioTitle.TextColor3        = Color3.fromRGB(0, 200, 255)
-BioTitle.ZIndex            = 5
+    local BioTitle: TextLabel = Instance.new("TextLabel", BioCard)
+    BioTitle.Position          = UDim2.new(0, 6, 0, 4)
+    BioTitle.Size              = UDim2.new(1, -8, 0, 12)
+    BioTitle.BackgroundTransparency = 1
+    BioTitle.Font              = Enum.Font.Arcade
+    BioTitle.Text              = "About"
+    BioTitle.TextSize          = 9
+    BioTitle.TextXAlignment    = Enum.TextXAlignment.Left
+    BioTitle.TextColor3        = Color3.fromRGB(0, 200, 255)
+    BioTitle.ZIndex            = 5
 
-local BioDivider: Frame = Instance.new("Frame", BioCard)
-BioDivider.Position           = UDim2.new(0, 4, 0, 17)
-BioDivider.Size               = UDim2.new(1, -8, 0, 1)
-BioDivider.BackgroundColor3   = Color3.fromRGB(0, 200, 255)
-BioDivider.BackgroundTransparency = 0.6
-BioDivider.BorderSizePixel    = 0
-BioDivider.ZIndex             = 5
+    local BioDivider: Frame = Instance.new("Frame", BioCard)
+    BioDivider.Position           = UDim2.new(0, 4, 0, 17)
+    BioDivider.Size               = UDim2.new(1, -8, 0, 1)
+    BioDivider.BackgroundColor3   = Color3.fromRGB(0, 200, 255)
+    BioDivider.BackgroundTransparency = 0.6
+    BioDivider.BorderSizePixel    = 0
+    BioDivider.ZIndex             = 5
 
-local BioText: TextLabel = Instance.new("TextLabel", BioCard)
-BioText.Position          = UDim2.new(0, 6, 0, 20)
-BioText.Size              = UDim2.new(1, -8, 1, -24)
-BioText.BackgroundTransparency = 1
-BioText.Font              = Enum.Font.Arcade
-BioText.Text              = "Hey is me Alwi, creator of Velocity X!\nI like furry 🦊 (fox / kenomo) & fabulous beast\n\"you shou yan\" :3\nEnjoy the script! ❤"
-BioText.TextSize          = 8
-BioText.TextXAlignment    = Enum.TextXAlignment.Left
-BioText.TextYAlignment    = Enum.TextYAlignment.Top
-BioText.TextWrapped       = true
-BioText.TextColor3        = Color3.fromRGB(210, 210, 210)
-BioText.ZIndex            = 5
+    local BioText: TextLabel = Instance.new("TextLabel", BioCard)
+    BioText.Position          = UDim2.new(0, 6, 0, 20)
+    BioText.Size              = UDim2.new(1, -8, 1, -24)
+    BioText.BackgroundTransparency = 1
+    BioText.Font              = Enum.Font.Arcade
+    BioText.Text              = "Hey is me Alwi, creator of Velocity X!\nI like furry 🦊 (fox / kenomo) & fabulous beast\n\"you shou yan\" :3\nEnjoy the script! ❤"
+    BioText.TextSize          = 8
+    BioText.TextXAlignment    = Enum.TextXAlignment.Left
+    BioText.TextYAlignment    = Enum.TextYAlignment.Top
+    BioText.TextWrapped       = true
+    BioText.TextColor3        = Color3.fromRGB(210, 210, 210)
+    BioText.ZIndex            = 5
 
-local FoxPaw: TextLabel = Instance.new("TextLabel", BioCard)
-FoxPaw.AnchorPoint        = Vector2.new(1, 1)
-FoxPaw.Position           = UDim2.new(1, -4, 1, -4)
-FoxPaw.Size               = UDim2.new(0, 24, 0, 24)
-FoxPaw.BackgroundTransparency = 1
-FoxPaw.Font               = Enum.Font.GothamBold
-FoxPaw.Text               = "🐾"
-FoxPaw.TextSize           = 14
-FoxPaw.TextTransparency   = 0.3
-FoxPaw.ZIndex             = 5
-
-local TagsOuter: Frame = Instance.new("Frame", CreditContent)
-TagsOuter.AnchorPoint           = Vector2.new(0.5, 0)
-TagsOuter.Position              = UDim2.new(0.5, 0, 0, 150)
-TagsOuter.Size                  = UDim2.new(1, -12, 0, 40)
-TagsOuter.BackgroundTransparency = 1
-TagsOuter.BorderSizePixel       = 0
-TagsOuter.ZIndex                = 4
-
-local function makeTagsRow(parent: Frame, yOffset: number): Frame
-    local row: Frame = Instance.new("Frame", parent)
-    row.Position              = UDim2.new(0, 0, 0, yOffset)
-    row.Size                  = UDim2.new(1, 0, 0, 16)
-    row.BackgroundTransparency = 1
-    row.BorderSizePixel       = 0
-    row.ZIndex                = 4
-    local ll: UIListLayout = Instance.new("UIListLayout", row)
-    ll.FillDirection          = Enum.FillDirection.Horizontal
-    ll.HorizontalAlignment    = Enum.HorizontalAlignment.Left
-    ll.VerticalAlignment      = Enum.VerticalAlignment.Center
-    ll.Padding                = UDim.new(0, 4)
-    return row
+    local FoxPaw: TextLabel = Instance.new("TextLabel", BioCard)
+    FoxPaw.AnchorPoint        = Vector2.new(1, 1)
+    FoxPaw.Position           = UDim2.new(1, -4, 1, -4)
+    FoxPaw.Size               = UDim2.new(0, 24, 0, 24)
+    FoxPaw.BackgroundTransparency = 1
+    FoxPaw.Font               = Enum.Font.GothamBold
+    FoxPaw.Text               = "🐾"
+    FoxPaw.TextSize           = 14
+    FoxPaw.TextTransparency   = 0.3
+    FoxPaw.ZIndex             = 5
 end
 
-local TagRow1: Frame = makeTagsRow(TagsOuter, 0)
-local TagRow2: Frame = makeTagsRow(TagsOuter, 22)
+do
+    local TagsOuter: Frame = Instance.new("Frame", CreditContent)
+    TagsOuter.LayoutOrder           = 3
+    TagsOuter.Size                  = UDim2.new(1, 0, 0, 40)
+    TagsOuter.BackgroundTransparency = 1
+    TagsOuter.BorderSizePixel       = 0
+    TagsOuter.ZIndex                = 4
 
-local TS = game:GetService("TextService")
-local function addTag(parent: Frame, txt: string, col: Color3)
-    local tag: TextLabel = Instance.new("TextLabel", parent)
-    tag.BackgroundColor3       = col
-    tag.BackgroundTransparency = 0.5
-    tag.BorderSizePixel        = 0
-    tag.Font                   = Enum.Font.Arcade
-    tag.Text                   = txt
-    tag.TextSize               = 7
-    tag.TextColor3             = Color3.fromRGB(255, 255, 255)
-    tag.ZIndex                 = 5
-    Instance.new("UICorner", tag).CornerRadius = UDim.new(1, 0)
-    local sz: Vector2 = TS:GetTextSize(txt, 7, Enum.Font.Arcade, Vector2.new(200, 20))
-    tag.Size = UDim2.new(0, sz.X + 10, 0, 14)
+    local function makeTagsRow(parent: Frame, yOffset: number): Frame
+        local row: Frame = Instance.new("Frame", parent)
+        row.Position              = UDim2.new(0, 0, 0, yOffset)
+        row.Size                  = UDim2.new(1, 0, 0, 16)
+        row.BackgroundTransparency = 1
+        row.BorderSizePixel       = 0
+        row.ZIndex                = 4
+        local ll: UIListLayout = Instance.new("UIListLayout", row)
+        ll.FillDirection          = Enum.FillDirection.Horizontal
+        ll.HorizontalAlignment    = Enum.HorizontalAlignment.Left
+        ll.VerticalAlignment      = Enum.VerticalAlignment.Center
+        ll.Padding                = UDim.new(0, 4)
+        return row
+    end
+
+    local TagRow1: Frame = makeTagsRow(TagsOuter, 0)
+    local TagRow2: Frame = makeTagsRow(TagsOuter, 22)
+
+    local TS_tags = game:GetService("TextService")
+    local function addTag(parent: Frame, txt: string, col: Color3)
+        local tag: TextLabel = Instance.new("TextLabel", parent)
+        tag.BackgroundColor3       = col
+        tag.BackgroundTransparency = 0.5
+        tag.BorderSizePixel        = 0
+        tag.Font                   = Enum.Font.Arcade
+        tag.Text                   = txt
+        tag.TextSize               = 7
+        tag.TextColor3             = Color3.fromRGB(255, 255, 255)
+        tag.ZIndex                 = 5
+        Instance.new("UICorner", tag).CornerRadius = UDim.new(1, 0)
+        local sz: Vector2 = TS_tags:GetTextSize(txt, 7, Enum.Font.Arcade, Vector2.new(200, 20))
+        tag.Size = UDim2.new(0, sz.X + 10, 0, 14)
+    end
+
+    addTag(TagRow1, "fox",      Color3.fromRGB(255, 115, 15))
+    addTag(TagRow1, "kenomo",       Color3.fromRGB(110, 70, 210))
+    addTag(TagRow1, "furry",        Color3.fromRGB(190, 55, 115))
+    addTag(TagRow1, "like fabulous beast",    Color3.fromRGB(0,  150, 220))
+
+    addTag(TagRow2, "Lua 3yr",   Color3.fromRGB(30,  160, 100))
+    addTag(TagRow2, "Introvert", Color3.fromRGB(60,  90,  180))
+    addTag(TagRow2, "Ragebait",  Color3.fromRGB(200, 50,  50))
 end
 
-addTag(TagRow1, "🦊 fox",      Color3.fromRGB(255, 115, 15))
-addTag(TagRow1, "kenomo",       Color3.fromRGB(110, 70, 210))
-addTag(TagRow1, "furry",        Color3.fromRGB(190, 55, 115))
-addTag(TagRow1, "like fabulous beast",    Color3.fromRGB(0,  150, 220))
+local UIS = game:GetService("UserInputService")
 
-addTag(TagRow2, "lua 3yr",   Color3.fromRGB(30,  160, 100))
-addTag(TagRow2, "Introvert", Color3.fromRGB(60,  90,  180))
-addTag(TagRow2, "Ragebait",  Color3.fromRGB(200, 50,  50))
+do
+    local SocialSep: Frame = Instance.new("Frame", CreditContent)
+    SocialSep.LayoutOrder            = 4
+    SocialSep.Size                   = UDim2.new(1, 0, 0, 1)
+    SocialSep.BackgroundColor3       = Color3.fromRGB(0, 200, 255)
+    SocialSep.BackgroundTransparency = 0.6
+    SocialSep.BorderSizePixel        = 0
+    SocialSep.ZIndex                 = 4
+
+    local SocialHdr: TextLabel = Instance.new("TextLabel", CreditContent)
+    SocialHdr.LayoutOrder            = 5
+    SocialHdr.Size                   = UDim2.new(1, 0, 0, 14)
+    SocialHdr.BackgroundTransparency = 1
+    SocialHdr.Font                   = Enum.Font.Arcade
+    SocialHdr.Text                   = "🌐 Social"
+    SocialHdr.TextSize               = 8
+    SocialHdr.TextXAlignment         = Enum.TextXAlignment.Left
+    SocialHdr.TextColor3             = Color3.fromRGB(0, 200, 255)
+    SocialHdr.ZIndex                 = 4
+end
+
+local SocialRow: ScrollingFrame = Instance.new("ScrollingFrame", CreditContent)
+SocialRow.LayoutOrder            = 6
+SocialRow.Size                   = UDim2.new(1, 0, 0, 80)
+SocialRow.BackgroundTransparency = 1
+SocialRow.BorderSizePixel        = 0
+SocialRow.ZIndex                 = 4
+SocialRow.ScrollBarThickness     = 3
+SocialRow.ScrollBarImageColor3   = Color3.fromRGB(0, 200, 255)
+SocialRow.ScrollingDirection     = Enum.ScrollingDirection.X
+SocialRow.AutomaticCanvasSize    = Enum.AutomaticSize.X
+SocialRow.CanvasSize             = UDim2.new(0, 0, 0, 0)
+
+do
+    local SocialList: UIListLayout = Instance.new("UIListLayout", SocialRow)
+    SocialList.FillDirection        = Enum.FillDirection.Horizontal
+    SocialList.HorizontalAlignment  = Enum.HorizontalAlignment.Left
+    SocialList.VerticalAlignment    = Enum.VerticalAlignment.Center
+    SocialList.Padding              = UDim.new(0, 10)
+
+    local SocialPad: UIPadding = Instance.new("UIPadding", SocialRow)
+    SocialPad.PaddingLeft   = UDim.new(0, 4)
+    SocialPad.PaddingRight  = UDim.new(0, 4)
+    SocialPad.PaddingTop    = UDim.new(0, 4)
+    SocialPad.PaddingBottom = UDim.new(0, 4)
+end
+
+local function makeSocialBtn(
+    assetId: string?,
+    emoji:   string?,
+    label:   string,
+    link:    string,
+    colA:    Color3,
+    colB:    Color3
+)
+    local card: Frame = Instance.new("Frame", SocialRow)
+    card.BackgroundTransparency = 1
+    card.BorderSizePixel        = 0
+    card.Size                   = UDim2.new(0, 58, 1, 0)
+    card.ZIndex                 = 4
+
+    local cardScale: UIScale = Instance.new("UIScale", card)
+    cardScale.Scale = 1
+
+    local btn: ImageButton = Instance.new("ImageButton", card)
+    btn.AnchorPoint        = Vector2.new(0.5, 0)
+    btn.Position           = UDim2.new(0.5, 0, 0, 4)
+    btn.Size               = UDim2.new(0, 40, 0, 40)
+    btn.BackgroundColor3   = colA
+    btn.BackgroundTransparency = 0.25
+    btn.BorderSizePixel    = 0
+    btn.ZIndex             = 5
+    btn.Image              = ""
+    btn.ClipsDescendants   = true
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(1, 0)
+
+    local btnGrad: UIGradient = Instance.new("UIGradient", btn)
+    btnGrad.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, colA),
+        ColorSequenceKeypoint.new(1, colB),
+    }
+    btnGrad.Rotation = 135
+
+    local stroke: UIStroke = Instance.new("UIStroke", btn)
+    stroke.Color        = colA
+    stroke.Thickness    = 1.5
+    stroke.Transparency = 0.35
+
+    if assetId then
+        local img: ImageLabel = Instance.new("ImageLabel", btn)
+        img.AnchorPoint            = Vector2.new(0.5, 0.5)
+        img.Position               = UDim2.new(0.5, 0, 0.5, 0)
+        img.Size                   = UDim2.new(0.65, 0, 0.65, 0)
+        img.BackgroundTransparency = 1
+        img.Image                  = "rbxassetid://" .. assetId
+        img.ZIndex                 = 6
+    else
+        local lbl2: TextLabel = Instance.new("TextLabel", btn)
+        lbl2.AnchorPoint            = Vector2.new(0.5, 0.5)
+        lbl2.Position               = UDim2.new(0.5, 0, 0.5, 0)
+        lbl2.Size                   = UDim2.new(1, 0, 1, 0)
+        lbl2.BackgroundTransparency = 1
+        lbl2.Font                   = Enum.Font.GothamBold
+        lbl2.Text                   = emoji or "?"
+        lbl2.TextSize               = 18
+        lbl2.TextColor3             = Color3.fromRGB(255, 255, 255)
+        lbl2.ZIndex                 = 6
+    end
+
+    local nameLbl: TextLabel = Instance.new("TextLabel", card)
+    nameLbl.AnchorPoint            = Vector2.new(0.5, 0)
+    nameLbl.Position               = UDim2.new(0.5, 0, 0, 46)
+    nameLbl.Size                   = UDim2.new(1, 4, 0, 12)
+    nameLbl.BackgroundTransparency = 1
+    nameLbl.Font                   = Enum.Font.Arcade
+    nameLbl.Text                   = label
+    nameLbl.TextSize               = 7
+    nameLbl.TextXAlignment         = Enum.TextXAlignment.Center
+    nameLbl.TextColor3             = Color3.fromRGB(175, 175, 175)
+    nameLbl.ZIndex                 = 4
+
+    btn.MouseEnter:Connect(function()
+        pcall(function()
+            TweenService:Create(cardScale,
+                TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+                { Scale = 1.14 }
+            ):Play()
+
+            TweenService:Create(btn,
+                TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+                { BackgroundTransparency = 0.08, Position = UDim2.new(0.5, 0, 0, 0) }
+            ):Play()
+            TweenService:Create(stroke,
+                TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                { Transparency = 0, Thickness = 2.2 }
+            ):Play()
+            TweenService:Create(nameLbl,
+                TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                { TextColor3 = Color3.fromRGB(230, 230, 230) }
+            ):Play()
+        end)
+    end)
+    btn.MouseLeave:Connect(function()
+        pcall(function()
+            TweenService:Create(cardScale,
+                TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+                { Scale = 1 }
+            ):Play()
+            TweenService:Create(btn,
+                TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+                { BackgroundTransparency = 0.25, Position = UDim2.new(0.5, 0, 0, 4) }
+            ):Play()
+            TweenService:Create(stroke,
+                TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+                { Transparency = 0.35, Thickness = 1.5 }
+            ):Play()
+
+            if nameLbl.Text ~= "✓ Copied!" then
+                TweenService:Create(nameLbl,
+                    TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+                    { TextColor3 = Color3.fromRGB(175, 175, 175) }
+                ):Play()
+            end
+        end)
+    end)
+
+    btn.MouseButton1Click:Connect(function()
+        pcall(setclipboard, link)
+
+        task.spawn(function()
+            pcall(function()
+                TweenService:Create(cardScale,
+                    TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+                    { Scale = 0.80 }):Play()
+                task.wait(0.09)
+                TweenService:Create(cardScale,
+                    TweenInfo.new(0.52, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
+                    { Scale = 1 }):Play()
+            end)
+        end)
+
+        task.spawn(function()
+            pcall(function()
+                local iconObj = btn:FindFirstChildOfClass("ImageLabel")
+                             or btn:FindFirstChildOfClass("TextLabel")
+                if iconObj then
+                    TweenService:Create(iconObj,
+                        TweenInfo.new(0.10, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+                        { Rotation = -22 }):Play()
+                    task.wait(0.11)
+                    TweenService:Create(iconObj,
+                        TweenInfo.new(0.13, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out),
+                        { Rotation = 15 }):Play()
+                    task.wait(0.14)
+                    TweenService:Create(iconObj,
+                        TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+                        { Rotation = 0 }):Play()
+                end
+            end)
+        end)
+
+        pcall(function()
+            TweenService:Create(stroke, TweenInfo.new(0.06),
+                { Transparency = 0, Thickness = 2.8 }):Play()
+            task.delay(0.28, function()
+                pcall(function()
+                    TweenService:Create(stroke, TweenInfo.new(0.28),
+                        { Transparency = 0.35, Thickness = 1.5 }):Play()
+                end)
+            end)
+        end)
+
+        task.spawn(function()
+            pcall(function()
+                local floatCheck: TextLabel = Instance.new("TextLabel", card)
+                floatCheck.AnchorPoint            = Vector2.new(0.5, 1)
+                floatCheck.Position               = UDim2.new(0.5, 0, 0.02, 0)
+                floatCheck.Size                   = UDim2.new(0.9, 0, 0, 20)
+                floatCheck.BackgroundTransparency = 1
+                floatCheck.Font                   = Enum.Font.GothamBold
+                floatCheck.Text                   = "✓"
+                floatCheck.TextSize               = 14
+                floatCheck.TextColor3             = Color3.fromRGB(0, 255, 150)
+                floatCheck.TextStrokeTransparency = 0.35
+                floatCheck.TextStrokeColor3       = Color3.fromRGB(0, 0, 0)
+                floatCheck.ZIndex                 = 12
+                TweenService:Create(floatCheck,
+                    TweenInfo.new(0.72, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                    { Position    = UDim2.new(0.5, 0, -0.4, 0),
+                      TextTransparency = 1 }):Play()
+                task.wait(0.74)
+                pcall(function() floatCheck:Destroy() end)
+            end)
+        end)
+
+        nameLbl.Text       = "✓ Copied!"
+        nameLbl.TextColor3 = Color3.fromRGB(0, 255, 150)
+        task.delay(2, function()
+            pcall(function()
+                nameLbl.Text       = label
+                nameLbl.TextColor3 = Color3.fromRGB(175, 175, 175)
+            end)
+        end)
+    end)
+end
+
+makeSocialBtn(
+    "94937742565147",
+    nil,
+    "Discord",
+    "https://discord.com/users/1136652082091409468",
+    Color3.fromRGB(88,  101, 242),
+    Color3.fromRGB(58,  30,  180)
+)
+
+makeSocialBtn(
+    "140193697070787",
+    nil,
+    "YouTube",
+    "https://youtube.com/@IkuraJust",
+    Color3.fromRGB(255, 30,  30),
+    Color3.fromRGB(180, 0,   60)
+)
+
+makeSocialBtn(
+    "99316223126384",
+    nil, 
+    "Roblox",
+    "https://www.roblox.com/users/1291925/profile",
+    Color3.fromRGB(226, 35,  26),
+    Color3.fromRGB(180, 60,  20)
+)
+
+makeSocialBtn(
+    "117782741969829",
+    nil,
+    "GitHub",
+    "https://github.com/mainery-foxxie",
+    Color3.fromRGB(30,  30,  30),
+    Color3.fromRGB(80,  80,  80)
+)
 
 local ACTIVE_COL:   Color3 = Color3.fromRGB(0, 255, 150)
 local INACTIVE_COL: Color3 = Color3.fromRGB(140, 140, 140)
@@ -1557,7 +2057,9 @@ TabBtnSettings.TextColor3 = ACTIVE_COL
 
 task.spawn(function()
     local imgUrl: string = getThumbnail(CREATOR_USER_ID)
+
     AvatarImg.Image = imgUrl
+
     task.wait()
     pcall(function()
         AvatarLoadingLbl.Text    = ""
@@ -1570,21 +2072,72 @@ task.spawn(function()
 end)
 
 task.spawn(function()
+    while task.wait(0.15) do
+        pcall(function()
+            local char = Players.LocalPlayer.Character
+            local hrp  = char and char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                local p = hrp.CFrame.Position
+                posXLbl.Text = string.format("%d", math.floor(p.X))
+                posYLbl.Text = string.format("%d", math.floor(p.Y))
+                posZLbl.Text = string.format("%d", math.floor(p.Z))
+            else
+                posXLbl.Text = "—"
+                posYLbl.Text = "—"
+                posZLbl.Text = "—"
+            end
+        end)
+    end
+end)
+
+task.spawn(function()
+    local RS    = game:GetService("RunService")
+    local Stats = game:GetService("Stats")
+    local fpsCount  = 0
+    local fpsTimer  = tick()
+
+    task.spawn(function()
+        while task.wait(0) do
+            fpsCount += 1
+        end
+    end)
+
+    while task.wait(1) do
+
+        pcall(function()
+            local now = tick()
+            local fps = math.floor(fpsCount / (now - fpsTimer))
+            fpsCount  = 0
+            fpsTimer  = now
+            fpsValLbl.Text = string.format("%d fps", fps)
+        end)
+
+        pcall(function()
+            local ping = math.floor(
+                Stats.Network.ServerStatsItem["Data Ping"].Value
+            )
+            pingValLbl.Text = string.format("%d ms", ping)
+        end)
+
+        pcall(function()
+            timeValLbl.Text = string.format("%s", os.date("%H:%M:%S"))
+        end)
+    end
+end)
+
+task.spawn(function()
     while task.wait(15) do
-        local ok, mt = pcall(function() return Players.LocalPlayer.MembershipType end)
-        local hasPremium: boolean = ok and mt ~= Enum.MembershipType.None
+        local ok, mt    = pcall(function() return Players.LocalPlayer.MembershipType end)
+        local hasPremium = ok and mt ~= Enum.MembershipType.None
         pcall(function()
             premiumValLbl.Text = string.format("%s",
-                hasPremium and "✓ Premium" or "✗ None"
-            )
+                hasPremium and "✓ Premium" or "✗ None")
             premiumValLbl.TextColor3 = hasPremium
                 and Color3.fromRGB(255, 215, 0)
                 or  Color3.fromRGB(170, 170, 170)
         end)
     end
 end)
-
-local PanelTitle: TextLabel = TabBtnSettings
 
 type ToggleControl = {
     Frame: Frame,
@@ -1935,6 +2488,26 @@ local antiGameplayPauseRunning:   boolean              = false
 local antiGameplayPauseThread:    thread?              = nil
 
 local function cleanupAntiFeatures()
+
+    pcall(function()
+        if antiAfkConnection then
+            antiAfkConnection:Disconnect()
+            antiAfkConnection = nil
+        end
+    end)
+    pcall(function()
+        if antiFlingConnection then
+            antiFlingConnection:Disconnect()
+            antiFlingConnection = nil
+        end
+    end)
+    pcall(function()
+        antiGameplayPauseRunning = false
+        if antiGameplayPauseThread then
+            task.cancel(antiGameplayPauseThread)
+            antiGameplayPauseThread = nil
+        end
+    end)
 end
 
 local ErrorPanel: Frame = Instance.new("Frame", MainBackground)
@@ -1951,32 +2524,34 @@ ErrorPanel.Visible                = false
 
 Instance.new("UICorner", ErrorPanel).CornerRadius = UDim.new(0, 8)
 
-local ErrStroke: UIStroke = Instance.new("UIStroke", ErrorPanel)
-ErrStroke.Color       = Color3.fromRGB(255, 60, 60)
-ErrStroke.Thickness   = 1.5
-ErrStroke.Transparency = 0.3
+do
+    local ErrStroke: UIStroke = Instance.new("UIStroke", ErrorPanel)
+    ErrStroke.Color       = Color3.fromRGB(255, 60, 60)
+    ErrStroke.Thickness   = 1.5
+    ErrStroke.Transparency = 0.3
 
-local ErrTopBar: Frame = Instance.new("Frame", ErrorPanel)
-ErrTopBar.Size             = UDim2.new(1, 0, 0, 2)
-ErrTopBar.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
-ErrTopBar.BorderSizePixel  = 0
-local ErrTopGrad: UIGradient = Instance.new("UIGradient", ErrTopBar)
-ErrTopGrad.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0,   Color3.fromRGB(255, 80, 80)),
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 160, 60)),
-    ColorSequenceKeypoint.new(1,   Color3.fromRGB(255, 80, 80)),
-}
+    local ErrTopBar: Frame = Instance.new("Frame", ErrorPanel)
+    ErrTopBar.Size             = UDim2.new(1, 0, 0, 2)
+    ErrTopBar.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+    ErrTopBar.BorderSizePixel  = 0
+    local ErrTopGrad: UIGradient = Instance.new("UIGradient", ErrTopBar)
+    ErrTopGrad.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0,   Color3.fromRGB(255, 80, 80)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 160, 60)),
+        ColorSequenceKeypoint.new(1,   Color3.fromRGB(255, 80, 80)),
+    }
 
-local ErrIcon: TextLabel = Instance.new("TextLabel", ErrorPanel)
-ErrIcon.AnchorPoint            = Vector2.new(0, 0.5)
-ErrIcon.Position               = UDim2.new(0, 8, 0.38, 0)
-ErrIcon.Size                   = UDim2.new(0, 18, 0, 18)
-ErrIcon.BackgroundTransparency = 1
-ErrIcon.Font                   = Enum.Font.GothamBold
-ErrIcon.Text                   = "⚠"
-ErrIcon.TextScaled             = true
-ErrIcon.TextColor3             = Color3.fromRGB(255, 140, 40)
-ErrIcon.ZIndex                 = 6
+    local ErrIcon: TextLabel = Instance.new("TextLabel", ErrorPanel)
+    ErrIcon.AnchorPoint            = Vector2.new(0, 0.5)
+    ErrIcon.Position               = UDim2.new(0, 8, 0.38, 0)
+    ErrIcon.Size                   = UDim2.new(0, 18, 0, 18)
+    ErrIcon.BackgroundTransparency = 1
+    ErrIcon.Font                   = Enum.Font.GothamBold
+    ErrIcon.Text                   = "⚠"
+    ErrIcon.TextScaled             = true
+    ErrIcon.TextColor3             = Color3.fromRGB(255, 140, 40)
+    ErrIcon.ZIndex                 = 6
+end
 
 local ErrTitle: TextLabel = Instance.new("TextLabel", ErrorPanel)
 ErrTitle.AnchorPoint            = Vector2.new(0, 0)
@@ -2019,12 +2594,14 @@ ErrRetryBtn.TextSize               = 11
 ErrRetryBtn.TextColor3             = Color3.fromRGB(255, 255, 255)
 ErrRetryBtn.ZIndex                 = 7
 Instance.new("UICorner", ErrRetryBtn).CornerRadius = UDim.new(0, 4)
-local ErrRetryGrad: UIGradient = Instance.new("UIGradient", ErrRetryBtn)
-ErrRetryGrad.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 80, 80)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 40, 40)),
-}
-ErrRetryGrad.Rotation = 90
+do
+    local ErrRetryGrad: UIGradient = Instance.new("UIGradient", ErrRetryBtn)
+    ErrRetryGrad.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 80, 80)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 40, 40)),
+    }
+    ErrRetryGrad.Rotation = 90
+end
 Instance.new("UIStroke", ErrRetryBtn).Color     = Color3.fromRGB(255, 80, 80)
 Instance.new("UIStroke", ErrRetryBtn).Thickness = 1
 
@@ -2353,10 +2930,12 @@ openConsoleButton.TextColor3         = Color3.fromRGB(0, 200, 255)
 openConsoleButton.TextSize           = 12
 openConsoleButton.ZIndex             = 2
 Instance.new("UICorner", openConsoleButton).CornerRadius = UDim.new(0, 4)
-local consoleBtnStroke: UIStroke = Instance.new("UIStroke", openConsoleButton)
-consoleBtnStroke.Color       = Color3.fromRGB(0, 200, 255)
-consoleBtnStroke.Thickness   = 1.5
-consoleBtnStroke.Transparency = 0.5
+do
+    local consoleBtnStroke: UIStroke = Instance.new("UIStroke", openConsoleButton)
+    consoleBtnStroke.Color       = Color3.fromRGB(0, 200, 255)
+    consoleBtnStroke.Thickness   = 1.5
+    consoleBtnStroke.Transparency = 0.5
+end
 openConsoleButton.Parent = ScrollingFrame
 openConsoleButton.MouseButton1Click:Connect(function()
     pcall(function()
@@ -2376,10 +2955,12 @@ deleteConfigButton.TextColor3         = Color3.fromRGB(255, 100, 100)
 deleteConfigButton.TextSize           = 12
 deleteConfigButton.ZIndex             = 2
 Instance.new("UICorner", deleteConfigButton).CornerRadius = UDim.new(0, 4)
-local delBtnStroke: UIStroke = Instance.new("UIStroke", deleteConfigButton)
-delBtnStroke.Color       = Color3.fromRGB(255, 100, 100)
-delBtnStroke.Thickness   = 1.5
-delBtnStroke.Transparency = 0.5
+do
+    local delBtnStroke: UIStroke = Instance.new("UIStroke", deleteConfigButton)
+    delBtnStroke.Color       = Color3.fromRGB(255, 100, 100)
+    delBtnStroke.Thickness   = 1.5
+    delBtnStroke.Transparency = 0.5
+end
 deleteConfigButton.Parent = ScrollingFrame
 
 local function updateCanvasSize()
@@ -2431,6 +3012,7 @@ task.spawn(function()
         pcall(ApplyGreetingState)
 
         if _greetingShowDiscord then
+
             pcall(function()
                 TweenService:Create(GCardIcon, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
                     ImageTransparency = 0,
@@ -2440,6 +3022,7 @@ task.spawn(function()
                 }):Play()
             end)
         else
+
             pcall(function()
                 GCardIcon.ImageTransparency = 1
                 GCardSub.TextTransparency   = 1
@@ -2471,9 +3054,53 @@ InjectButton.MouseButton1Click:Connect(function()
     if RealZzHub then RealZzHub:Destroy() end
 end)
 
+SettingsIcon.MouseEnter:Connect(function()
+    if SettingsPanel and not SettingsPanel.Visible then
+        pcall(function()
+            TweenService:Create(SettingsIconScale,
+                TweenInfo.new(0.20, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+                { Scale = 1.22 }):Play()
+            TweenService:Create(SettingsIcon,
+                TweenInfo.new(0.32, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                { Rotation = 42, ImageTransparency = 0 }):Play()
+        end)
+    end
+end)
+SettingsIcon.MouseLeave:Connect(function()
+    if SettingsPanel and not SettingsPanel.Visible then
+        pcall(function()
+            TweenService:Create(SettingsIconScale,
+                TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+                { Scale = 1 }):Play()
+            TweenService:Create(SettingsIcon,
+                TweenInfo.new(0.40, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
+                { Rotation = 0, ImageTransparency = 0.2 }):Play()
+        end)
+    end
+end)
+
 SettingsIcon.MouseButton1Click:Connect(function()
     if not SettingsPanel then return end
     if SettingsPanel.Visible then
+
+        pcall(function()
+            TweenService:Create(SettingsIconScale,
+                TweenInfo.new(0.10, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                { Scale = 0.76 }):Play()
+            TweenService:Create(SettingsIcon,
+                TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                { Rotation = -30 }):Play()
+            task.delay(0.12, function()
+                pcall(function()
+                    TweenService:Create(SettingsIconScale,
+                        TweenInfo.new(0.42, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
+                        { Scale = 1 }):Play()
+                    TweenService:Create(SettingsIcon,
+                        TweenInfo.new(0.48, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
+                        { Rotation = 0, ImageTransparency = 0.2 }):Play()
+                end)
+            end)
+        end)
         TweenService:Create(SettingsPanel, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
             Size = UDim2.new(0, 0, 0, 0), ImageTransparency = 1
         }):Play()
@@ -2489,6 +3116,25 @@ SettingsIcon.MouseButton1Click:Connect(function()
             setButtonActive(CloseButton,  true)
         end
     else
+
+        pcall(function()
+            TweenService:Create(SettingsIconScale,
+                TweenInfo.new(0.10, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                { Scale = 0.76 }):Play()
+            TweenService:Create(SettingsIcon,
+                TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                { Rotation = 82 }):Play()
+            task.delay(0.12, function()
+                pcall(function()
+                    TweenService:Create(SettingsIconScale,
+                        TweenInfo.new(0.42, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
+                        { Scale = 1 }):Play()
+                    TweenService:Create(SettingsIcon,
+                        TweenInfo.new(0.48, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+                        { Rotation = 45, ImageTransparency = 0 }):Play()
+                end)
+            end)
+        end)
         resetToSettingsTab()
         SettingsPanel.Visible = true
         SettingsPanel.Size    = UDim2.new(0, 0, 0, 0)
