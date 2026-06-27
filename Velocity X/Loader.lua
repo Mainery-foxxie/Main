@@ -129,18 +129,6 @@ local cloneref: (obj: any) -> any = cloneref or function(obj: any): any return o
 local HttpService  = cloneref(game:GetService("HttpService"))
 local TweenService = game:GetService("TweenService")
 local RunService   = game:GetService("RunService")
-
--- ── URL SECURITY (XOR decode) ──────────────────────────────────────────────
--- Key is assembled at runtime from two constants so it never appears as plain 73
-local _k: number = bit32.bxor(0x4C, 0x05)   -- 76 ⊕ 5 = 73, evaluated at runtime
-local function _xu(t: {number}): string
-    local b: {string} = table.create(#t)
-    for i: number, v: number in ipairs(t) do
-        b[i] = string.char(bit32.bxor(v, _k))
-    end
-    return table.concat(b)
-end
--- ──────────────────────────────────────────────────────────────────────────
 local Players      = game:GetService("Players")
 local player       = Players.LocalPlayer
 
@@ -574,31 +562,7 @@ ShadowStroke.Transparency = 0.6
 local EdgeStroke: UIStroke = Instance.new("UIStroke", MainBackground)
 EdgeStroke.Thickness   = 3.5
 EdgeStroke.Transparency = 0.3
-
-do
-    local colorGreen: Color3 = Color3.fromRGB(0, 255, 120)
-    local colorBlue:  Color3 = Color3.fromRGB(0, 170, 255)
-    local startTime:  number = tick()
-    local cycleDuration: number = 4
-
-    task.spawn(function()
-        local _strokeFrame: number = 0
-        while MainBackground and MainBackground.Parent do
-            _strokeFrame += 1
-            if _strokeFrame % 3 == 0 then
-                pcall(function()
-                    local t: number      = (tick() - startTime) / cycleDuration
-                    local factor: number = (math.sin(t * math.pi * 2) + 1) / 2
-                    local r: number = colorGreen.R + (colorBlue.R - colorGreen.R) * factor
-                    local g: number = colorGreen.G + (colorBlue.G - colorGreen.G) * factor
-                    local bv: number = colorGreen.B + (colorBlue.B - colorGreen.B) * factor
-                    EdgeStroke.Color = Color3.new(r, g, bv)
-                end)
-            end
-            RunService.Heartbeat:Wait()
-        end
-    end)
-end
+EdgeStroke.Color       = Color3.fromRGB(0, 255, 120)
 
 do
     local Corner: UICorner = Instance.new("UICorner", MainBackground)
@@ -900,9 +864,10 @@ ConfirmGradient.Color = ColorSequence.new{
     ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 170, 255)),
 }
 ConfirmGradient.Rotation = 45
-Instance.new("UIStroke", ConfirmFrame).Color       = Color3.fromRGB(0, 200, 255)
-Instance.new("UIStroke", ConfirmFrame).Thickness   = 2
-Instance.new("UIStroke", ConfirmFrame).Transparency = 0.3
+local ConfirmStroke: UIStroke = Instance.new("UIStroke", ConfirmFrame)
+ConfirmStroke.Color        = Color3.fromRGB(0, 200, 255)
+ConfirmStroke.Thickness    = 2
+ConfirmStroke.Transparency = 0.3
 Instance.new("UICorner", ConfirmFrame).CornerRadius = UDim.new(0, 8)
 
 do
@@ -933,8 +898,9 @@ do
     YesGradient.Color    = ConfirmGradient.Color
     YesGradient.Rotation = 90
 end
-Instance.new("UIStroke", YesButton).Color     = Color3.fromRGB(0, 255, 150)
-Instance.new("UIStroke", YesButton).Thickness = 1.5
+local YesStroke: UIStroke = Instance.new("UIStroke", YesButton)
+YesStroke.Color     = Color3.fromRGB(0, 255, 150)
+YesStroke.Thickness = 1.5
 
 local NoButton: TextButton = Instance.new("TextButton", ConfirmFrame)
 NoButton.BackgroundColor3     = Color3.fromRGB(255, 255, 255)
@@ -951,8 +917,9 @@ do
     NoGradient.Color    = ConfirmGradient.Color
     NoGradient.Rotation = 90
 end
-Instance.new("UIStroke", NoButton).Color     = Color3.fromRGB(0, 255, 150)
-Instance.new("UIStroke", NoButton).Thickness = 1.5
+local NoStroke: UIStroke = Instance.new("UIStroke", NoButton)
+NoStroke.Color     = Color3.fromRGB(0, 255, 150)
+NoStroke.Thickness = 1.5
 
 local DeleteConfirmFrame: ImageLabel = Instance.new("ImageLabel", MainBackground)
 DeleteConfirmFrame.Name             = "DeleteConfirmFrame"
@@ -972,9 +939,10 @@ do
         ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 50, 50)),
     }
     DeleteConfirmGradient.Rotation = 45
-    Instance.new("UIStroke", DeleteConfirmFrame).Color       = Color3.fromRGB(255, 100, 100)
-    Instance.new("UIStroke", DeleteConfirmFrame).Thickness   = 2
-    Instance.new("UIStroke", DeleteConfirmFrame).Transparency = 0.3
+    local DeleteConfirmStroke: UIStroke = Instance.new("UIStroke", DeleteConfirmFrame)
+    DeleteConfirmStroke.Color        = Color3.fromRGB(255, 100, 100)
+    DeleteConfirmStroke.Thickness    = 2
+    DeleteConfirmStroke.Transparency = 0.3
     Instance.new("UICorner", DeleteConfirmFrame).CornerRadius = UDim.new(0, 8)
 
     local DeleteConfirmText: TextLabel = Instance.new("TextLabel", DeleteConfirmFrame)
@@ -1007,8 +975,9 @@ do
     }
     DeleteYesGradient.Rotation = 90
 end
-Instance.new("UIStroke", DeleteYesButton).Color     = Color3.fromRGB(255, 100, 100)
-Instance.new("UIStroke", DeleteYesButton).Thickness = 1.5
+local DeleteYesStroke: UIStroke = Instance.new("UIStroke", DeleteYesButton)
+DeleteYesStroke.Color     = Color3.fromRGB(255, 100, 100)
+DeleteYesStroke.Thickness = 1.5
 
 local DeleteNoButton: TextButton = Instance.new("TextButton", DeleteConfirmFrame)
 DeleteNoButton.BackgroundColor3     = Color3.fromRGB(255, 255, 255)
@@ -1028,8 +997,9 @@ do
     }
     DeleteNoGradient.Rotation = 90
 end
-Instance.new("UIStroke", DeleteNoButton).Color     = Color3.fromRGB(255, 100, 100)
-Instance.new("UIStroke", DeleteNoButton).Thickness = 1.5
+local DeleteNoStroke: UIStroke = Instance.new("UIStroke", DeleteNoButton)
+DeleteNoStroke.Color     = Color3.fromRGB(255, 100, 100)
+DeleteNoStroke.Thickness = 1.5
 
 local PANEL_W: number = 222
 local PANEL_H: number = 245
@@ -1061,6 +1031,26 @@ do
     local PanelCorner: UICorner = Instance.new("UICorner", SettingsPanel)
     PanelCorner.CornerRadius = UDim.new(0, 8)
 end
+
+local GameThumbnailBG: ImageLabel = Instance.new("ImageLabel", SettingsPanel)
+GameThumbnailBG.BackgroundTransparency = 1
+GameThumbnailBG.Size              = UDim2.new(1, 0, 1, 0)
+GameThumbnailBG.ScaleType         = Enum.ScaleType.Crop
+GameThumbnailBG.ImageTransparency = 0.4
+GameThumbnailBG.ZIndex            = 1
+GameThumbnailBG.Image             = "rbxthumb://type=GameIcon&id=" .. tostring(game.GameId) .. "&w=150&h=150"
+
+task.spawn(function()
+    local fetchStatus: Enum.AssetFetchStatus? = nil
+    local ok: boolean = pcall(function()
+        game:GetService("ContentProvider"):PreloadAsync({ GameThumbnailBG }, function(_, status: Enum.AssetFetchStatus)
+            fetchStatus = status
+        end)
+    end)
+    if not ok or fetchStatus ~= Enum.AssetFetchStatus.Success then
+        GameThumbnailBG.Visible = false
+    end
+end)
 
 local TabBar: Frame = Instance.new("Frame", SettingsPanel)
 TabBar.Size               = UDim2.new(1, 0, 0, 28)
@@ -2108,10 +2098,8 @@ task.spawn(function()
     local fpsCount  = 0
     local fpsTimer  = tick()
 
-    task.spawn(function()
-        while task.wait(0) do
-            fpsCount += 1
-        end
+    RS.Heartbeat:Connect(function()
+        fpsCount += 1
     end)
 
     while task.wait(1) do
@@ -2126,7 +2114,7 @@ task.spawn(function()
 
         pcall(function()
             local ping = math.floor(
-                Stats.Network.ServerStatsItem["Data Ping"].Value
+                Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
             )
             pingValLbl.Text = string.format("%d ms", ping)
         end)
@@ -2391,7 +2379,7 @@ local injected:   boolean = false
 local UNIVERSAL_URL:    string = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/Main/Universal/Main.lua"
 local GITHUB_BASE:      string = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/Main/"
 local GITHUB_JSON_URL:  string = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/config/SupportedGames.json"
-local PASTEBIN_JSON_URL: string = _xu({33,61,61,57,58,115,102,102,57,40,58,61,44,47,48,103,40,57,57,102,5,19,6,28,57,120,32,27,102,59,40,62})
+local PASTEBIN_JSON_URL: string = string.char(104,116,116,112,115,58,47,47,112,97,115,116,101,102,121,46,97,112,112,47,76,90,79,85,112,49,105,82,47,114,97,119)
 
 local function fetch(url: string): string?
     local success: boolean, result: any = pcall(function()
@@ -2590,8 +2578,9 @@ do
     }
     ErrRetryGrad.Rotation = 90
 end
-Instance.new("UIStroke", ErrRetryBtn).Color     = Color3.fromRGB(255, 80, 80)
-Instance.new("UIStroke", ErrRetryBtn).Thickness = 1
+local ErrRetryStroke: UIStroke = Instance.new("UIStroke", ErrRetryBtn)
+ErrRetryStroke.Color     = Color3.fromRGB(255, 80, 80)
+ErrRetryStroke.Thickness = 1
 
 local ErrDismissBtn: TextButton = Instance.new("TextButton", ErrorPanel)
 ErrDismissBtn.AnchorPoint            = Vector2.new(1, 0)
@@ -2832,10 +2821,11 @@ local antiAfkCtrl = addToggle(ScrollingFrame, "Anti AFK", config.antiAfk, functi
     if config.autoSave then saveConfig() end
     if val then
         if not antiAfkConnection then
-            antiAfkConnection = game:GetService("Players").LocalPlayer.Idled:Connect(function()
+            antiAfkConnection = player.Idled:Connect(function()
                 pcall(function()
-                    game:GetService("VirtualUser"):CaptureController()
-                    game:GetService("VirtualUser"):ClickButton2(Vector2.new())
+                    local VirtualUser: VirtualUser = game:GetService("VirtualUser")
+                    VirtualUser:CaptureController()
+                    VirtualUser:ClickButton2(Vector2.new())
                 end)
             end)
         end
@@ -2853,10 +2843,9 @@ local antiFlingCtrl = addToggle(ScrollingFrame, "Anti Fling", config.antiFling, 
     if config.autoSave then saveConfig() end
     if val then
         if not antiFlingConnection then
-            antiFlingConnection = game:GetService("RunService").Stepped:Connect(function()
-                local localPlayer = game:GetService("Players").LocalPlayer
-                for _, p: Player in game:GetService("Players"):GetPlayers() do
-                    if p == localPlayer or not p.Character then continue end
+            antiFlingConnection = RunService.Stepped:Connect(function()
+                for _, p: Player in Players:GetPlayers() do
+                    if p == player or not p.Character then continue end
                     for _, v: Instance in p.Character:GetDescendants() do
                         if v:IsA("BasePart") then
                             (v :: BasePart).CanCollide = false
@@ -2881,10 +2870,11 @@ local antiGameplayPauseCtrl = addToggle(ScrollingFrame, "Anti Gameplay Pause", c
         if not antiGameplayPauseRunning then
             antiGameplayPauseRunning = true
             antiGameplayPauseThread  = task.spawn(function()
+                local GuiService: GuiService = game:GetService("GuiService")
                 while antiGameplayPauseRunning do
                     pcall(function()
-                        game:GetService("GuiService"):SetGameplayPausedNotificationEnabled(false)
-                        game:GetService("Players").LocalPlayer.GameplayPaused = false
+                        GuiService:SetGameplayPausedNotificationEnabled(false)
+                        player.GameplayPaused = false
                     end)
                     task.wait()
                 end
