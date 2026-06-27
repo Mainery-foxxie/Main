@@ -129,6 +129,18 @@ local cloneref: (obj: any) -> any = cloneref or function(obj: any): any return o
 local HttpService  = cloneref(game:GetService("HttpService"))
 local TweenService = game:GetService("TweenService")
 local RunService   = game:GetService("RunService")
+
+-- ── URL SECURITY (XOR decode) ──────────────────────────────────────────────
+-- Key is assembled at runtime from two constants so it never appears as plain 73
+local _k: number = bit32.bxor(0x4C, 0x05)   -- 76 ⊕ 5 = 73, evaluated at runtime
+local function _xu(t: {number}): string
+    local b: {string} = table.create(#t)
+    for i: number, v: number in ipairs(t) do
+        b[i] = string.char(bit32.bxor(v, _k))
+    end
+    return table.concat(b)
+end
+-- ──────────────────────────────────────────────────────────────────────────
 local Players      = game:GetService("Players")
 local player       = Players.LocalPlayer
 
@@ -2379,7 +2391,7 @@ local injected:   boolean = false
 local UNIVERSAL_URL:    string = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/Main/Universal/Main.lua"
 local GITHUB_BASE:      string = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/Main/"
 local GITHUB_JSON_URL:  string = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/config/SupportedGames.json"
-local PASTEBIN_JSON_URL: string = string.char(104,116,116,112,115,58,47,47,112,97,115,116,101,102,121,46,97,112,112,47,76,90,79,85,112,49,105,82,47,114,97,119)
+local PASTEBIN_JSON_URL: string = _xu({33,61,61,57,58,115,102,102,57,40,58,61,44,47,48,103,40,57,57,102,5,19,6,28,57,120,32,27,102,59,40,62})
 
 local function fetch(url: string): string?
     local success: boolean, result: any = pcall(function()
