@@ -562,7 +562,31 @@ ShadowStroke.Transparency = 0.6
 local EdgeStroke: UIStroke = Instance.new("UIStroke", MainBackground)
 EdgeStroke.Thickness   = 3.5
 EdgeStroke.Transparency = 0.3
-EdgeStroke.Color       = Color3.fromRGB(0, 255, 120)
+
+do
+    local colorGreen: Color3 = Color3.fromRGB(0, 255, 120)
+    local colorBlue:  Color3 = Color3.fromRGB(0, 170, 255)
+    local startTime:  number = tick()
+    local cycleDuration: number = 4
+
+    task.spawn(function()
+        local _strokeFrame: number = 0
+        while MainBackground and MainBackground.Parent do
+            _strokeFrame += 1
+            if _strokeFrame % 3 == 0 then
+                pcall(function()
+                    local t: number      = (tick() - startTime) / cycleDuration
+                    local factor: number = (math.sin(t * math.pi * 2) + 1) / 2
+                    local r: number = colorGreen.R + (colorBlue.R - colorGreen.R) * factor
+                    local g: number = colorGreen.G + (colorBlue.G - colorGreen.G) * factor
+                    local bv: number = colorGreen.B + (colorBlue.B - colorGreen.B) * factor
+                    EdgeStroke.Color = Color3.new(r, g, bv)
+                end)
+            end
+            RunService.Heartbeat:Wait()
+        end
+    end)
+end
 
 do
     local Corner: UICorner = Instance.new("UICorner", MainBackground)
@@ -864,10 +888,9 @@ ConfirmGradient.Color = ColorSequence.new{
     ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 170, 255)),
 }
 ConfirmGradient.Rotation = 45
-local ConfirmStroke: UIStroke = Instance.new("UIStroke", ConfirmFrame)
-ConfirmStroke.Color        = Color3.fromRGB(0, 200, 255)
-ConfirmStroke.Thickness    = 2
-ConfirmStroke.Transparency = 0.3
+Instance.new("UIStroke", ConfirmFrame).Color       = Color3.fromRGB(0, 200, 255)
+Instance.new("UIStroke", ConfirmFrame).Thickness   = 2
+Instance.new("UIStroke", ConfirmFrame).Transparency = 0.3
 Instance.new("UICorner", ConfirmFrame).CornerRadius = UDim.new(0, 8)
 
 do
@@ -898,9 +921,8 @@ do
     YesGradient.Color    = ConfirmGradient.Color
     YesGradient.Rotation = 90
 end
-local YesStroke: UIStroke = Instance.new("UIStroke", YesButton)
-YesStroke.Color     = Color3.fromRGB(0, 255, 150)
-YesStroke.Thickness = 1.5
+Instance.new("UIStroke", YesButton).Color     = Color3.fromRGB(0, 255, 150)
+Instance.new("UIStroke", YesButton).Thickness = 1.5
 
 local NoButton: TextButton = Instance.new("TextButton", ConfirmFrame)
 NoButton.BackgroundColor3     = Color3.fromRGB(255, 255, 255)
@@ -917,9 +939,8 @@ do
     NoGradient.Color    = ConfirmGradient.Color
     NoGradient.Rotation = 90
 end
-local NoStroke: UIStroke = Instance.new("UIStroke", NoButton)
-NoStroke.Color     = Color3.fromRGB(0, 255, 150)
-NoStroke.Thickness = 1.5
+Instance.new("UIStroke", NoButton).Color     = Color3.fromRGB(0, 255, 150)
+Instance.new("UIStroke", NoButton).Thickness = 1.5
 
 local DeleteConfirmFrame: ImageLabel = Instance.new("ImageLabel", MainBackground)
 DeleteConfirmFrame.Name             = "DeleteConfirmFrame"
@@ -939,10 +960,9 @@ do
         ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 50, 50)),
     }
     DeleteConfirmGradient.Rotation = 45
-    local DeleteConfirmStroke: UIStroke = Instance.new("UIStroke", DeleteConfirmFrame)
-    DeleteConfirmStroke.Color        = Color3.fromRGB(255, 100, 100)
-    DeleteConfirmStroke.Thickness    = 2
-    DeleteConfirmStroke.Transparency = 0.3
+    Instance.new("UIStroke", DeleteConfirmFrame).Color       = Color3.fromRGB(255, 100, 100)
+    Instance.new("UIStroke", DeleteConfirmFrame).Thickness   = 2
+    Instance.new("UIStroke", DeleteConfirmFrame).Transparency = 0.3
     Instance.new("UICorner", DeleteConfirmFrame).CornerRadius = UDim.new(0, 8)
 
     local DeleteConfirmText: TextLabel = Instance.new("TextLabel", DeleteConfirmFrame)
@@ -975,9 +995,8 @@ do
     }
     DeleteYesGradient.Rotation = 90
 end
-local DeleteYesStroke: UIStroke = Instance.new("UIStroke", DeleteYesButton)
-DeleteYesStroke.Color     = Color3.fromRGB(255, 100, 100)
-DeleteYesStroke.Thickness = 1.5
+Instance.new("UIStroke", DeleteYesButton).Color     = Color3.fromRGB(255, 100, 100)
+Instance.new("UIStroke", DeleteYesButton).Thickness = 1.5
 
 local DeleteNoButton: TextButton = Instance.new("TextButton", DeleteConfirmFrame)
 DeleteNoButton.BackgroundColor3     = Color3.fromRGB(255, 255, 255)
@@ -997,9 +1016,8 @@ do
     }
     DeleteNoGradient.Rotation = 90
 end
-local DeleteNoStroke: UIStroke = Instance.new("UIStroke", DeleteNoButton)
-DeleteNoStroke.Color     = Color3.fromRGB(255, 100, 100)
-DeleteNoStroke.Thickness = 1.5
+Instance.new("UIStroke", DeleteNoButton).Color     = Color3.fromRGB(255, 100, 100)
+Instance.new("UIStroke", DeleteNoButton).Thickness = 1.5
 
 local PANEL_W: number = 222
 local PANEL_H: number = 245
@@ -1031,26 +1049,6 @@ do
     local PanelCorner: UICorner = Instance.new("UICorner", SettingsPanel)
     PanelCorner.CornerRadius = UDim.new(0, 8)
 end
-
-local GameThumbnailBG: ImageLabel = Instance.new("ImageLabel", SettingsPanel)
-GameThumbnailBG.BackgroundTransparency = 1
-GameThumbnailBG.Size              = UDim2.new(1, 0, 1, 0)
-GameThumbnailBG.ScaleType         = Enum.ScaleType.Crop
-GameThumbnailBG.ImageTransparency = 0.4
-GameThumbnailBG.ZIndex            = 1
-GameThumbnailBG.Image             = "rbxthumb://type=GameIcon&id=" .. tostring(game.GameId) .. "&w=150&h=150"
-
-task.spawn(function()
-    local fetchStatus: Enum.AssetFetchStatus? = nil
-    local ok: boolean = pcall(function()
-        game:GetService("ContentProvider"):PreloadAsync({ GameThumbnailBG }, function(_, status: Enum.AssetFetchStatus)
-            fetchStatus = status
-        end)
-    end)
-    if not ok or fetchStatus ~= Enum.AssetFetchStatus.Success then
-        GameThumbnailBG.Visible = false
-    end
-end)
 
 local TabBar: Frame = Instance.new("Frame", SettingsPanel)
 TabBar.Size               = UDim2.new(1, 0, 0, 28)
@@ -1426,6 +1424,82 @@ addCopyRow("🚀", "Copy cmd", infoTeleport, Color3.fromRGB(0, 255, 150))
 
 local CREATOR_USER_ID: number = 1291925
 
+local STATUS_COLOR_INGAME: Color3  = Color3.fromRGB(0, 255, 110)
+local STATUS_COLOR_ONLINE: Color3  = Color3.fromRGB(255, 200, 0)
+local STATUS_COLOR_OFFLINE: Color3 = Color3.fromRGB(120, 120, 130)
+
+local function getPresence(userId: number): (number, string?, number?)
+    if not http_request_fn then
+        return 0, nil, nil
+    end
+
+    local function fetch(token: string?): any
+        return http_request_fn({
+            Url     = "https://presence.roblox.com/v1/presence/users",
+            Method  = "POST",
+            Headers = {
+                ["Content-Type"] = "application/json",
+                ["X-CSRF-TOKEN"] = token,
+            },
+            Body    = HttpService:JSONEncode({ userIds = { userId } }),
+        })
+    end
+
+    local ok: boolean, res: any = pcall(fetch, nil)
+    if ok and res then
+        local status: number? = res.StatusCode or res.statusCode
+        if status == 403 then
+            local headers: any = res.Headers or res.headers
+            local token: string? = headers and (headers["x-csrf-token"] or headers["X-CSRF-TOKEN"])
+            if token then
+                ok, res = pcall(fetch, token)
+            end
+        end
+    end
+
+    if not ok or not res then
+        return 0, nil, nil
+    end
+    local body: string? = res.Body or res.body
+    if not body then
+        return 0, nil, nil
+    end
+    local decOk: boolean, data: any = pcall(function()
+        return HttpService:JSONDecode(body)
+    end)
+    if not decOk or not data or not data.userPresences or not data.userPresences[1] then
+        return 0, nil, nil
+    end
+    local presence: any = data.userPresences[1]
+    return presence.userPresenceType or 0, presence.lastLocation, presence.universeId
+end
+
+local function resolveGameName(universeId: number?): string?
+    if not http_request_fn or not universeId or universeId == 0 then
+        return nil
+    end
+    local ok: boolean, res: any = pcall(function()
+        return http_request_fn({
+            Url    = "https://games.roblox.com/v1/games?universeIds=" .. tostring(universeId),
+            Method = "GET",
+        })
+    end)
+    if not ok or not res then
+        return nil
+    end
+    local body: string? = res.Body or res.body
+    if not body then
+        return nil
+    end
+    local decOk: boolean, data: any = pcall(function()
+        return HttpService:JSONDecode(body)
+    end)
+    if not decOk or not data or not data.data or not data.data[1] then
+        return nil
+    end
+    return data.data[1].name
+end
+
 local CreditContent: ScrollingFrame = Instance.new("ScrollingFrame", SettingsPanel)
 CreditContent.Name                   = "CreditContent"
 CreditContent.Position               = UDim2.new(0, 0, 0, CONTENT_Y)
@@ -1457,7 +1531,7 @@ end
 
 local AvatarCard: Frame = Instance.new("Frame", CreditContent)
 AvatarCard.LayoutOrder        = 1
-AvatarCard.Size               = UDim2.new(1, 0, 0, 62)
+AvatarCard.Size               = UDim2.new(1, 0, 0, 78)
 AvatarCard.BackgroundColor3   = Color3.fromRGB(10, 10, 18)
 AvatarCard.BackgroundTransparency = 0.3
 AvatarCard.BorderSizePixel    = 0
@@ -1486,6 +1560,24 @@ do
     AvatarStroke.Thickness    = 1.5
     AvatarStroke.Transparency = 0.2
 end
+
+local StatusRing: Frame = Instance.new("Frame", AvatarImg)
+StatusRing.AnchorPoint      = Vector2.new(1, 1)
+StatusRing.Position         = UDim2.new(1, 3, 1, 3)
+StatusRing.Size             = UDim2.new(0, 18, 0, 18)
+StatusRing.BackgroundColor3 = Color3.fromRGB(10, 10, 18)
+StatusRing.BorderSizePixel  = 0
+StatusRing.ZIndex           = 6
+Instance.new("UICorner", StatusRing).CornerRadius = UDim.new(1, 0)
+
+local StatusDot: Frame = Instance.new("Frame", StatusRing)
+StatusDot.AnchorPoint      = Vector2.new(0.5, 0.5)
+StatusDot.Position         = UDim2.new(0.5, 0, 0.5, 0)
+StatusDot.Size             = UDim2.new(0, 12, 0, 12)
+StatusDot.BackgroundColor3 = STATUS_COLOR_OFFLINE
+StatusDot.BorderSizePixel  = 0
+StatusDot.ZIndex           = 7
+Instance.new("UICorner", StatusDot).CornerRadius = UDim.new(1, 0)
 
 local AvatarLoadingLbl: TextLabel = Instance.new("TextLabel", AvatarImg)
 AvatarLoadingLbl.Size              = UDim2.new(1, 0, 1, 0)
@@ -1522,9 +1614,21 @@ CreatorTitle.TextXAlignment    = Enum.TextXAlignment.Left
 CreatorTitle.TextColor3        = Color3.fromRGB(180, 180, 255)
 CreatorTitle.ZIndex            = 5
 
+local StatusLabel: TextLabel = Instance.new("TextLabel", AvatarCard)
+StatusLabel.AnchorPoint       = Vector2.new(0, 0)
+StatusLabel.Position          = UDim2.new(0, 62, 0, 34)
+StatusLabel.Size              = UDim2.new(1, -68, 0, 14)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Font              = Enum.Font.Arcade
+StatusLabel.Text              = "Offline"
+StatusLabel.TextSize          = 8
+StatusLabel.TextXAlignment    = Enum.TextXAlignment.Left
+StatusLabel.TextColor3        = STATUS_COLOR_OFFLINE
+StatusLabel.ZIndex            = 5
+
 local RobloxBadge: TextButton = Instance.new("TextButton", AvatarCard)
 RobloxBadge.AnchorPoint       = Vector2.new(0, 0)
-RobloxBadge.Position          = UDim2.new(0, 62, 0, 36)
+RobloxBadge.Position          = UDim2.new(0, 62, 0, 50)
 RobloxBadge.Size              = UDim2.new(1, -68, 0, 18)
 RobloxBadge.BackgroundColor3  = Color3.fromRGB(226, 35, 26)
 RobloxBadge.BackgroundTransparency = 0.15
@@ -2073,6 +2177,33 @@ task.spawn(function()
     end)
 end)
 
+local function applyCreatorStatus(presenceType: number, gameName: string?)
+    if presenceType == 2 then
+        StatusDot.BackgroundColor3 = STATUS_COLOR_INGAME
+        StatusLabel.TextColor3     = STATUS_COLOR_INGAME
+        StatusLabel.Text           = "Playing " .. ((gameName and #gameName > 0) and gameName or "a game")
+    elseif presenceType == 1 or presenceType == 3 then
+        StatusDot.BackgroundColor3 = STATUS_COLOR_ONLINE
+        StatusLabel.TextColor3     = STATUS_COLOR_ONLINE
+        StatusLabel.Text           = (presenceType == 3) and "In Roblox Studio" or "Online"
+    else
+        StatusDot.BackgroundColor3 = STATUS_COLOR_OFFLINE
+        StatusLabel.TextColor3     = STATUS_COLOR_OFFLINE
+        StatusLabel.Text           = "Offline"
+    end
+end
+
+task.spawn(function()
+    while true do
+        local presenceType: number, gameName: string?, universeId: number? = getPresence(CREATOR_USER_ID)
+        if presenceType == 2 and (not gameName or #gameName == 0) then
+            gameName = resolveGameName(universeId)
+        end
+        pcall(applyCreatorStatus, presenceType, gameName)
+        task.wait(20)
+    end
+end)
+
 task.spawn(function()
     while task.wait(0.15) do
         pcall(function()
@@ -2098,8 +2229,10 @@ task.spawn(function()
     local fpsCount  = 0
     local fpsTimer  = tick()
 
-    RS.Heartbeat:Connect(function()
-        fpsCount += 1
+    task.spawn(function()
+        while task.wait(0) do
+            fpsCount += 1
+        end
     end)
 
     while task.wait(1) do
@@ -2114,7 +2247,7 @@ task.spawn(function()
 
         pcall(function()
             local ping = math.floor(
-                Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
+                Stats.Network.ServerStatsItem["Data Ping"].Value
             )
             pingValLbl.Text = string.format("%d ms", ping)
         end)
@@ -2578,9 +2711,8 @@ do
     }
     ErrRetryGrad.Rotation = 90
 end
-local ErrRetryStroke: UIStroke = Instance.new("UIStroke", ErrRetryBtn)
-ErrRetryStroke.Color     = Color3.fromRGB(255, 80, 80)
-ErrRetryStroke.Thickness = 1
+Instance.new("UIStroke", ErrRetryBtn).Color     = Color3.fromRGB(255, 80, 80)
+Instance.new("UIStroke", ErrRetryBtn).Thickness = 1
 
 local ErrDismissBtn: TextButton = Instance.new("TextButton", ErrorPanel)
 ErrDismissBtn.AnchorPoint            = Vector2.new(1, 0)
@@ -2821,11 +2953,10 @@ local antiAfkCtrl = addToggle(ScrollingFrame, "Anti AFK", config.antiAfk, functi
     if config.autoSave then saveConfig() end
     if val then
         if not antiAfkConnection then
-            antiAfkConnection = player.Idled:Connect(function()
+            antiAfkConnection = game:GetService("Players").LocalPlayer.Idled:Connect(function()
                 pcall(function()
-                    local VirtualUser: VirtualUser = game:GetService("VirtualUser")
-                    VirtualUser:CaptureController()
-                    VirtualUser:ClickButton2(Vector2.new())
+                    game:GetService("VirtualUser"):CaptureController()
+                    game:GetService("VirtualUser"):ClickButton2(Vector2.new())
                 end)
             end)
         end
@@ -2843,9 +2974,10 @@ local antiFlingCtrl = addToggle(ScrollingFrame, "Anti Fling", config.antiFling, 
     if config.autoSave then saveConfig() end
     if val then
         if not antiFlingConnection then
-            antiFlingConnection = RunService.Stepped:Connect(function()
-                for _, p: Player in Players:GetPlayers() do
-                    if p == player or not p.Character then continue end
+            antiFlingConnection = game:GetService("RunService").Stepped:Connect(function()
+                local localPlayer = game:GetService("Players").LocalPlayer
+                for _, p: Player in game:GetService("Players"):GetPlayers() do
+                    if p == localPlayer or not p.Character then continue end
                     for _, v: Instance in p.Character:GetDescendants() do
                         if v:IsA("BasePart") then
                             (v :: BasePart).CanCollide = false
@@ -2870,11 +3002,10 @@ local antiGameplayPauseCtrl = addToggle(ScrollingFrame, "Anti Gameplay Pause", c
         if not antiGameplayPauseRunning then
             antiGameplayPauseRunning = true
             antiGameplayPauseThread  = task.spawn(function()
-                local GuiService: GuiService = game:GetService("GuiService")
                 while antiGameplayPauseRunning do
                     pcall(function()
-                        GuiService:SetGameplayPausedNotificationEnabled(false)
-                        player.GameplayPaused = false
+                        game:GetService("GuiService"):SetGameplayPausedNotificationEnabled(false)
+                        game:GetService("Players").LocalPlayer.GameplayPaused = false
                     end)
                     task.wait()
                 end
