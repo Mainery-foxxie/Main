@@ -562,31 +562,7 @@ ShadowStroke.Transparency = 0.6
 local EdgeStroke: UIStroke = Instance.new("UIStroke", MainBackground)
 EdgeStroke.Thickness   = 3.5
 EdgeStroke.Transparency = 0.3
-
-do
-    local colorGreen: Color3 = Color3.fromRGB(0, 255, 120)
-    local colorBlue:  Color3 = Color3.fromRGB(0, 170, 255)
-    local startTime:  number = tick()
-    local cycleDuration: number = 4
-
-    task.spawn(function()
-        local _strokeFrame: number = 0
-        while MainBackground and MainBackground.Parent do
-            _strokeFrame += 1
-            if _strokeFrame % 3 == 0 then
-                pcall(function()
-                    local t: number      = (tick() - startTime) / cycleDuration
-                    local factor: number = (math.sin(t * math.pi * 2) + 1) / 2
-                    local r: number = colorGreen.R + (colorBlue.R - colorGreen.R) * factor
-                    local g: number = colorGreen.G + (colorBlue.G - colorGreen.G) * factor
-                    local bv: number = colorGreen.B + (colorBlue.B - colorGreen.B) * factor
-                    EdgeStroke.Color = Color3.new(r, g, bv)
-                end)
-            end
-            RunService.Heartbeat:Wait()
-        end
-    end)
-end
+EdgeStroke.Color       = Color3.fromRGB(0, 255, 120)
 
 do
     local Corner: UICorner = Instance.new("UICorner", MainBackground)
@@ -888,9 +864,10 @@ ConfirmGradient.Color = ColorSequence.new{
     ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 170, 255)),
 }
 ConfirmGradient.Rotation = 45
-Instance.new("UIStroke", ConfirmFrame).Color       = Color3.fromRGB(0, 200, 255)
-Instance.new("UIStroke", ConfirmFrame).Thickness   = 2
-Instance.new("UIStroke", ConfirmFrame).Transparency = 0.3
+local ConfirmStroke: UIStroke = Instance.new("UIStroke", ConfirmFrame)
+ConfirmStroke.Color        = Color3.fromRGB(0, 200, 255)
+ConfirmStroke.Thickness    = 2
+ConfirmStroke.Transparency = 0.3
 Instance.new("UICorner", ConfirmFrame).CornerRadius = UDim.new(0, 8)
 
 do
@@ -921,8 +898,9 @@ do
     YesGradient.Color    = ConfirmGradient.Color
     YesGradient.Rotation = 90
 end
-Instance.new("UIStroke", YesButton).Color     = Color3.fromRGB(0, 255, 150)
-Instance.new("UIStroke", YesButton).Thickness = 1.5
+local YesStroke: UIStroke = Instance.new("UIStroke", YesButton)
+YesStroke.Color     = Color3.fromRGB(0, 255, 150)
+YesStroke.Thickness = 1.5
 
 local NoButton: TextButton = Instance.new("TextButton", ConfirmFrame)
 NoButton.BackgroundColor3     = Color3.fromRGB(255, 255, 255)
@@ -939,8 +917,9 @@ do
     NoGradient.Color    = ConfirmGradient.Color
     NoGradient.Rotation = 90
 end
-Instance.new("UIStroke", NoButton).Color     = Color3.fromRGB(0, 255, 150)
-Instance.new("UIStroke", NoButton).Thickness = 1.5
+local NoStroke: UIStroke = Instance.new("UIStroke", NoButton)
+NoStroke.Color     = Color3.fromRGB(0, 255, 150)
+NoStroke.Thickness = 1.5
 
 local DeleteConfirmFrame: ImageLabel = Instance.new("ImageLabel", MainBackground)
 DeleteConfirmFrame.Name             = "DeleteConfirmFrame"
@@ -960,9 +939,10 @@ do
         ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 50, 50)),
     }
     DeleteConfirmGradient.Rotation = 45
-    Instance.new("UIStroke", DeleteConfirmFrame).Color       = Color3.fromRGB(255, 100, 100)
-    Instance.new("UIStroke", DeleteConfirmFrame).Thickness   = 2
-    Instance.new("UIStroke", DeleteConfirmFrame).Transparency = 0.3
+    local DeleteConfirmStroke: UIStroke = Instance.new("UIStroke", DeleteConfirmFrame)
+    DeleteConfirmStroke.Color        = Color3.fromRGB(255, 100, 100)
+    DeleteConfirmStroke.Thickness    = 2
+    DeleteConfirmStroke.Transparency = 0.3
     Instance.new("UICorner", DeleteConfirmFrame).CornerRadius = UDim.new(0, 8)
 
     local DeleteConfirmText: TextLabel = Instance.new("TextLabel", DeleteConfirmFrame)
@@ -995,8 +975,9 @@ do
     }
     DeleteYesGradient.Rotation = 90
 end
-Instance.new("UIStroke", DeleteYesButton).Color     = Color3.fromRGB(255, 100, 100)
-Instance.new("UIStroke", DeleteYesButton).Thickness = 1.5
+local DeleteYesStroke: UIStroke = Instance.new("UIStroke", DeleteYesButton)
+DeleteYesStroke.Color     = Color3.fromRGB(255, 100, 100)
+DeleteYesStroke.Thickness = 1.5
 
 local DeleteNoButton: TextButton = Instance.new("TextButton", DeleteConfirmFrame)
 DeleteNoButton.BackgroundColor3     = Color3.fromRGB(255, 255, 255)
@@ -1016,8 +997,9 @@ do
     }
     DeleteNoGradient.Rotation = 90
 end
-Instance.new("UIStroke", DeleteNoButton).Color     = Color3.fromRGB(255, 100, 100)
-Instance.new("UIStroke", DeleteNoButton).Thickness = 1.5
+local DeleteNoStroke: UIStroke = Instance.new("UIStroke", DeleteNoButton)
+DeleteNoStroke.Color     = Color3.fromRGB(255, 100, 100)
+DeleteNoStroke.Thickness = 1.5
 
 local PANEL_W: number = 222
 local PANEL_H: number = 245
@@ -1049,6 +1031,26 @@ do
     local PanelCorner: UICorner = Instance.new("UICorner", SettingsPanel)
     PanelCorner.CornerRadius = UDim.new(0, 8)
 end
+
+local GameThumbnailBG: ImageLabel = Instance.new("ImageLabel", SettingsPanel)
+GameThumbnailBG.BackgroundTransparency = 1
+GameThumbnailBG.Size              = UDim2.new(1, 0, 1, 0)
+GameThumbnailBG.ScaleType         = Enum.ScaleType.Crop
+GameThumbnailBG.ImageTransparency = 0.4
+GameThumbnailBG.ZIndex            = 1
+GameThumbnailBG.Image             = "rbxthumb://type=GameIcon&id=" .. tostring(game.GameId) .. "&w=150&h=150"
+
+task.spawn(function()
+    local fetchStatus: Enum.AssetFetchStatus? = nil
+    local ok: boolean = pcall(function()
+        game:GetService("ContentProvider"):PreloadAsync({ GameThumbnailBG }, function(_, status: Enum.AssetFetchStatus)
+            fetchStatus = status
+        end)
+    end)
+    if not ok or fetchStatus ~= Enum.AssetFetchStatus.Success then
+        GameThumbnailBG.Visible = false
+    end
+end)
 
 local TabBar: Frame = Instance.new("Frame", SettingsPanel)
 TabBar.Size               = UDim2.new(1, 0, 0, 28)
@@ -1433,71 +1435,85 @@ local function getPresence(userId: number): (number, string?, number?)
         return 0, nil, nil
     end
 
-    local function fetch(token: string?): any
-        return http_request_fn({
-            Url     = "https://presence.roblox.com/v1/presence/users",
-            Method  = "POST",
-            Headers = {
-                ["Content-Type"] = "application/json",
-                ["X-CSRF-TOKEN"] = token,
-            },
-            Body    = HttpService:JSONEncode({ userIds = { userId } }),
-        })
-    end
+    local resultType: number      = 0
+    local resultGame: string?     = nil
+    local resultUniverse: number? = nil
 
-    local ok: boolean, res: any = pcall(fetch, nil)
-    if ok and res then
-        local status: number? = res.StatusCode or res.statusCode
-        if status == 403 then
-            local headers: any = res.Headers or res.headers
-            local token: string? = headers and (headers["x-csrf-token"] or headers["X-CSRF-TOKEN"])
-            if token then
-                ok, res = pcall(fetch, token)
+    local wholeOk: boolean = pcall(function()
+        local function fetch(token: string?): any
+            return http_request_fn({
+                Url     = "https://presence.roblox.com/v1/presence/users",
+                Method  = "POST",
+                Headers = {
+                    ["Content-Type"] = "application/json",
+                    ["X-CSRF-TOKEN"] = token,
+                },
+                Body    = HttpService:JSONEncode({ userIds = { userId } }),
+            })
+        end
+
+        local res: any = fetch(nil)
+        if type(res) == "table" then
+            local status: any = res.StatusCode or res.statusCode
+            if status == 403 then
+                local headers: any = res.Headers or res.headers
+                local token: string? = (type(headers) == "table")
+                    and (headers["x-csrf-token"] or headers["X-CSRF-TOKEN"])
+                    or nil
+                if token then
+                    res = fetch(token)
+                end
             end
         end
-    end
 
-    if not ok or not res then
-        return 0, nil, nil
-    end
-    local body: string? = res.Body or res.body
-    if not body then
-        return 0, nil, nil
-    end
-    local decOk: boolean, data: any = pcall(function()
-        return HttpService:JSONDecode(body)
+        if type(res) ~= "table" then return end
+        local body: any = res.Body or res.body
+        if type(body) ~= "string" or #body == 0 then return end
+
+        local data: any = HttpService:JSONDecode(body)
+        if type(data) ~= "table" or type(data.userPresences) ~= "table" then return end
+
+        local presence: any = data.userPresences[1]
+        if type(presence) ~= "table" then return end
+
+        if type(presence.userPresenceType) == "number" then
+            resultType = presence.userPresenceType
+        end
+        if type(presence.lastLocation) == "string" then
+            resultGame = presence.lastLocation
+        end
+        if type(presence.universeId) == "number" then
+            resultUniverse = presence.universeId
+        end
     end)
-    if not decOk or not data or not data.userPresences or not data.userPresences[1] then
+
+    if not wholeOk then
         return 0, nil, nil
     end
-    local presence: any = data.userPresences[1]
-    return presence.userPresenceType or 0, presence.lastLocation, presence.universeId
+    return resultType, resultGame, resultUniverse
 end
 
 local function resolveGameName(universeId: number?): string?
-    if not http_request_fn or not universeId or universeId == 0 then
+    if not http_request_fn or type(universeId) ~= "number" or universeId == 0 then
         return nil
     end
-    local ok: boolean, res: any = pcall(function()
-        return http_request_fn({
+
+    local result: string? = nil
+    pcall(function()
+        local res: any = http_request_fn({
             Url    = "https://games.roblox.com/v1/games?universeIds=" .. tostring(universeId),
             Method = "GET",
         })
+        if type(res) ~= "table" then return end
+        local body: any = res.Body or res.body
+        if type(body) ~= "string" or #body == 0 then return end
+        local data: any = HttpService:JSONDecode(body)
+        if type(data) ~= "table" or type(data.data) ~= "table" then return end
+        local first: any = data.data[1]
+        if type(first) ~= "table" or type(first.name) ~= "string" then return end
+        result = first.name
     end)
-    if not ok or not res then
-        return nil
-    end
-    local body: string? = res.Body or res.body
-    if not body then
-        return nil
-    end
-    local decOk: boolean, data: any = pcall(function()
-        return HttpService:JSONDecode(body)
-    end)
-    if not decOk or not data or not data.data or not data.data[1] then
-        return nil
-    end
-    return data.data[1].name
+    return result
 end
 
 local CreditContent: ScrollingFrame = Instance.new("ScrollingFrame", SettingsPanel)
@@ -2194,7 +2210,7 @@ local function applyCreatorStatus(presenceType: number, gameName: string?)
 end
 
 task.spawn(function()
-    while true do
+    while RealZzHub and RealZzHub.Parent do
         local presenceType: number, gameName: string?, universeId: number? = getPresence(CREATOR_USER_ID)
         if presenceType == 2 and (not gameName or #gameName == 0) then
             gameName = resolveGameName(universeId)
@@ -2229,10 +2245,8 @@ task.spawn(function()
     local fpsCount  = 0
     local fpsTimer  = tick()
 
-    task.spawn(function()
-        while task.wait(0) do
-            fpsCount += 1
-        end
+    RS.Heartbeat:Connect(function()
+        fpsCount += 1
     end)
 
     while task.wait(1) do
@@ -2247,7 +2261,7 @@ task.spawn(function()
 
         pcall(function()
             local ping = math.floor(
-                Stats.Network.ServerStatsItem["Data Ping"].Value
+                Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
             )
             pingValLbl.Text = string.format("%d ms", ping)
         end)
@@ -2711,8 +2725,9 @@ do
     }
     ErrRetryGrad.Rotation = 90
 end
-Instance.new("UIStroke", ErrRetryBtn).Color     = Color3.fromRGB(255, 80, 80)
-Instance.new("UIStroke", ErrRetryBtn).Thickness = 1
+local ErrRetryStroke: UIStroke = Instance.new("UIStroke", ErrRetryBtn)
+ErrRetryStroke.Color     = Color3.fromRGB(255, 80, 80)
+ErrRetryStroke.Thickness = 1
 
 local ErrDismissBtn: TextButton = Instance.new("TextButton", ErrorPanel)
 ErrDismissBtn.AnchorPoint            = Vector2.new(1, 0)
@@ -2953,10 +2968,11 @@ local antiAfkCtrl = addToggle(ScrollingFrame, "Anti AFK", config.antiAfk, functi
     if config.autoSave then saveConfig() end
     if val then
         if not antiAfkConnection then
-            antiAfkConnection = game:GetService("Players").LocalPlayer.Idled:Connect(function()
+            antiAfkConnection = player.Idled:Connect(function()
                 pcall(function()
-                    game:GetService("VirtualUser"):CaptureController()
-                    game:GetService("VirtualUser"):ClickButton2(Vector2.new())
+                    local VirtualUser: VirtualUser = game:GetService("VirtualUser")
+                    VirtualUser:CaptureController()
+                    VirtualUser:ClickButton2(Vector2.new())
                 end)
             end)
         end
@@ -2974,10 +2990,9 @@ local antiFlingCtrl = addToggle(ScrollingFrame, "Anti Fling", config.antiFling, 
     if config.autoSave then saveConfig() end
     if val then
         if not antiFlingConnection then
-            antiFlingConnection = game:GetService("RunService").Stepped:Connect(function()
-                local localPlayer = game:GetService("Players").LocalPlayer
-                for _, p: Player in game:GetService("Players"):GetPlayers() do
-                    if p == localPlayer or not p.Character then continue end
+            antiFlingConnection = RunService.Stepped:Connect(function()
+                for _, p: Player in Players:GetPlayers() do
+                    if p == player or not p.Character then continue end
                     for _, v: Instance in p.Character:GetDescendants() do
                         if v:IsA("BasePart") then
                             (v :: BasePart).CanCollide = false
@@ -3002,10 +3017,11 @@ local antiGameplayPauseCtrl = addToggle(ScrollingFrame, "Anti Gameplay Pause", c
         if not antiGameplayPauseRunning then
             antiGameplayPauseRunning = true
             antiGameplayPauseThread  = task.spawn(function()
+                local GuiService: GuiService = game:GetService("GuiService")
                 while antiGameplayPauseRunning do
                     pcall(function()
-                        game:GetService("GuiService"):SetGameplayPausedNotificationEnabled(false)
-                        game:GetService("Players").LocalPlayer.GameplayPaused = false
+                        GuiService:SetGameplayPausedNotificationEnabled(false)
+                        player.GameplayPaused = false
                     end)
                     task.wait()
                 end
