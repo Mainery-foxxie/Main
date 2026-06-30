@@ -116,14 +116,14 @@ end
 
 return {
     NewWindow = function(_, windowTitle)
-        local WIN_W = 240
-        local TOPBAR_H = 36
+        local WIN_W = 190
+        local TOPBAR_H = 28
         local windowId = stripSpaces(windowTitle)
         local bodyHeight = 0
         local windowOpen = true
 
         -- stagger multiple windows
-        windowOffset = windowOffset + 260
+        windowOffset = windowOffset + 210
 
         local WindowRoot = Instance.new("Frame")
         local Topbar     = Instance.new("Frame")
@@ -188,7 +188,7 @@ return {
         TitleLabel.Font = Enum.Font.GothamBold
         TitleLabel.Text = windowTitle
         TitleLabel.TextColor3 = T.TEXT
-        TitleLabel.TextSize = 12
+        TitleLabel.TextSize = 10
         TitleLabel.TextXAlignment = Enum.TextXAlignment.Center
 
         MinBtn.Name = "MinBtn"
@@ -197,7 +197,7 @@ return {
         MinBtn.BorderSizePixel = 0
         MinBtn.AnchorPoint = Vector2.new(1, 0.5)
         MinBtn.Position = UDim2.new(1, -8, 0.5, 0)
-        MinBtn.Size = UDim2.new(0, 22, 0, 16)
+        MinBtn.Size = UDim2.new(0, 18, 0, 13)
         MinBtn.ZIndex = 4
         MinBtn.AutoButtonColor = false
         MinBtn.Font = Enum.Font.GothamBold
@@ -224,14 +224,14 @@ return {
 
         local BodyPad = Instance.new("UIPadding")
         BodyPad.Parent = Body
-        BodyPad.PaddingTop    = UDim.new(0, 6)
-        BodyPad.PaddingBottom = UDim.new(0, 6)
-        BodyPad.PaddingLeft   = UDim.new(0, 8)
-        BodyPad.PaddingRight  = UDim.new(0, 8)
+        BodyPad.PaddingTop    = UDim.new(0, 4)
+        BodyPad.PaddingBottom = UDim.new(0, 4)
+        BodyPad.PaddingLeft   = UDim.new(0, 6)
+        BodyPad.PaddingRight  = UDim.new(0, 6)
 
         BodyLayout.Parent = Body
         BodyLayout.SortOrder = Enum.SortOrder.LayoutOrder
-        BodyLayout.Padding = UDim.new(0, 4)
+        BodyLayout.Padding = UDim.new(0, 3)
 
         local function setBodyHeight(h)
             bodyHeight = h
@@ -266,9 +266,9 @@ return {
             NewSection = function(_, sectionTitle)
                 local sectionId = stripSpaces(sectionTitle)
                 local sectionOpen = false
-                local HEADER_H = 34
-                local ITEM_H   = 32
-                local PAD_V    = 8
+                local HEADER_H = 26
+                local ITEM_H   = 25
+                local PAD_V    = 6
                 local sectionContentHeight = 0
 
                 local SectionFrame  = Instance.new("Frame")
@@ -301,34 +301,34 @@ return {
                 AccentBar.Parent = SectionHeader
                 AccentBar.BackgroundColor3 = T.ACCENT
                 AccentBar.BorderSizePixel = 0
-                AccentBar.Size = UDim2.new(0, 3, 0, 16)
-                AccentBar.Position = UDim2.new(0, 10, 0.5, -8)
+                AccentBar.Size = UDim2.new(0, 3, 0, 12)
+                AccentBar.Position = UDim2.new(0, 8, 0.5, -6)
                 AccentBar.ZIndex = 5
                 corner(AccentBar, 2)
 
                 SecTitle.Name = "Title"
                 SecTitle.Parent = SectionHeader
                 SecTitle.BackgroundTransparency = 1
-                SecTitle.Position = UDim2.new(0, 22, 0, 0)
-                SecTitle.Size = UDim2.new(1, -44, 1, 0)
+                SecTitle.Position = UDim2.new(0, 18, 0, 0)
+                SecTitle.Size = UDim2.new(1, -36, 1, 0)
                 SecTitle.ZIndex = 5
                 SecTitle.Font = Enum.Font.GothamBold
                 SecTitle.Text = sectionTitle
                 SecTitle.TextColor3 = T.TEXT
-                SecTitle.TextSize = 11
+                SecTitle.TextSize = 9
                 SecTitle.TextXAlignment = Enum.TextXAlignment.Left
 
                 ChevronLbl.Name = "Chevron"
                 ChevronLbl.Parent = SectionHeader
                 ChevronLbl.BackgroundTransparency = 1
                 ChevronLbl.AnchorPoint = Vector2.new(1, 0.5)
-                ChevronLbl.Position = UDim2.new(1, -10, 0.5, 0)
-                ChevronLbl.Size = UDim2.new(0, 16, 0, 16)
+                ChevronLbl.Position = UDim2.new(1, -8, 0.5, 0)
+                ChevronLbl.Size = UDim2.new(0, 13, 0, 13)
                 ChevronLbl.ZIndex = 5
                 ChevronLbl.Font = Enum.Font.GothamBold
                 ChevronLbl.Text = "›"
                 ChevronLbl.TextColor3 = T.SUBTEXT
-                ChevronLbl.TextSize = 18
+                ChevronLbl.TextSize = 14
                 ChevronLbl.Rotation = 90
 
                 ClickRgn.Name = "ClickRegion"
@@ -350,14 +350,14 @@ return {
 
                 local ItemPad = Instance.new("UIPadding")
                 ItemPad.Parent = ItemContainer
-                ItemPad.PaddingLeft   = UDim.new(0, 8)
-                ItemPad.PaddingRight  = UDim.new(0, 8)
-                ItemPad.PaddingTop    = UDim.new(0, 4)
-                ItemPad.PaddingBottom = UDim.new(0, 4)
+                ItemPad.PaddingLeft   = UDim.new(0, 6)
+                ItemPad.PaddingRight  = UDim.new(0, 6)
+                ItemPad.PaddingTop    = UDim.new(0, 3)
+                ItemPad.PaddingBottom = UDim.new(0, 3)
 
                 ItemLayout.Parent = ItemContainer
                 ItemLayout.SortOrder = Enum.SortOrder.LayoutOrder
-                ItemLayout.Padding = UDim.new(0, 3)
+                ItemLayout.Padding = UDim.new(0, 2)
 
                 -- section grows body by HEADER_H + 10 (section frame + gap)
                 local SECTION_OVERHEAD = HEADER_H + 4
@@ -420,11 +420,11 @@ return {
 
                         Lbl.Parent = Row
                         Lbl.BackgroundTransparency = 1
-                        Lbl.Size = UDim2.new(1, -52, 1, 0)
+                        Lbl.Size = UDim2.new(1, -42, 1, 0)
                         Lbl.Font = Enum.Font.Gotham
                         Lbl.Text = label
                         Lbl.TextColor3 = T.TEXT
-                        Lbl.TextSize = 11
+                        Lbl.TextSize = 9
                         Lbl.TextXAlignment = Enum.TextXAlignment.Left
                         Lbl.ZIndex = 5
 
@@ -433,18 +433,18 @@ return {
                         Track.BorderSizePixel = 0
                         Track.AnchorPoint = Vector2.new(1, 0.5)
                         Track.Position = UDim2.new(1, 0, 0.5, 0)
-                        Track.Size = UDim2.new(0, 40, 0, 20)
+                        Track.Size = UDim2.new(0, 32, 0, 16)
                         Track.ZIndex = 5
-                        corner(Track, 10)
+                        corner(Track, 8)
 
                         Knob.Parent = Track
                         Knob.BackgroundColor3 = T.WHITE
                         Knob.BorderSizePixel = 0
                         Knob.AnchorPoint = Vector2.new(0, 0.5)
                         Knob.Position = UDim2.new(0, 2, 0.5, 0)
-                        Knob.Size = UDim2.new(0, 16, 0, 16)
+                        Knob.Size = UDim2.new(0, 12, 0, 12)
                         Knob.ZIndex = 6
-                        corner(Knob, 8)
+                        corner(Knob, 6)
 
                         HitArea.Parent = Row
                         HitArea.BackgroundTransparency = 1
@@ -457,7 +457,7 @@ return {
                             state = not state
                             if state then
                                 tween(Track, TI_MED, { BackgroundColor3 = T.ACCENT })
-                                tween(Knob, TI_SPRING, { Position = UDim2.new(0, 22, 0.5, 0) })
+                                tween(Knob, TI_SPRING, { Position = UDim2.new(0, 18, 0.5, 0) })
                             else
                                 tween(Track, TI_MED, { BackgroundColor3 = T.TOGGLE_OFF })
                                 tween(Knob, TI_SPRING, { Position = UDim2.new(0, 2, 0.5, 0) })
@@ -491,11 +491,11 @@ return {
                         Lbl.Parent = Row
                         Lbl.BackgroundTransparency = 1
                         Lbl.Position = UDim2.new(0, 0, 0, 0)
-                        Lbl.Size = UDim2.new(0.6, 0, 0, 18)
+                        Lbl.Size = UDim2.new(0.6, 0, 0, 14)
                         Lbl.Font = Enum.Font.Gotham
                         Lbl.Text = label
                         Lbl.TextColor3 = T.TEXT
-                        Lbl.TextSize = 11
+                        Lbl.TextSize = 9
                         Lbl.TextXAlignment = Enum.TextXAlignment.Left
                         Lbl.ZIndex = 5
 
@@ -504,23 +504,23 @@ return {
                         ValBg.BorderSizePixel = 0
                         ValBg.AnchorPoint = Vector2.new(1, 0)
                         ValBg.Position = UDim2.new(1, 0, 0, 0)
-                        ValBg.Size = UDim2.new(0, 44, 0, 18)
+                        ValBg.Size = UDim2.new(0, 36, 0, 14)
                         ValBg.ZIndex = 5
-                        corner(ValBg, 5)
+                        corner(ValBg, 4)
 
                         ValLbl.Parent = ValBg
                         ValLbl.BackgroundTransparency = 1
                         ValLbl.Size = UDim2.new(1, 0, 1, 0)
                         ValLbl.Font = Enum.Font.GothamBold
                         ValLbl.TextColor3 = T.ACCENT
-                        ValLbl.TextSize = 10
+                        ValLbl.TextSize = 8
                         ValLbl.Text = tostring(isFloat and tonumber(string.format("%.2f", cur)) or math.floor(cur))
                         ValLbl.ZIndex = 6
 
                         Track.Parent = Row
                         Track.BackgroundColor3 = T.ELEMENT
                         Track.BorderSizePixel = 0
-                        Track.Position = UDim2.new(0, 0, 0, 26)
+                        Track.Position = UDim2.new(0, 0, 0, 20)
                         Track.Size = UDim2.new(1, 0, 0, 4)
                         Track.ZIndex = 5
                         corner(Track, 2)
@@ -539,15 +539,15 @@ return {
                         Thumb.BorderSizePixel = 0
                         Thumb.AnchorPoint = Vector2.new(0.5, 0.5)
                         Thumb.Position = UDim2.new(initScale, 0, 0.5, 0)
-                        Thumb.Size = UDim2.new(0, 12, 0, 12)
+                        Thumb.Size = UDim2.new(0, 10, 0, 10)
                         Thumb.ZIndex = 7
-                        corner(Thumb, 6)
+                        corner(Thumb, 5)
                         stroke(Thumb, T.ACCENT, 2, 0)
 
                         HitArea.Parent = Row
                         HitArea.BackgroundTransparency = 1
-                        HitArea.Position = UDim2.new(0, 0, 0, 18)
-                        HitArea.Size = UDim2.new(1, 0, 0, 24)
+                        HitArea.Position = UDim2.new(0, 0, 0, 14)
+                        HitArea.Size = UDim2.new(1, 0, 0, 20)
                         HitArea.Text = ""
                         HitArea.AutoButtonColor = false
                         HitArea.ZIndex = 8
@@ -568,14 +568,14 @@ return {
                         HitArea.InputBegan:Connect(function(i)
                             if i.UserInputType == Enum.UserInputType.MouseButton1 then
                                 dragging = true
-                                tween(Thumb, TI_FAST, { Size = UDim2.new(0, 14, 0, 14) })
+                                tween(Thumb, TI_FAST, { Size = UDim2.new(0, 12, 0, 12) })
                                 updateSlider(i)
                             end
                         end)
                         HitArea.InputEnded:Connect(function(i)
                             if i.UserInputType == Enum.UserInputType.MouseButton1 then
                                 dragging = false
-                                tween(Thumb, TI_FAST, { Size = UDim2.new(0, 12, 0, 12) })
+                                tween(Thumb, TI_FAST, { Size = UDim2.new(0, 10, 0, 10) })
                             end
                         end)
                         UserInputService.InputChanged:Connect(function(i)
@@ -602,12 +602,12 @@ return {
                         Btn.BorderSizePixel = 0
                         Btn.AnchorPoint = Vector2.new(0.5, 0.5)
                         Btn.Position = UDim2.new(0.5, 0, 0.5, 0)
-                        Btn.Size = UDim2.new(1, 0, 0, 26)
+                        Btn.Size = UDim2.new(1, 0, 0, 20)
                         Btn.AutoButtonColor = false
                         Btn.Font = Enum.Font.GothamBold
                         Btn.Text = label
                         Btn.TextColor3 = T.TEXT
-                        Btn.TextSize = 11
+                        Btn.TextSize = 9
                         Btn.ZIndex = 6
                         corner(Btn, 6)
                         stroke(Btn, T.ACCENT, 1, 0.5)
@@ -619,10 +619,10 @@ return {
                             tween(Btn, TI_FAST, { BackgroundColor3 = T.ACCENT_DIM })
                         end)
                         Btn.MouseButton1Down:Connect(function()
-                            tween(Btn, TI_FAST, { Size = UDim2.new(1, 0, 0, 23) })
+                            tween(Btn, TI_FAST, { Size = UDim2.new(1, 0, 0, 18) })
                         end)
                         Btn.MouseButton1Up:Connect(function()
-                            tween(Btn, TI_SPRING, { Size = UDim2.new(1, 0, 0, 26) })
+                            tween(Btn, TI_SPRING, { Size = UDim2.new(1, 0, 0, 20) })
                         end)
                         Btn.MouseButton1Click:Connect(function()
                             callback(Btn)
@@ -646,14 +646,14 @@ return {
                         TB.BorderSizePixel = 0
                         TB.AnchorPoint = Vector2.new(0.5, 0.5)
                         TB.Position = UDim2.new(0.5, 0, 0.5, 0)
-                        TB.Size = UDim2.new(1, 0, 0, 26)
+                        TB.Size = UDim2.new(1, 0, 0, 20)
                         TB.ClearTextOnFocus = false
                         TB.Font = Enum.Font.Gotham
                         TB.PlaceholderText = placeholder
                         TB.PlaceholderColor3 = T.SUBTEXT
                         TB.Text = ""
                         TB.TextColor3 = T.TEXT
-                        TB.TextSize = 11
+                        TB.TextSize = 9
                         TB.ZIndex = 6
                         corner(TB, 6)
                         local tbStroke = stroke(TB, T.ELEMENT2, 1, 0)
@@ -673,7 +673,7 @@ return {
                         addItem()
                         local selected = options[defaultIndex] or options[1]
                         local isOpen = false
-                        local OPT_H = 26
+                        local OPT_H = 20
                         local maxVisible = math.min(#options, 4)
                         local popupH = maxVisible * OPT_H
 
@@ -698,31 +698,31 @@ return {
                         Display.BorderSizePixel = 0
                         Display.AnchorPoint = Vector2.new(0.5, 0.5)
                         Display.Position = UDim2.new(0.5, 0, 0.5, 0)
-                        Display.Size = UDim2.new(1, 0, 0, 26)
+                        Display.Size = UDim2.new(1, 0, 0, 20)
                         Display.ZIndex = 6
                         corner(Display, 6)
                         stroke(Display, T.ELEMENT2, 1, 0.4)
 
                         SelLabel.Parent = Display
                         SelLabel.BackgroundTransparency = 1
-                        SelLabel.Position = UDim2.new(0, 10, 0, 0)
-                        SelLabel.Size = UDim2.new(1, -28, 1, 0)
+                        SelLabel.Position = UDim2.new(0, 8, 0, 0)
+                        SelLabel.Size = UDim2.new(1, -22, 1, 0)
                         SelLabel.Font = Enum.Font.Gotham
                         SelLabel.Text = selected
                         SelLabel.TextColor3 = T.TEXT
-                        SelLabel.TextSize = 11
+                        SelLabel.TextSize = 9
                         SelLabel.TextXAlignment = Enum.TextXAlignment.Left
                         SelLabel.ZIndex = 7
 
                         Arrow.Parent = Display
                         Arrow.BackgroundTransparency = 1
                         Arrow.AnchorPoint = Vector2.new(1, 0.5)
-                        Arrow.Position = UDim2.new(1, -6, 0.5, 0)
-                        Arrow.Size = UDim2.new(0, 16, 0, 16)
+                        Arrow.Position = UDim2.new(1, -5, 0.5, 0)
+                        Arrow.Size = UDim2.new(0, 13, 0, 13)
                         Arrow.Font = Enum.Font.GothamBold
                         Arrow.Text = "›"
                         Arrow.TextColor3 = T.SUBTEXT
-                        Arrow.TextSize = 16
+                        Arrow.TextSize = 13
                         Arrow.Rotation = 90
                         Arrow.ZIndex = 7
 
@@ -765,7 +765,7 @@ return {
                             OBtn.Font = Enum.Font.Gotham
                             OBtn.Text = opt
                             OBtn.TextColor3 = T.TEXT
-                            OBtn.TextSize = 11
+                            OBtn.TextSize = 9
                             OBtn.ZIndex = 22
 
                             OBtn.MouseEnter:Connect(function()
@@ -848,11 +848,11 @@ return {
 
                         Lbl.Parent = Row
                         Lbl.BackgroundTransparency = 1
-                        Lbl.Size = UDim2.new(1, -38, 1, 0)
+                        Lbl.Size = UDim2.new(1, -32, 1, 0)
                         Lbl.Font = Enum.Font.Gotham
                         Lbl.Text = label
                         Lbl.TextColor3 = T.TEXT
-                        Lbl.TextSize = 11
+                        Lbl.TextSize = 9
                         Lbl.TextXAlignment = Enum.TextXAlignment.Left
                         Lbl.ZIndex = 6
 
@@ -861,11 +861,11 @@ return {
                         Swatch.BorderSizePixel = 0
                         Swatch.AnchorPoint = Vector2.new(1, 0.5)
                         Swatch.Position = UDim2.new(1, 0, 0.5, 0)
-                        Swatch.Size = UDim2.new(0, 30, 0, 20)
+                        Swatch.Size = UDim2.new(0, 24, 0, 16)
                         Swatch.AutoButtonColor = false
                         Swatch.Text = ""
                         Swatch.ZIndex = 6
-                        corner(Swatch, 5)
+                        corner(Swatch, 4)
                         stroke(Swatch, T.ELEMENT2, 1, 0.3)
 
                         Popup.Parent = Row
@@ -952,11 +952,11 @@ return {
 
                         RainLbl.Parent = RainRow
                         RainLbl.BackgroundTransparency = 1
-                        RainLbl.Size = UDim2.new(1, -50, 1, 0)
+                        RainLbl.Size = UDim2.new(1, -42, 1, 0)
                         RainLbl.Font = Enum.Font.Gotham
                         RainLbl.Text = "Rainbow"
                         RainLbl.TextColor3 = T.TEXT
-                        RainLbl.TextSize = 10
+                        RainLbl.TextSize = 9
                         RainLbl.TextXAlignment = Enum.TextXAlignment.Left
                         RainLbl.ZIndex = 12 + zi
 
@@ -965,18 +965,18 @@ return {
                         RainTrack.BorderSizePixel = 0
                         RainTrack.AnchorPoint = Vector2.new(1, 0.5)
                         RainTrack.Position = UDim2.new(1, 0, 0.5, 0)
-                        RainTrack.Size = UDim2.new(0, 36, 0, 18)
+                        RainTrack.Size = UDim2.new(0, 30, 0, 15)
                         RainTrack.ZIndex = 12 + zi
-                        corner(RainTrack, 9)
+                        corner(RainTrack, 7)
 
                         RainKnob.Parent = RainTrack
                         RainKnob.BackgroundColor3 = T.WHITE
                         RainKnob.BorderSizePixel = 0
                         RainKnob.AnchorPoint = Vector2.new(0, 0.5)
                         RainKnob.Position = UDim2.new(0, 2, 0.5, 0)
-                        RainKnob.Size = UDim2.new(0, 14, 0, 14)
+                        RainKnob.Size = UDim2.new(0, 11, 0, 11)
                         RainKnob.ZIndex = 13 + zi
-                        corner(RainKnob, 7)
+                        corner(RainKnob, 5)
 
                         RainHit.Parent = RainRow
                         RainHit.BackgroundTransparency = 1
@@ -1061,7 +1061,7 @@ return {
                             rainbowOn = not rainbowOn
                             if rainbowOn then
                                 tween(RainTrack, TI_MED, { BackgroundColor3 = T.ACCENT })
-                                tween(RainKnob, TI_SPRING, { Position = UDim2.new(0, 20, 0.5, 0) })
+                                tween(RainKnob, TI_SPRING, { Position = UDim2.new(0, 17, 0.5, 0) })
                                 while rainbowOn do
                                     local c = Color3.fromHSV(hue, 1, 1)
                                     Swatch.BackgroundColor3 = c
