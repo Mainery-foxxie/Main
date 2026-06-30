@@ -136,7 +136,7 @@ return {
         WindowRoot.Parent = Container
         WindowRoot.BackgroundColor3 = T.BG
         WindowRoot.BorderSizePixel = 0
-        WindowRoot.Position = UDim2.new(0, 20 + (windowOffset - 210), 0, 20)
+        WindowRoot.Position = UDim2.new(0, 50 + (windowOffset - 210), 0, 30)
         WindowRoot.Size = UDim2.new(0, WIN_W, 0, TOPBAR_H)
         WindowRoot.ZIndex = 2
         WindowRoot.ClipsDescendants = false
@@ -309,8 +309,8 @@ return {
                 SecTitle.Name = "Title"
                 SecTitle.Parent = SectionHeader
                 SecTitle.BackgroundTransparency = 1
-                SecTitle.Position = UDim2.new(0, 18, 0, 0)
-                SecTitle.Size = UDim2.new(1, -36, 1, 0)
+                SecTitle.Position = UDim2.new(0, 16, 0, 0)
+                SecTitle.Size = UDim2.new(1, -30, 1, 0)
                 SecTitle.ZIndex = 5
                 SecTitle.Font = Enum.Font.GothamBold
                 SecTitle.Text = sectionTitle
