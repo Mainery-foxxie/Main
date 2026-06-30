@@ -4,19 +4,29 @@ local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local Mouse = game:GetService("Players").LocalPlayer:GetMouse()
 
--- Rainbow hue state
 local hue = 0
 local colorPickerZIndex = 1
-
--- Upvalue for window X offset
 local windowOffset = 0
 
--- Destroy existing instance
 if game:GetService("CoreGui"):FindFirstChild("WizardLibrary") then
     game:GetService("CoreGui"):FindFirstChild("WizardLibrary"):Destroy()
 end
 
--- Root GUI
+-- Theme
+local T = {
+    BG         = Color3.fromRGB(13,  15,  20),
+    SURFACE    = Color3.fromRGB(20,  23,  32),
+    SECTION    = Color3.fromRGB(26,  30,  44),
+    ELEMENT    = Color3.fromRGB(35,  40,  58),
+    ELEMENT2   = Color3.fromRGB(44,  50,  70),
+    ACCENT     = Color3.fromRGB(58, 123, 255),
+    ACCENT_DIM = Color3.fromRGB(30,  60, 140),
+    TEXT       = Color3.fromRGB(230, 235, 255),
+    SUBTEXT    = Color3.fromRGB(130, 145, 180),
+    TOGGLE_OFF = Color3.fromRGB(55,  60,  80),
+    WHITE      = Color3.fromRGB(255, 255, 255),
+}
+
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "WizardLibrary"
 ScreenGui.Parent = game:GetService("CoreGui")
@@ -24,21 +34,53 @@ ScreenGui.Parent = game:GetService("CoreGui")
 local Container = Instance.new("Frame")
 Container.Name = "Container"
 Container.Parent = ScreenGui
-Container.BackgroundColor3 = Color3.new(1, 1, 1)
 Container.BackgroundTransparency = 1
-Container.Size = UDim2.new(0, 100, 0, 100)
+Container.Size = UDim2.new(1, 0, 1, 0)
 
--- Toggle visibility with RightControl
 UserInputService.InputBegan:Connect(function(input)
     if input.KeyCode == Enum.KeyCode.RightControl then
-        CoastifiedLibrary.Enabled = not CoastifiedLibrary.Enabled
+        ScreenGui.Enabled = not ScreenGui.Enabled
     end
 end)
 
--- Dragging utility
+-- Helpers
+local function corner(parent, radius)
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, radius or 8)
+    c.Parent = parent
+    return c
+end
+
+local function stroke(parent, color, thickness, transparency)
+    local s = Instance.new("UIStroke")
+    s.Color = color or T.ELEMENT2
+    s.Thickness = thickness or 1
+    s.Transparency = transparency or 0
+    s.Parent = parent
+    return s
+end
+
+local function stripSpaces(str)
+    return str:gsub(" ", "")
+end
+
+local function tween(instance, info, goal)
+    TweenService:Create(instance, info, goal):Play()
+end
+
+local TI_FAST   = TweenInfo.new(0.18, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+local TI_MED    = TweenInfo.new(0.28, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+local TI_SLOW   = TweenInfo.new(0.40, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+local TI_SPRING = TweenInfo.new(0.35, Enum.EasingStyle.Back,  Enum.EasingDirection.Out)
+
+coroutine.wrap(function()
+    while task.wait() do
+        hue = (hue + 0.004) % 1
+    end
+end)()
+
 local function Dragging(frame)
     local dragStart, startPos, dragging, lastInput
-
     frame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1
             or input.UserInputType == Enum.UserInputType.Touch
@@ -46,7 +88,6 @@ local function Dragging(frame)
             dragging = true
             dragStart = input.Position
             startPos = frame.Position
-
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     dragging = false
@@ -54,7 +95,6 @@ local function Dragging(frame)
             end)
         end
     end)
-
     frame.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement
             or input.UserInputType == Enum.UserInputType.Touch
@@ -62,7 +102,6 @@ local function Dragging(frame)
             lastInput = input
         end
     end)
-
     UserInputService.InputChanged:Connect(function(input)
         if input == lastInput and dragging then
             local delta = input.Position - dragStart
@@ -74,495 +113,468 @@ local function Dragging(frame)
     end)
 end
 
--- Strip spaces from a string (used for instance naming)
-local function stripSpaces(str)
-    return str:gsub(" ", "")
-end
-
--- Rainbow hue ticker
-coroutine.wrap(function()
-    while wait() do
-        hue = hue + 0.00392156862745098
-        if hue >= 1 then hue = 0 end
-    end
-end)()
-
--- Tween helper
-local function tween(instance, info, goal)
-    TweenService:Create(instance, info, goal):Play()
-end
-
-local TWEEN_FAST  = TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-local TWEEN_MED   = TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-local TWEEN_SLOW  = TweenInfo.new(0.75, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-local TWEEN_SLIDE = TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-local TWEEN_INSTANT = TweenInfo.new(0, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-
--- Fade a button's text out, swap it, then fade back in
-local function swapButtonText(btn, newText, newSize)
-    tween(btn, TWEEN_FAST, { TextTransparency = 1 })
-    btn.Text = newText
-    btn.TextSize = newSize
-    btn.Visible = false
-    repeat wait() until btn.TextTransparency == 1
-    btn.Visible = true
-    tween(btn, TWEEN_FAST, { TextTransparency = 0 })
-end
-
--- Fade two buttons simultaneously, swap, fade back
-local function swapTwoButtons(btn1, newText1, newSize1, btn2, newText2, newSize2)
-    tween(btn1, TWEEN_FAST, { TextTransparency = 1 })
-    tween(btn2, TWEEN_FAST, { TextTransparency = 1 })
-    btn1.Text = newText1
-    btn1.TextSize = newSize1
-    btn1.Visible = false
-    btn2.Text = newText2
-    btn2.TextSize = newSize2
-    btn2.Visible = false
-    repeat wait() until btn1.TextTransparency == 1 and btn2.TextTransparency == 1
-    btn1.Visible = true
-    btn2.Visible = true
-    tween(btn1, TWEEN_FAST, { TextTransparency = 0 })
-    tween(btn2, TWEEN_FAST, { TextTransparency = 0 })
-end
-
--- ─── Library ───────────────────────────────────────────────────────────────
-
 return {
     NewWindow = function(_, windowTitle)
         windowOffset = windowOffset + 2
 
+        local WIN_W = 240
         local windowId = stripSpaces(windowTitle)
-        local bodyHeight = 35
+        local bodyHeight = 0
         local windowOpen = true
 
-        -- Instances
-        local WindowRoot    = Instance.new("ImageLabel")
-        local Topbar        = Instance.new("Frame")
-        local ToggleBtn     = Instance.new("TextButton")
-        local TitleLabel    = Instance.new("TextLabel")
-        local BottomCover   = Instance.new("Frame")
-        local Body          = Instance.new("ImageLabel")
-        local BodySorter    = Instance.new("UIListLayout")
-        local BodyTopCover  = Instance.new("Frame")
+        local WindowRoot = Instance.new("Frame")
+        local Topbar     = Instance.new("Frame")
+        local TitleLabel = Instance.new("TextLabel")
+        local MinBtn     = Instance.new("TextButton")
+        local Body       = Instance.new("Frame")
+        local BodyLayout = Instance.new("UIListLayout")
+
+        -- Window shadow
+        local Shadow = Instance.new("ImageLabel")
+        Shadow.Name = "Shadow"
+        Shadow.Parent = Container
+        Shadow.BackgroundTransparency = 1
+        Shadow.Size = UDim2.new(0, WIN_W + 30, 0, 60)
+        Shadow.Position = UDim2.new(windowOffset, -115, 3, -278)
+        Shadow.Image = "rbxassetid://6014261993"
+        Shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+        Shadow.ImageTransparency = 0.5
+        Shadow.ScaleType = Enum.ScaleType.Slice
+        Shadow.SliceCenter = Rect.new(49, 49, 450, 450)
+
+        WindowRoot.Name = windowId .. "Window"
+        WindowRoot.Parent = Container
+        WindowRoot.BackgroundColor3 = T.BG
+        WindowRoot.BorderSizePixel = 0
+        WindowRoot.Position = UDim2.new(windowOffset, -100, 3, -265)
+        WindowRoot.Size = UDim2.new(0, WIN_W, 0, 36)
+        WindowRoot.ZIndex = 2
+        corner(WindowRoot, 10)
+        stroke(WindowRoot, T.ELEMENT2, 1, 0.5)
+
+        Topbar.Name = "Topbar"
+        Topbar.Parent = WindowRoot
+        Topbar.BackgroundColor3 = T.SURFACE
+        Topbar.BorderSizePixel = 0
+        Topbar.Size = UDim2.new(1, 0, 0, 36)
+        Topbar.ZIndex = 2
+        corner(Topbar, 10)
+
+        -- Accent line at top of topbar
+        local AccentLine = Instance.new("Frame")
+        AccentLine.Name = "AccentLine"
+        AccentLine.Parent = Topbar
+        AccentLine.BackgroundColor3 = T.ACCENT
+        AccentLine.BorderSizePixel = 0
+        AccentLine.Size = UDim2.new(1, 0, 0, 2)
+        AccentLine.Position = UDim2.new(0, 0, 0, 0)
+        AccentLine.ZIndex = 3
+        local acCorner = Instance.new("UICorner")
+        acCorner.CornerRadius = UDim.new(0, 10)
+        acCorner.Parent = AccentLine
+
+        -- Dot indicators
+        local function makeDot(color, xOff)
+            local d = Instance.new("Frame")
+            d.Parent = Topbar
+            d.BackgroundColor3 = color
+            d.BorderSizePixel = 0
+            d.Size = UDim2.new(0, 8, 0, 8)
+            d.Position = UDim2.new(0, xOff, 0.5, -4)
+            d.ZIndex = 3
+            corner(d, 4)
+            return d
+        end
+        makeDot(Color3.fromRGB(255, 95, 87), 12)
+        makeDot(Color3.fromRGB(255, 189, 46), 26)
+        makeDot(Color3.fromRGB(40, 201, 64), 40)
+
+        TitleLabel.Name = "WindowTitle"
+        TitleLabel.Parent = Topbar
+        TitleLabel.BackgroundTransparency = 1
+        TitleLabel.Position = UDim2.new(0, 58, 0, 0)
+        TitleLabel.Size = UDim2.new(0, WIN_W - 90, 0, 36)
+        TitleLabel.ZIndex = 3
+        TitleLabel.Font = Enum.Font.GothamBold
+        TitleLabel.Text = windowTitle
+        TitleLabel.TextColor3 = T.TEXT
+        TitleLabel.TextSize = 12
+        TitleLabel.TextXAlignment = Enum.TextXAlignment.Center
+
+        MinBtn.Name = "MinBtn"
+        MinBtn.Parent = Topbar
+        MinBtn.BackgroundColor3 = T.ELEMENT
+        MinBtn.BorderSizePixel = 0
+        MinBtn.AnchorPoint = Vector2.new(1, 0.5)
+        MinBtn.Position = UDim2.new(1, -10, 0.5, 0)
+        MinBtn.Size = UDim2.new(0, 22, 0, 16)
+        MinBtn.ZIndex = 3
+        MinBtn.AutoButtonColor = false
+        MinBtn.Font = Enum.Font.GothamBold
+        MinBtn.Text = "—"
+        MinBtn.TextColor3 = T.SUBTEXT
+        MinBtn.TextSize = 9
+        corner(MinBtn, 4)
+
+        MinBtn.MouseEnter:Connect(function()
+            tween(MinBtn, TI_FAST, { TextColor3 = T.TEXT })
+        end)
+        MinBtn.MouseLeave:Connect(function()
+            tween(MinBtn, TI_FAST, { TextColor3 = T.SUBTEXT })
+        end)
+
+        Body.Name = "Body"
+        Body.Parent = WindowRoot
+        Body.BackgroundColor3 = T.BG
+        Body.BorderSizePixel = 0
+        Body.ClipsDescendants = true
+        Body.Position = UDim2.new(0, 0, 0, 36)
+        Body.Size = UDim2.new(1, 0, 0, 0)
+        Body.ZIndex = 2
+
+        local BodyPad = Instance.new("UIPadding")
+        BodyPad.Parent = Body
+        BodyPad.PaddingTop = UDim.new(0, 6)
+        BodyPad.PaddingBottom = UDim.new(0, 6)
+
+        BodyLayout.Parent = Body
+        BodyLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        BodyLayout.Padding = UDim.new(0, 4)
 
         local function growBody(amount)
             bodyHeight = bodyHeight + amount
-            tween(Body, TWEEN_MED, { Size = UDim2.new(0, 170, 0, bodyHeight) })
+            tween(Body, TI_MED, { Size = UDim2.new(1, 0, 0, bodyHeight) })
+            tween(WindowRoot, TI_MED, { Size = UDim2.new(0, WIN_W, 0, 36 + bodyHeight) })
+            tween(Shadow, TI_MED, { Size = UDim2.new(0, WIN_W + 30, 0, 36 + bodyHeight + 24) })
         end
         local function shrinkBody(amount)
             bodyHeight = bodyHeight - amount
-            tween(Body, TWEEN_MED, { Size = UDim2.new(0, 170, 0, bodyHeight) })
+            tween(Body, TI_MED, { Size = UDim2.new(1, 0, 0, bodyHeight) })
+            tween(WindowRoot, TI_MED, { Size = UDim2.new(0, WIN_W, 0, 36 + bodyHeight) })
+            tween(Shadow, TI_MED, { Size = UDim2.new(0, WIN_W + 30, 0, 36 + bodyHeight + 24) })
         end
 
-        -- WindowRoot (rounded image label acting as the window shell)
-        WindowRoot.Name = windowId .. "Window"
-        WindowRoot.Parent = Container
-        WindowRoot.BackgroundColor3 = Color3.new(0.098, 0.098, 0.098)
-        WindowRoot.BackgroundTransparency = 1
-        WindowRoot.Position = UDim2.new(windowOffset, -100, 3, -265)
-        WindowRoot.Size = UDim2.new(0, 170, 0, 30)
-        WindowRoot.ZIndex = 2
-        WindowRoot.Image = "rbxassetid://3570695787"
-        WindowRoot.ImageColor3 = Color3.new(0.098, 0.098, 0.098)
-        WindowRoot.ScaleType = Enum.ScaleType.Slice
-        WindowRoot.SliceCenter = Rect.new(100, 100, 100, 100)
-        WindowRoot.SliceScale = 0.05
-
-        -- Topbar
-        Topbar.Name = "Topbar"
-        Topbar.Parent = WindowRoot
-        Topbar.BackgroundColor3 = Color3.new(1, 1, 1)
-        Topbar.BackgroundTransparency = 1
-        Topbar.BorderSizePixel = 0
-        Topbar.Size = UDim2.new(0, 170, 0, 30)
-        Topbar.ZIndex = 2
-
-        -- Window toggle button (minimise/restore)
-        ToggleBtn.Name = "WindowToggle"
-        ToggleBtn.Parent = Topbar
-        ToggleBtn.BackgroundColor3 = Color3.new(1, 1, 1)
-        ToggleBtn.BackgroundTransparency = 1
-        ToggleBtn.Position = UDim2.new(0.82245, 0, 0, 0)
-        ToggleBtn.Size = UDim2.new(0, 30, 0, 30)
-        ToggleBtn.ZIndex = 2
-        ToggleBtn.Font = Enum.Font.SourceSansSemibold
-        ToggleBtn.Text = "-"
-        ToggleBtn.TextColor3 = Color3.new(1, 1, 1)
-        ToggleBtn.TextSize = 20
-        ToggleBtn.TextWrapped = true
-
-        ToggleBtn.MouseButton1Down:Connect(function()
+        MinBtn.MouseButton1Click:Connect(function()
             if windowOpen then
                 windowOpen = false
-                swapButtonText(ToggleBtn, "v", 14)
+                tween(MinBtn, TI_FAST, { Size = UDim2.new(0, 22, 0, 16) })
+                MinBtn.Text = "+"
+                tween(Body, TI_MED, { Size = UDim2.new(1, 0, 0, 0) })
+                tween(WindowRoot, TI_MED, { Size = UDim2.new(0, WIN_W, 0, 36) })
+                tween(Shadow, TI_MED, { Size = UDim2.new(0, WIN_W + 30, 0, 60) })
             else
                 windowOpen = true
-                swapButtonText(ToggleBtn, "-", 20)
+                MinBtn.Text = "—"
+                tween(Body, TI_MED, { Size = UDim2.new(1, 0, 0, bodyHeight) })
+                tween(WindowRoot, TI_MED, { Size = UDim2.new(0, WIN_W, 0, 36 + bodyHeight) })
+                tween(Shadow, TI_MED, { Size = UDim2.new(0, WIN_W + 30, 0, 36 + bodyHeight + 24) })
             end
         end)
 
-        -- Title
-        TitleLabel.Name = "WindowTitle"
-        TitleLabel.Parent = Topbar
-        TitleLabel.BackgroundColor3 = Color3.new(1, 1, 1)
-        TitleLabel.BackgroundTransparency = 1
-        TitleLabel.Size = UDim2.new(0, 170, 0, 30)
-        TitleLabel.ZIndex = 2
-        TitleLabel.Font = Enum.Font.SourceSansBold
-        TitleLabel.Text = windowTitle
-        TitleLabel.TextColor3 = Color3.new(1, 1, 1)
-        TitleLabel.TextSize = 13
-        TitleLabel.TextScaled = true
-
-        local TitleConstraint = Instance.new("UITextSizeConstraint")
-        TitleConstraint.MaxTextSize = 13
-        TitleConstraint.MinTextSize = 6
-        TitleConstraint.Parent = TitleLabel
-
-        -- Cover that hides the bottom round corners of the topbar
-        BottomCover.Name = "BottomRoundCover"
-        BottomCover.Parent = Topbar
-        BottomCover.BackgroundColor3 = Color3.new(0.098, 0.098, 0.098)
-        BottomCover.BorderSizePixel = 0
-        BottomCover.Position = UDim2.new(0, 0, 0.8333, 0)
-        BottomCover.Size = UDim2.new(0, 170, 0, 5)
-        BottomCover.ZIndex = 2
-
-        -- Body
-        Body.Name = "Body"
-        Body.Parent = WindowRoot
-        Body.BackgroundColor3 = Color3.new(0.137, 0.137, 0.137)
-        Body.BackgroundTransparency = 1
-        Body.ClipsDescendants = true
-        Body.Size = UDim2.new(0, 170, 0, bodyHeight)
-        Body.Image = "rbxassetid://3570695787"
-        Body.ImageColor3 = Color3.new(0.137, 0.137, 0.137)
-        Body.ScaleType = Enum.ScaleType.Slice
-        Body.SliceCenter = Rect.new(100, 100, 100, 100)
-        Body.SliceScale = 0.05
-
-        BodySorter.Name = "Sorter"
-        BodySorter.Parent = Body
-        BodySorter.SortOrder = Enum.SortOrder.LayoutOrder
-
-        BodyTopCover.Name = "TopbarBodyCover"
-        BodyTopCover.Parent = Body
-        BodyTopCover.BackgroundColor3 = Color3.new(1, 1, 1)
-        BodyTopCover.BackgroundTransparency = 1
-        BodyTopCover.BorderSizePixel = 0
-        BodyTopCover.Size = UDim2.new(0, 170, 0, 30)
-
-        Dragging(WindowRoot)
-
-        -- ─── Window API ──────────────────────────────────────────────────────
+        Dragging(Topbar)
 
         return {
             NewSection = function(_, sectionTitle)
                 local sectionId = stripSpaces(sectionTitle)
                 local sectionOpen = false
-                local sectionHeight = 30
-                local arrowText = "v"
+                local sectionHeight = 36
+                local ITEM_H = 34
 
-                local SectionFrame   = Instance.new("Frame")
-                local SectionInfo    = Instance.new("Frame")
-                local SectionToggle  = Instance.new("TextButton")
-                local SectionTitle   = Instance.new("TextLabel")
-                local SectionLayout  = Instance.new("UIListLayout")
-
-                local function growSection(amount)
-                    sectionHeight = sectionHeight + amount
-                    tween(SectionFrame, TWEEN_MED, { Size = UDim2.new(0, 170, 0, sectionHeight) })
-                end
-                local function shrinkSection(amount)
-                    sectionHeight = sectionHeight - amount
-                    tween(SectionFrame, TWEEN_MED, { Size = UDim2.new(0, 170, 0, sectionHeight) })
-                end
+                local SectionFrame  = Instance.new("Frame")
+                local SectionHeader = Instance.new("Frame")
+                local AccentBar     = Instance.new("Frame")
+                local SecTitle      = Instance.new("TextLabel")
+                local ChevronLbl    = Instance.new("TextLabel")
+                local ItemContainer = Instance.new("Frame")
+                local ItemLayout    = Instance.new("UIListLayout")
 
                 SectionFrame.Name = sectionId .. "Section"
                 SectionFrame.Parent = Body
-                SectionFrame.BackgroundColor3 = Color3.new(0.176, 0.176, 0.176)
+                SectionFrame.BackgroundColor3 = T.SURFACE
                 SectionFrame.BorderSizePixel = 0
                 SectionFrame.ClipsDescendants = true
-                SectionFrame.Size = UDim2.new(0, 170, 0, sectionHeight)
+                SectionFrame.Size = UDim2.new(1, -16, 0, sectionHeight)
+                SectionFrame.Position = UDim2.new(0, 8, 0, 0)
+                corner(SectionFrame, 8)
+                stroke(SectionFrame, T.ELEMENT, 1, 0.6)
 
-                growBody(30)
+                growBody(ITEM_H + 10)
 
-                SectionInfo.Name = "SectionInfo"
-                SectionInfo.Parent = SectionFrame
-                SectionInfo.BackgroundColor3 = Color3.new(1, 1, 1)
-                SectionInfo.BackgroundTransparency = 1
-                SectionInfo.Size = UDim2.new(0, 170, 0, 30)
+                SectionHeader.Name = "SectionHeader"
+                SectionHeader.Parent = SectionFrame
+                SectionHeader.BackgroundTransparency = 1
+                SectionHeader.Size = UDim2.new(1, 0, 0, 36)
+                SectionHeader.ZIndex = 3
 
-                SectionToggle.Name = "SectionToggle"
-                SectionToggle.Parent = SectionInfo
-                SectionToggle.BackgroundColor3 = Color3.new(1, 1, 1)
-                SectionToggle.BackgroundTransparency = 1
-                SectionToggle.Position = UDim2.new(0.82245, 0, 0, 0)
-                SectionToggle.Size = UDim2.new(0, 30, 0, 30)
-                SectionToggle.ZIndex = 2
-                SectionToggle.Font = Enum.Font.SourceSansSemibold
-                SectionToggle.Text = arrowText
-                SectionToggle.TextColor3 = Color3.new(1, 1, 1)
-                SectionToggle.TextSize = 14
-                SectionToggle.TextWrapped = true
+                AccentBar.Name = "AccentBar"
+                AccentBar.Parent = SectionHeader
+                AccentBar.BackgroundColor3 = T.ACCENT
+                AccentBar.BorderSizePixel = 0
+                AccentBar.Size = UDim2.new(0, 3, 0, 16)
+                AccentBar.Position = UDim2.new(0, 10, 0.5, -8)
+                AccentBar.ZIndex = 4
+                corner(AccentBar, 2)
 
-                SectionTitle.Name = "SectionTitle"
-                SectionTitle.Parent = SectionInfo
-                SectionTitle.BackgroundColor3 = Color3.new(1, 1, 1)
-                SectionTitle.BackgroundTransparency = 1
-                SectionTitle.BorderSizePixel = 0
-                SectionTitle.Position = UDim2.new(0.052941, 0, 0, 0)
-                SectionTitle.Size = UDim2.new(0, 125, 0, 30)
-                SectionTitle.Font = Enum.Font.SourceSansBold
-                SectionTitle.Text = sectionTitle
-                SectionTitle.TextColor3 = Color3.new(1, 1, 1)
-                SectionTitle.TextSize = 13
-                SectionTitle.TextScaled = true
-                SectionTitle.TextXAlignment = Enum.TextXAlignment.Left
+                SecTitle.Name = "SectionTitle"
+                SecTitle.Parent = SectionHeader
+                SecTitle.BackgroundTransparency = 1
+                SecTitle.Position = UDim2.new(0, 22, 0, 0)
+                SecTitle.Size = UDim2.new(1, -50, 1, 0)
+                SecTitle.ZIndex = 4
+                SecTitle.Font = Enum.Font.GothamBold
+                SecTitle.Text = sectionTitle
+                SecTitle.TextColor3 = T.TEXT
+                SecTitle.TextSize = 11
+                SecTitle.TextXAlignment = Enum.TextXAlignment.Left
 
-                local SectionTitleConstraint = Instance.new("UITextSizeConstraint")
-                SectionTitleConstraint.MaxTextSize = 13
-                SectionTitleConstraint.MinTextSize = 6
-                SectionTitleConstraint.Parent = SectionTitle
+                ChevronLbl.Name = "Chevron"
+                ChevronLbl.Parent = SectionHeader
+                ChevronLbl.BackgroundTransparency = 1
+                ChevronLbl.AnchorPoint = Vector2.new(1, 0.5)
+                ChevronLbl.Position = UDim2.new(1, -10, 0.5, 0)
+                ChevronLbl.Size = UDim2.new(0, 16, 0, 16)
+                ChevronLbl.ZIndex = 4
+                ChevronLbl.Font = Enum.Font.GothamBold
+                ChevronLbl.Text = "›"
+                ChevronLbl.TextColor3 = T.SUBTEXT
+                ChevronLbl.TextSize = 16
+                ChevronLbl.Rotation = 90
 
-                SectionLayout.Name = "Layout"
-                SectionLayout.Parent = SectionFrame
-                SectionLayout.SortOrder = Enum.SortOrder.LayoutOrder
+                ItemContainer.Name = "Items"
+                ItemContainer.Parent = SectionFrame
+                ItemContainer.BackgroundTransparency = 1
+                ItemContainer.BorderSizePixel = 0
+                ItemContainer.Position = UDim2.new(0, 0, 0, 36)
+                ItemContainer.Size = UDim2.new(1, 0, 1, -36)
+                ItemContainer.ClipsDescendants = true
 
-                -- Window toggle affects sections
-                ToggleBtn.MouseButton1Down:Connect(function()
-                    if windowOpen then
-                        shrinkBody(30)
-                        SectionToggle.Text = ""
-                        tween(SectionFrame, TWEEN_MED, { BackgroundTransparency = 1 })
-                    else
-                        growBody(30)
-                        SectionToggle.Text = arrowText
-                        tween(SectionFrame, TWEEN_MED, { BackgroundTransparency = 0 })
-                    end
-                end)
+                local ItemPad = Instance.new("UIPadding")
+                ItemPad.Parent = ItemContainer
+                ItemPad.PaddingLeft = UDim.new(0, 10)
+                ItemPad.PaddingRight = UDim.new(0, 10)
+                ItemPad.PaddingBottom = UDim.new(0, 4)
 
-                -- Section collapse/expand
-                SectionToggle.MouseButton1Down:Connect(function()
-                    if sectionOpen then
-                        sectionOpen = false
-                        arrowText = "v"
-                        swapTwoButtons(SectionToggle, arrowText, 14, ToggleBtn, ToggleBtn.Text, ToggleBtn.TextSize)
-                    else
-                        sectionOpen = true
-                        arrowText = "-"
-                        swapTwoButtons(SectionToggle, arrowText, 20, ToggleBtn, ToggleBtn.Text, ToggleBtn.TextSize)
-                    end
-                end)
+                ItemLayout.Parent = ItemContainer
+                ItemLayout.SortOrder = Enum.SortOrder.LayoutOrder
+                ItemLayout.Padding = UDim.new(0, 2)
 
-                -- Helper: update section/body sizing when window toggle is pressed and section state is known
-                local function onWindowToggleForSection()
-                    if windowOpen then
-                        if sectionOpen then
-                            shrinkBody(30)
-                            tween(ToggleBtn, TWEEN_INSTANT, { Rotation = 0 })
-                            tween(SectionFrame, TWEEN_MED, { BackgroundTransparency = 1 })
-                        else
-                            tween(SectionFrame, TWEEN_MED, { BackgroundTransparency = 1 })
-                        end
-                    else
-                        if sectionOpen then
-                            growBody(30)
-                            tween(ToggleBtn, TWEEN_INSTANT, { Rotation = 360 })
-                            tween(SectionFrame, TWEEN_MED, { BackgroundTransparency = 0 })
-                        else
-                            tween(SectionFrame, TWEEN_MED, { BackgroundTransparency = 0 })
-                        end
-                    end
+                local itemCount = 0
 
-                    swapButtonText(SectionToggle, SectionToggle.Text, SectionToggle.TextSize)
+                local function growSection()
+                    sectionHeight = sectionHeight + ITEM_H
+                    tween(SectionFrame, TI_MED, { Size = UDim2.new(1, -16, 0, sectionHeight) })
+                    growBody(ITEM_H)
+                end
+                local function shrinkSection()
+                    sectionHeight = sectionHeight - ITEM_H
+                    tween(SectionFrame, TI_MED, { Size = UDim2.new(1, -16, 0, sectionHeight) })
+                    shrinkBody(ITEM_H)
                 end
 
-                -- ─── Section API ─────────────────────────────────────────────
+                local clickBtn = Instance.new("TextButton")
+                clickBtn.Name = "SectionClickRegion"
+                clickBtn.Parent = SectionHeader
+                clickBtn.BackgroundTransparency = 1
+                clickBtn.Size = UDim2.new(1, 0, 1, 0)
+                clickBtn.ZIndex = 5
+                clickBtn.Text = ""
+                clickBtn.AutoButtonColor = false
 
+                clickBtn.MouseButton1Click:Connect(function()
+                    if sectionOpen then
+                        sectionOpen = false
+                        tween(ChevronLbl, TI_MED, { Rotation = 90, TextColor3 = T.SUBTEXT })
+                        for _ = 1, itemCount do
+                            shrinkSection()
+                        end
+                    else
+                        sectionOpen = true
+                        tween(ChevronLbl, TI_MED, { Rotation = 270, TextColor3 = T.ACCENT })
+                        for _ = 1, itemCount do
+                            growSection()
+                        end
+                    end
+                end)
+
+                SectionHeader.MouseEnter:Connect(function()
+                    tween(SectionFrame, TI_FAST, { BackgroundColor3 = T.SECTION })
+                end)
+                SectionHeader.MouseLeave:Connect(function()
+                    tween(SectionFrame, TI_FAST, { BackgroundColor3 = T.SURFACE })
+                end)
+
+                -- Section API
                 return {
-                    -- ── Toggle ────────────────────────────────────────────────
                     CreateToggle = function(_, label, callback)
-                        local toggleId = stripSpaces(label)
+                        itemCount = itemCount + 1
                         local state = false
 
-                        local Holder      = Instance.new("Frame")
-                        local Title       = Instance.new("TextLabel")
-                        local Background  = Instance.new("ImageLabel")
-                        local Dot         = Instance.new("ImageButton")
+                        local Row      = Instance.new("Frame")
+                        local Lbl      = Instance.new("TextLabel")
+                        local Track    = Instance.new("Frame")
+                        local Knob     = Instance.new("Frame")
+                        local HitArea  = Instance.new("TextButton")
 
-                        Holder.Name = toggleId .. "ToggleHolder"
-                        Holder.Parent = SectionFrame
-                        Holder.BackgroundColor3 = Color3.new(0.137, 0.137, 0.137)
-                        Holder.BorderSizePixel = 0
-                        Holder.Size = UDim2.new(0, 170, 0, 30)
+                        Row.Name = stripSpaces(label) .. "Row"
+                        Row.Parent = ItemContainer
+                        Row.BackgroundTransparency = 1
+                        Row.Size = UDim2.new(1, 0, 0, ITEM_H)
 
-                        Title.Name = "ToggleTitle"
-                        Title.Parent = Holder
-                        Title.BackgroundColor3 = Color3.new(1, 1, 1)
-                        Title.BackgroundTransparency = 1
-                        Title.BorderSizePixel = 0
-                        Title.Position = UDim2.new(0.052941, 0, 0, 0)
-                        Title.Size = UDim2.new(0, 125, 0, 30)
-                        Title.Font = Enum.Font.SourceSansBold
-                        Title.Text = label
-                        Title.TextColor3 = Color3.new(1, 1, 1)
-                        Title.TextSize = 13
-                        Title.TextScaled = true
-                        Title.TextXAlignment = Enum.TextXAlignment.Left
+                        Lbl.Name = "Label"
+                        Lbl.Parent = Row
+                        Lbl.BackgroundTransparency = 1
+                        Lbl.Position = UDim2.new(0, 0, 0, 0)
+                        Lbl.Size = UDim2.new(1, -52, 1, 0)
+                        Lbl.Font = Enum.Font.Gotham
+                        Lbl.Text = label
+                        Lbl.TextColor3 = T.TEXT
+                        Lbl.TextSize = 11
+                        Lbl.TextXAlignment = Enum.TextXAlignment.Left
 
-                        local TitleConstraint = Instance.new("UITextSizeConstraint")
-                        TitleConstraint.MaxTextSize = 13
-                        TitleConstraint.MinTextSize = 6
-                        TitleConstraint.Parent = Title
+                        Track.Name = "Track"
+                        Track.Parent = Row
+                        Track.BackgroundColor3 = T.TOGGLE_OFF
+                        Track.BorderSizePixel = 0
+                        Track.AnchorPoint = Vector2.new(1, 0.5)
+                        Track.Position = UDim2.new(1, 0, 0.5, 0)
+                        Track.Size = UDim2.new(0, 40, 0, 20)
+                        corner(Track, 10)
 
-                        Background.Name = "ToggleBackground"
-                        Background.Parent = Holder
-                        Background.BackgroundColor3 = Color3.new(1, 1, 1)
-                        Background.BackgroundTransparency = 1
-                        Background.BorderSizePixel = 0
-                        Background.Position = UDim2.new(0.847059, 0, 0.166667, 0)
-                        Background.Size = UDim2.new(0, 20, 0, 20)
-                        Background.Image = "rbxassetid://3570695787"
-                        Background.ImageColor3 = Color3.new(0.254902, 0.254902, 0.254902)
+                        Knob.Name = "Knob"
+                        Knob.Parent = Track
+                        Knob.BackgroundColor3 = T.WHITE
+                        Knob.BorderSizePixel = 0
+                        Knob.AnchorPoint = Vector2.new(0, 0.5)
+                        Knob.Position = UDim2.new(0, 2, 0.5, 0)
+                        Knob.Size = UDim2.new(0, 16, 0, 16)
+                        corner(Knob, 8)
 
-                        Dot.Name = "ToggleButton"
-                        Dot.Parent = Background
-                        Dot.BackgroundColor3 = Color3.new(1, 1, 1)
-                        Dot.BackgroundTransparency = 1
-                        Dot.Position = UDim2.new(0, 2, 0, 2)
-                        Dot.Size = UDim2.new(0, 16, 0, 16)
-                        Dot.Image = "rbxassetid://3570695787"
-                        Dot.ImageColor3 = Color3.new(1, 0.341176, 0.341176)
-                        Dot.ImageTransparency = 1
+                        HitArea.Name = "Hit"
+                        HitArea.Parent = Row
+                        HitArea.BackgroundTransparency = 1
+                        HitArea.Size = UDim2.new(1, 0, 1, 0)
+                        HitArea.Text = ""
+                        HitArea.AutoButtonColor = false
+                        HitArea.ZIndex = 2
 
-                        Dot.MouseButton1Down:Connect(function()
+                        HitArea.MouseButton1Click:Connect(function()
                             state = not state
-                            tween(Dot, TWEEN_MED, { ImageTransparency = state and 0 or 1 })
+                            if state then
+                                tween(Track, TI_MED, { BackgroundColor3 = T.ACCENT })
+                                tween(Knob, TI_SPRING, { Position = UDim2.new(0, 22, 0.5, 0) })
+                            else
+                                tween(Track, TI_MED, { BackgroundColor3 = T.TOGGLE_OFF })
+                                tween(Knob, TI_SPRING, { Position = UDim2.new(0, 2, 0.5, 0) })
+                            end
                             callback(state)
                         end)
-
-                        SectionToggle.MouseButton1Down:Connect(function()
-                            if sectionOpen then
-                                shrinkSection(30)
-                                shrinkBody(30)
-                            else
-                                growSection(30)
-                                growBody(30)
-                            end
-                        end)
-
-                        ToggleBtn.MouseButton1Down:Connect(onWindowToggleForSection)
                     end,
 
-                    -- ── Slider ────────────────────────────────────────────────
                     CreateSlider = function(_, label, min, max, default, isFloat, callback)
-                        local sliderId = stripSpaces(label)
+                        itemCount = itemCount + 1
                         local dragging = false
-                        local useFloat = isFloat
+                        local SLIDER_H = ITEM_H + 10
 
-                        local Holder        = Instance.new("Frame")
-                        local TitleLbl      = Instance.new("TextLabel")
-                        local ValueHolder   = Instance.new("ImageLabel")
-                        local ValueLbl      = Instance.new("TextLabel")
-                        local Track         = Instance.new("ImageLabel")
-                        local Fill          = Instance.new("ImageLabel")
+                        local Row      = Instance.new("Frame")
+                        local Lbl      = Instance.new("TextLabel")
+                        local ValLbl   = Instance.new("TextLabel")
+                        local Track    = Instance.new("Frame")
+                        local Fill     = Instance.new("Frame")
+                        local Thumb    = Instance.new("Frame")
+                        local HitArea  = Instance.new("TextButton")
 
-                        Holder.Name = sliderId .. "SliderHolder"
-                        Holder.Parent = SectionFrame
-                        Holder.BackgroundColor3 = Color3.new(0.137, 0.137, 0.137)
-                        Holder.BorderSizePixel = 0
-                        Holder.Size = UDim2.new(0, 170, 0, 30)
+                        Row.Name = stripSpaces(label) .. "SliderRow"
+                        Row.Parent = ItemContainer
+                        Row.BackgroundTransparency = 1
+                        Row.Size = UDim2.new(1, 0, 0, SLIDER_H)
 
-                        TitleLbl.Name = "SliderTitle"
-                        TitleLbl.Parent = Holder
-                        TitleLbl.BackgroundColor3 = Color3.new(1, 1, 1)
-                        TitleLbl.BackgroundTransparency = 1
-                        TitleLbl.BorderSizePixel = 0
-                        TitleLbl.Position = UDim2.new(0.052941, 0, 0, 0)
-                        TitleLbl.Size = UDim2.new(0, 125, 0, 15)
-                        TitleLbl.Font = Enum.Font.SourceSansSemibold
-                        TitleLbl.Text = label
-                        TitleLbl.TextColor3 = Color3.new(1, 1, 1)
-                        TitleLbl.TextSize = 17
-                        TitleLbl.TextScaled = true
-                        TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
+                        Lbl.Name = "Label"
+                        Lbl.Parent = Row
+                        Lbl.BackgroundTransparency = 1
+                        Lbl.Position = UDim2.new(0, 0, 0, 0)
+                        Lbl.Size = UDim2.new(0.6, 0, 0, 18)
+                        Lbl.Font = Enum.Font.Gotham
+                        Lbl.Text = label
+                        Lbl.TextColor3 = T.TEXT
+                        Lbl.TextSize = 11
+                        Lbl.TextXAlignment = Enum.TextXAlignment.Left
 
-                        ValueHolder.Name = "SliderValueHolder"
-                        ValueHolder.Parent = Holder
-                        ValueHolder.BackgroundColor3 = Color3.new(0.254902, 0.254902, 0.254902)
-                        ValueHolder.BackgroundTransparency = 1
-                        ValueHolder.Position = UDim2.new(0.747059, 0, 0, 0)
-                        ValueHolder.Size = UDim2.new(0, 35, 0, 15)
-                        ValueHolder.Image = "rbxassetid://3570695787"
-                        ValueHolder.ImageColor3 = Color3.new(0.254902, 0.254902, 0.254902)
-                        ValueHolder.ImageTransparency = 0.5
-                        ValueHolder.ScaleType = Enum.ScaleType.Slice
-                        ValueHolder.SliceCenter = Rect.new(100, 100, 100, 100)
-                        ValueHolder.SliceScale = 0.02
+                        local ValBg = Instance.new("Frame")
+                        ValBg.Parent = Row
+                        ValBg.BackgroundColor3 = T.ELEMENT
+                        ValBg.BorderSizePixel = 0
+                        ValBg.AnchorPoint = Vector2.new(1, 0)
+                        ValBg.Position = UDim2.new(1, 0, 0, 0)
+                        ValBg.Size = UDim2.new(0, 42, 0, 18)
+                        corner(ValBg, 5)
 
-                        ValueLbl.Name = "SliderValue"
-                        ValueLbl.Parent = ValueHolder
-                        ValueLbl.BackgroundColor3 = Color3.new(1, 1, 1)
-                        ValueLbl.BackgroundTransparency = 1
-                        ValueLbl.Size = UDim2.new(0, 35, 0, 15)
-                        ValueLbl.Font = Enum.Font.SourceSansSemibold
-                        ValueLbl.Text = tostring(
-                            useFloat and tonumber(string.format("%.2f", default or min))
-                                      or (default or min)
-                        )
-                        ValueLbl.TextColor3 = Color3.new(1, 1, 1)
-                        ValueLbl.TextSize = 14
+                        ValLbl.Name = "Value"
+                        ValLbl.Parent = ValBg
+                        ValLbl.BackgroundTransparency = 1
+                        ValLbl.Size = UDim2.new(1, 0, 1, 0)
+                        ValLbl.Font = Enum.Font.GothamBold
+                        ValLbl.TextColor3 = T.ACCENT
+                        ValLbl.TextSize = 10
+                        ValLbl.Text = tostring(isFloat and tonumber(string.format("%.2f", default or min)) or (default or min))
 
-                        Track.Name = "SliderBackground"
-                        Track.Parent = Holder
-                        Track.BackgroundColor3 = Color3.new(0.254902, 0.254902, 0.254902)
-                        Track.BackgroundTransparency = 1
-                        Track.Position = UDim2.new(0.053, 0, 0.65, 0)
-                        Track.Selectable = true
-                        Track.Size = UDim2.new(0, 153, 0, 5)
-                        Track.Image = "rbxassetid://3570695787"
-                        Track.ImageColor3 = Color3.new(0.254902, 0.254902, 0.254902)
-                        Track.ImageTransparency = 0.5
-                        Track.ScaleType = Enum.ScaleType.Slice
-                        Track.SliceCenter = Rect.new(100, 100, 100, 100)
-                        Track.ClipsDescendants = true
-                        Track.SliceScale = 0.02
+                        Track.Name = "Track"
+                        Track.Parent = Row
+                        Track.BackgroundColor3 = T.ELEMENT
+                        Track.BorderSizePixel = 0
+                        Track.Position = UDim2.new(0, 0, 0, 26)
+                        Track.Size = UDim2.new(1, 0, 0, 4)
+                        corner(Track, 2)
 
-                        Fill.Name = "Slider"
+                        Fill.Name = "Fill"
                         Fill.Parent = Track
-                        Fill.BackgroundColor3 = Color3.new(1, 1, 1)
-                        Fill.BackgroundTransparency = 1
-                        Fill.Size = UDim2.new(((default or min) - min) / (max - min), 0, 0, 5)
-                        Fill.Image = "rbxassetid://3570695787"
-                        Fill.ScaleType = Enum.ScaleType.Slice
-                        Fill.SliceCenter = Rect.new(100, 100, 100, 100)
-                        Fill.SliceScale = 0.02
+                        Fill.BackgroundColor3 = T.ACCENT
+                        Fill.BorderSizePixel = 0
+                        Fill.Size = UDim2.new(((default or min) - min) / math.max(max - min, 0.0001), 0, 1, 0)
+                        corner(Fill, 2)
+
+                        Thumb.Name = "Thumb"
+                        Thumb.Parent = Track
+                        Thumb.BackgroundColor3 = T.WHITE
+                        Thumb.BorderSizePixel = 0
+                        Thumb.AnchorPoint = Vector2.new(0.5, 0.5)
+                        Thumb.Position = UDim2.new(((default or min) - min) / math.max(max - min, 0.0001), 0, 0.5, 0)
+                        Thumb.Size = UDim2.new(0, 12, 0, 12)
+                        corner(Thumb, 6)
+                        stroke(Thumb, T.ACCENT, 2, 0)
+
+                        HitArea.Name = "Hit"
+                        HitArea.Parent = Track
+                        HitArea.BackgroundTransparency = 1
+                        HitArea.Position = UDim2.new(0, 0, -3, 0)
+                        HitArea.Size = UDim2.new(1, 0, 0, 22)
+                        HitArea.Text = ""
+                        HitArea.AutoButtonColor = false
+                        HitArea.ZIndex = 2
 
                         local function updateSlider(input)
                             local scale = math.clamp(
                                 (input.Position.X - Track.AbsolutePosition.X) / Track.AbsoluteSize.X,
                                 0, 1
                             )
-                            tween(Fill, TWEEN_SLIDE, { Size = UDim2.new(scale, 0, 1.15, 0) })
-
-                            local rawValue = scale * (max - min) + min
-                            local value = useFloat and tonumber(string.format("%.2f", rawValue))
-                                                    or math.floor(rawValue)
-                            ValueLbl.Text = tostring(value)
-                            callback(value)
+                            tween(Fill, TI_FAST, { Size = UDim2.new(scale, 0, 1, 0) })
+                            tween(Thumb, TI_FAST, { Position = UDim2.new(scale, 0, 0.5, 0) })
+                            local raw = scale * (max - min) + min
+                            local val = isFloat and tonumber(string.format("%.2f", raw)) or math.floor(raw)
+                            ValLbl.Text = tostring(val)
+                            callback(val)
                         end
 
-                        Track.InputBegan:Connect(function(i)
+                        HitArea.InputBegan:Connect(function(i)
                             if i.UserInputType == Enum.UserInputType.MouseButton1 then
                                 dragging = true
+                                tween(Thumb, TI_FAST, { Size = UDim2.new(0, 14, 0, 14) })
                                 updateSlider(i)
                             end
                         end)
-                        Track.InputEnded:Connect(function(i)
+                        HitArea.InputEnded:Connect(function(i)
                             if i.UserInputType == Enum.UserInputType.MouseButton1 then
                                 dragging = false
+                                tween(Thumb, TI_FAST, { Size = UDim2.new(0, 12, 0, 12) })
                             end
                         end)
                         UserInputService.InputChanged:Connect(function(i)
@@ -570,703 +582,510 @@ return {
                                 updateSlider(i)
                             end
                         end)
+                    end,
 
-                        SectionToggle.MouseButton1Down:Connect(function()
-                            if sectionOpen then
-                                shrinkSection(30)
-                                shrinkBody(30)
+                    CreateButton = function(_, label, callback)
+                        itemCount = itemCount + 1
+
+                        local Row = Instance.new("Frame")
+                        local Btn = Instance.new("TextButton")
+
+                        Row.Name = stripSpaces(label) .. "BtnRow"
+                        Row.Parent = ItemContainer
+                        Row.BackgroundTransparency = 1
+                        Row.Size = UDim2.new(1, 0, 0, ITEM_H)
+
+                        Btn.Name = "Button"
+                        Btn.Parent = Row
+                        Btn.BackgroundColor3 = T.ACCENT_DIM
+                        Btn.BorderSizePixel = 0
+                        Btn.AnchorPoint = Vector2.new(0.5, 0.5)
+                        Btn.Position = UDim2.new(0.5, 0, 0.5, 0)
+                        Btn.Size = UDim2.new(1, 0, 0, 26)
+                        Btn.AutoButtonColor = false
+                        Btn.Font = Enum.Font.GothamBold
+                        Btn.Text = label
+                        Btn.TextColor3 = T.TEXT
+                        Btn.TextSize = 11
+                        corner(Btn, 6)
+                        stroke(Btn, T.ACCENT, 1, 0.6)
+
+                        Btn.MouseEnter:Connect(function()
+                            tween(Btn, TI_FAST, { BackgroundColor3 = T.ACCENT })
+                        end)
+                        Btn.MouseLeave:Connect(function()
+                            tween(Btn, TI_FAST, { BackgroundColor3 = T.ACCENT_DIM })
+                        end)
+                        Btn.MouseButton1Down:Connect(function()
+                            tween(Btn, TI_FAST, { Size = UDim2.new(1, 0, 0, 23) })
+                        end)
+                        Btn.MouseButton1Up:Connect(function()
+                            tween(Btn, TI_SPRING, { Size = UDim2.new(1, 0, 0, 26) })
+                        end)
+                        Btn.MouseButton1Click:Connect(function()
+                            callback(Btn)
+                        end)
+                    end,
+
+                    CreateTextbox = function(_, placeholder, callback)
+                        itemCount = itemCount + 1
+
+                        local Row = Instance.new("Frame")
+                        local TB  = Instance.new("TextBox")
+
+                        Row.Name = stripSpaces(placeholder) .. "TBRow"
+                        Row.Parent = ItemContainer
+                        Row.BackgroundTransparency = 1
+                        Row.Size = UDim2.new(1, 0, 0, ITEM_H)
+
+                        TB.Parent = Row
+                        TB.BackgroundColor3 = T.ELEMENT
+                        TB.BorderSizePixel = 0
+                        TB.AnchorPoint = Vector2.new(0.5, 0.5)
+                        TB.Position = UDim2.new(0.5, 0, 0.5, 0)
+                        TB.Size = UDim2.new(1, 0, 0, 26)
+                        TB.ClearTextOnFocus = false
+                        TB.Font = Enum.Font.Gotham
+                        TB.PlaceholderText = placeholder
+                        TB.PlaceholderColor3 = T.SUBTEXT
+                        TB.Text = ""
+                        TB.TextColor3 = T.TEXT
+                        TB.TextSize = 11
+                        corner(TB, 6)
+                        local tbStroke = stroke(TB, T.ELEMENT2, 1, 0)
+
+                        TB.Focused:Connect(function()
+                            tween(TB, TI_FAST, { BackgroundColor3 = T.SECTION })
+                            tween(tbStroke, TI_FAST, { Color = T.ACCENT, Transparency = 0 })
+                        end)
+                        TB.FocusLost:Connect(function(enter)
+                            tween(TB, TI_FAST, { BackgroundColor3 = T.ELEMENT })
+                            tween(tbStroke, TI_FAST, { Color = T.ELEMENT2 })
+                            if enter then callback(TB.Text) end
+                        end)
+                    end,
+
+                    CreateDropdown = function(_, label, options, defaultIndex, callback)
+                        itemCount = itemCount + 1
+                        local selected = options[defaultIndex] or options[1]
+                        local isOpen = false
+                        local OPT_H = 26
+                        local maxVisible = math.min(#options, 4)
+                        local popupH = maxVisible * OPT_H
+
+                        local Row      = Instance.new("Frame")
+                        local Display  = Instance.new("Frame")
+                        local SelLabel = Instance.new("TextLabel")
+                        local Arrow    = Instance.new("TextLabel")
+                        local HitArea  = Instance.new("TextButton")
+                        local Popup    = Instance.new("Frame")
+                        local Scroll   = Instance.new("ScrollingFrame")
+                        local ScrollLayout = Instance.new("UIListLayout")
+
+                        Row.Name = stripSpaces(label) .. "DDRow"
+                        Row.Parent = ItemContainer
+                        Row.BackgroundTransparency = 1
+                        Row.ClipsDescendants = false
+                        Row.Size = UDim2.new(1, 0, 0, ITEM_H)
+
+                        Display.Name = "Display"
+                        Display.Parent = Row
+                        Display.BackgroundColor3 = T.ELEMENT
+                        Display.BorderSizePixel = 0
+                        Display.AnchorPoint = Vector2.new(0.5, 0.5)
+                        Display.Position = UDim2.new(0.5, 0, 0.5, 0)
+                        Display.Size = UDim2.new(1, 0, 0, 26)
+                        corner(Display, 6)
+                        stroke(Display, T.ELEMENT2, 1, 0.4)
+
+                        SelLabel.Name = "Selected"
+                        SelLabel.Parent = Display
+                        SelLabel.BackgroundTransparency = 1
+                        SelLabel.Position = UDim2.new(0, 10, 0, 0)
+                        SelLabel.Size = UDim2.new(1, -30, 1, 0)
+                        SelLabel.Font = Enum.Font.Gotham
+                        SelLabel.Text = selected
+                        SelLabel.TextColor3 = T.TEXT
+                        SelLabel.TextSize = 11
+                        SelLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+                        Arrow.Name = "Arrow"
+                        Arrow.Parent = Display
+                        Arrow.BackgroundTransparency = 1
+                        Arrow.AnchorPoint = Vector2.new(1, 0.5)
+                        Arrow.Position = UDim2.new(1, -8, 0.5, 0)
+                        Arrow.Size = UDim2.new(0, 16, 0, 16)
+                        Arrow.Font = Enum.Font.GothamBold
+                        Arrow.Text = "›"
+                        Arrow.TextColor3 = T.SUBTEXT
+                        Arrow.TextSize = 14
+                        Arrow.Rotation = 90
+
+                        HitArea.Name = "Hit"
+                        HitArea.Parent = Display
+                        HitArea.BackgroundTransparency = 1
+                        HitArea.Size = UDim2.new(1, 0, 1, 0)
+                        HitArea.Text = ""
+                        HitArea.AutoButtonColor = false
+                        HitArea.ZIndex = 2
+
+                        Popup.Name = "Popup"
+                        Popup.Parent = Row
+                        Popup.BackgroundColor3 = T.SECTION
+                        Popup.BorderSizePixel = 0
+                        Popup.ClipsDescendants = true
+                        Popup.Position = UDim2.new(0, 0, 1, 4)
+                        Popup.Size = UDim2.new(1, 0, 0, 0)
+                        Popup.ZIndex = 10
+                        corner(Popup, 6)
+                        stroke(Popup, T.ELEMENT2, 1, 0.3)
+
+                        Scroll.Parent = Popup
+                        Scroll.BackgroundTransparency = 1
+                        Scroll.BorderSizePixel = 0
+                        Scroll.Size = UDim2.new(1, 0, 1, 0)
+                        Scroll.CanvasSize = UDim2.new(0, 0, 0, #options * OPT_H)
+                        Scroll.ScrollBarThickness = 2
+                        Scroll.ScrollBarImageColor3 = T.ACCENT
+                        Scroll.ZIndex = 11
+
+                        ScrollLayout.Parent = Scroll
+                        ScrollLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+                        for _, opt in ipairs(options) do
+                            local OBtn = Instance.new("TextButton")
+                            OBtn.Name = stripSpaces(opt)
+                            OBtn.Parent = Scroll
+                            OBtn.BackgroundTransparency = 1
+                            OBtn.BorderSizePixel = 0
+                            OBtn.Size = UDim2.new(1, 0, 0, OPT_H)
+                            OBtn.AutoButtonColor = false
+                            OBtn.Font = Enum.Font.Gotham
+                            OBtn.Text = opt
+                            OBtn.TextColor3 = T.TEXT
+                            OBtn.TextSize = 11
+                            OBtn.ZIndex = 12
+
+                            OBtn.MouseEnter:Connect(function()
+                                tween(OBtn, TI_FAST, { BackgroundTransparency = 0.7, BackgroundColor3 = T.ACCENT })
+                            end)
+                            OBtn.MouseLeave:Connect(function()
+                                tween(OBtn, TI_FAST, { BackgroundTransparency = 1 })
+                            end)
+                            OBtn.MouseButton1Click:Connect(function()
+                                selected = opt
+                                SelLabel.Text = opt
+                                callback(opt)
+                                isOpen = false
+                                tween(Arrow, TI_MED, { Rotation = 90, TextColor3 = T.SUBTEXT })
+                                tween(Popup, TI_MED, { Size = UDim2.new(1, 0, 0, 0) })
+                                Body.ClipsDescendants = true
+                                ItemContainer.ClipsDescendants = true
+                                SectionFrame.ClipsDescendants = true
+                            end)
+                        end
+
+                        HitArea.MouseButton1Click:Connect(function()
+                            if isOpen then
+                                isOpen = false
+                                tween(Arrow, TI_MED, { Rotation = 90, TextColor3 = T.SUBTEXT })
+                                tween(Popup, TI_MED, { Size = UDim2.new(1, 0, 0, 0) })
+                                Body.ClipsDescendants = true
+                                ItemContainer.ClipsDescendants = true
+                                SectionFrame.ClipsDescendants = true
                             else
-                                growSection(30)
-                                growBody(30)
+                                isOpen = true
+                                Body.ClipsDescendants = false
+                                ItemContainer.ClipsDescendants = false
+                                SectionFrame.ClipsDescendants = false
+                                tween(Arrow, TI_MED, { Rotation = 270, TextColor3 = T.ACCENT })
+                                tween(Popup, TI_MED, { Size = UDim2.new(1, 0, 0, popupH) })
                             end
                         end)
 
-                        ToggleBtn.MouseButton1Down:Connect(onWindowToggleForSection)
+                        Display.MouseEnter:Connect(function()
+                            tween(Display, TI_FAST, { BackgroundColor3 = T.ELEMENT2 })
+                        end)
+                        Display.MouseLeave:Connect(function()
+                            tween(Display, TI_FAST, { BackgroundColor3 = T.ELEMENT })
+                        end)
                     end,
 
-                    -- ── Color Picker ──────────────────────────────────────────
                     CreateColorPicker = function(_, label, defaultColor, callback)
-                        local pickerId = stripSpaces(label)
+                        itemCount = itemCount + 1
                         colorPickerZIndex = colorPickerZIndex + 1
                         local zi = colorPickerZIndex
-
                         local pickerOpen = false
-                        local rainbowOn  = false
+                        local rainbowOn = false
                         local satConn, hueConn
-
                         local HSV = { H = 1, S = 1, V = 1 }
 
-                        -- Instances
-                        local Holder         = Instance.new("Frame")
-                        local PickerTitle    = Instance.new("TextLabel")
-                        local ColorSwatch    = Instance.new("ImageButton")
-                        local PickerPopup    = Instance.new("ImageLabel")
+                        local Row        = Instance.new("Frame")
+                        local Lbl        = Instance.new("TextLabel")
+                        local Swatch     = Instance.new("ImageButton")
+                        local Popup      = Instance.new("Frame")
+                        local HueHolder  = Instance.new("Frame")
+                        local HueBar     = Instance.new("ImageLabel")
+                        local HueMarker  = Instance.new("Frame")
+                        local SatHolder  = Instance.new("Frame")
+                        local SatSurface = Instance.new("ImageLabel")
+                        local SatMarker  = Instance.new("ImageLabel")
+                        local LabelR     = Instance.new("TextLabel")
+                        local LabelG     = Instance.new("TextLabel")
+                        local LabelB     = Instance.new("TextLabel")
+                        local RainRow    = Instance.new("Frame")
+                        local RainLbl    = Instance.new("TextLabel")
+                        local RainTrack  = Instance.new("Frame")
+                        local RainKnob   = Instance.new("Frame")
+                        local RainHit    = Instance.new("TextButton")
 
-                        local RainbowHolder  = Instance.new("Frame")
-                        local RainbowTitle   = Instance.new("TextLabel")
-                        local RainbowBg      = Instance.new("ImageLabel")
-                        local RainbowBtn     = Instance.new("ImageButton")
+                        Row.Name = stripSpaces(label) .. "CPRow"
+                        Row.Parent = ItemContainer
+                        Row.BackgroundTransparency = 1
+                        Row.Size = UDim2.new(1, 0, 0, ITEM_H)
 
-                        local LabelR         = Instance.new("TextLabel")
-                        local LabelG         = Instance.new("TextLabel")
-                        local LabelB         = Instance.new("TextLabel")
-                        local RoundR         = Instance.new("ImageLabel")
-                        local RoundG         = Instance.new("ImageLabel")
-                        local RoundB         = Instance.new("ImageLabel")
+                        Lbl.Name = "Label"
+                        Lbl.Parent = Row
+                        Lbl.BackgroundTransparency = 1
+                        Lbl.Position = UDim2.new(0, 0, 0, 0)
+                        Lbl.Size = UDim2.new(1, -36, 1, 0)
+                        Lbl.Font = Enum.Font.Gotham
+                        Lbl.Text = label
+                        Lbl.TextColor3 = T.TEXT
+                        Lbl.TextSize = 11
+                        Lbl.TextXAlignment = Enum.TextXAlignment.Left
 
-                        local HueHolder      = Instance.new("ImageLabel")
-                        local HueBar         = Instance.new("ImageLabel")
-                        local HueMarker      = Instance.new("Frame")
+                        Swatch.Name = "Swatch"
+                        Swatch.Parent = Row
+                        Swatch.BackgroundColor3 = defaultColor
+                        Swatch.BorderSizePixel = 0
+                        Swatch.AnchorPoint = Vector2.new(1, 0.5)
+                        Swatch.Position = UDim2.new(1, 0, 0.5, 0)
+                        Swatch.Size = UDim2.new(0, 28, 0, 20)
+                        Swatch.Image = ""
+                        corner(Swatch, 5)
+                        stroke(Swatch, T.ELEMENT2, 1, 0.3)
 
-                        local SatHolder      = Instance.new("ImageLabel")
-                        local SatSurface     = Instance.new("ImageLabel")
-                        local SatMarker      = Instance.new("ImageLabel")
+                        Popup.Name = "ColorPopup"
+                        Popup.Parent = Row
+                        Popup.BackgroundColor3 = T.SECTION
+                        Popup.BorderSizePixel = 0
+                        Popup.ClipsDescendants = true
+                        Popup.Position = UDim2.new(1, 8, -1.6, 0)
+                        Popup.Size = UDim2.new(0, 0, 0, 175)
+                        Popup.ZIndex = 1 + zi
+                        corner(Popup, 8)
+                        stroke(Popup, T.ELEMENT2, 1, 0.3)
 
-                        -- Layout
-                        Holder.Name = pickerId .. "ColorPickerHolder"
-                        Holder.Parent = SectionFrame
-                        Holder.BackgroundColor3 = Color3.new(0.137, 0.137, 0.137)
-                        Holder.BorderSizePixel = 0
-                        Holder.Size = UDim2.new(0, 170, 0, 30)
+                        SatHolder.Name = "SatHolder"
+                        SatHolder.Parent = Popup
+                        SatHolder.BackgroundColor3 = T.ELEMENT
+                        SatHolder.BorderSizePixel = 0
+                        SatHolder.ClipsDescendants = true
+                        SatHolder.Position = UDim2.new(0, 6, 0, 6)
+                        SatHolder.Size = UDim2.new(0, 120, 0, 114)
+                        SatHolder.ZIndex = 2 + zi
+                        corner(SatHolder, 6)
 
-                        PickerTitle.Name = "ColorPickerTitle"
-                        PickerTitle.Parent = Holder
-                        PickerTitle.BackgroundColor3 = Color3.new(1, 1, 1)
-                        PickerTitle.BackgroundTransparency = 1
-                        PickerTitle.BorderSizePixel = 0
-                        PickerTitle.Position = UDim2.new(0.052941, 0, 0, 0)
-                        PickerTitle.Size = UDim2.new(0, 125, 0, 30)
-                        PickerTitle.Font = Enum.Font.SourceSansBold
-                        PickerTitle.Text = label
-                        PickerTitle.TextColor3 = Color3.new(1, 1, 1)
-                        PickerTitle.TextSize = 17
-                        PickerTitle.TextScaled = true
-                        PickerTitle.TextXAlignment = Enum.TextXAlignment.Left
+                        SatSurface.Name = "SatSurface"
+                        SatSurface.Parent = SatHolder
+                        SatSurface.BackgroundColor3 = defaultColor
+                        SatSurface.BorderSizePixel = 0
+                        SatSurface.Size = UDim2.new(1, 0, 1, 0)
+                        SatSurface.Image = "rbxassetid://4805274903"
+                        SatSurface.ZIndex = 1 + zi
 
-                        ColorSwatch.Name = "ColorPickerToggle"
-                        ColorSwatch.Parent = Holder
-                        ColorSwatch.BackgroundColor3 = Color3.new(1, 1, 1)
-                        ColorSwatch.BackgroundTransparency = 1
-                        ColorSwatch.Position = UDim2.new(0.822, 0, 0.167, 0)
-                        ColorSwatch.Size = UDim2.new(0, 22, 0, 20)
-                        ColorSwatch.Image = "rbxassetid://3570695787"
-                        ColorSwatch.ImageColor3 = defaultColor
-                        ColorSwatch.ScaleType = Enum.ScaleType.Slice
-                        ColorSwatch.SliceCenter = Rect.new(100, 100, 100, 100)
-                        ColorSwatch.SliceScale = 0.04
+                        SatMarker.Name = "SatMarker"
+                        SatMarker.Parent = SatHolder
+                        SatMarker.BackgroundColor3 = T.WHITE
+                        SatMarker.BackgroundTransparency = 1
+                        SatMarker.Size = UDim2.new(0, 0, 0, 0)
+                        SatMarker.Image = "http://www.roblox.com/asset/?id=4805639000"
+                        SatMarker.ZIndex = 1 + zi
 
-                        PickerPopup.Name = "ColorPickerMain"
-                        PickerPopup.Parent = Holder
-                        PickerPopup.BackgroundColor3 = Color3.new(0.137, 0.137, 0.137)
-                        PickerPopup.BackgroundTransparency = 1
-                        PickerPopup.ClipsDescendants = true
-                        PickerPopup.BorderSizePixel = 0
-                        PickerPopup.Position = UDim2.new(1.04706, 0, -1.36667, 0)
-                        PickerPopup.Size = UDim2.new(0, 0, 0, 175)
-                        PickerPopup.Image = "rbxassetid://3570695787"
-                        PickerPopup.ImageColor3 = Color3.new(0.137, 0.137, 0.137)
-                        PickerPopup.ScaleType = Enum.ScaleType.Slice
-                        PickerPopup.SliceCenter = Rect.new(100, 100, 100, 100)
-                        PickerPopup.SliceScale = 0.05
-                        PickerPopup.ZIndex = 1 + zi
-
-                        -- Rainbow toggle row
-                        RainbowHolder.Name = "RainbowToggleHolder"
-                        RainbowHolder.Parent = PickerPopup
-                        RainbowHolder.BackgroundColor3 = Color3.new(0.137, 0.137, 0.137)
-                        RainbowHolder.BackgroundTransparency = 1
-                        RainbowHolder.BorderSizePixel = 0
-                        RainbowHolder.Position = UDim2.new(0, 0, 0.82, 0)
-                        RainbowHolder.Size = UDim2.new(0, 170, 0, 30)
-                        RainbowHolder.ZIndex = 1 + zi
-
-                        RainbowTitle.Name = "RainbowTitle"
-                        RainbowTitle.Parent = RainbowHolder
-                        RainbowTitle.BackgroundColor3 = Color3.new(1, 1, 1)
-                        RainbowTitle.BackgroundTransparency = 1
-                        RainbowTitle.BorderSizePixel = 0
-                        RainbowTitle.Position = UDim2.new(0.052941, 0, 0, 0)
-                        RainbowTitle.Size = UDim2.new(0, 125, 0, 30)
-                        RainbowTitle.Font = Enum.Font.SourceSansBold
-                        RainbowTitle.Text = "Rainbow"
-                        RainbowTitle.TextColor3 = Color3.new(1, 1, 1)
-                        RainbowTitle.TextSize = 17
-                        RainbowTitle.TextScaled = true
-                        RainbowTitle.TextXAlignment = Enum.TextXAlignment.Left
-                        RainbowTitle.ZIndex = 1 + zi
-
-                        RainbowBg.Name = "RainbowBackground"
-                        RainbowBg.Parent = RainbowHolder
-                        RainbowBg.BackgroundColor3 = Color3.new(1, 1, 1)
-                        RainbowBg.BackgroundTransparency = 1
-                        RainbowBg.BorderSizePixel = 0
-                        RainbowBg.Position = UDim2.new(0.847059, 0, 0.166667, 0)
-                        RainbowBg.Size = UDim2.new(0, 20, 0, 20)
-                        RainbowBg.Image = "rbxassetid://3570695787"
-                        RainbowBg.ImageColor3 = Color3.new(0.254902, 0.254902, 0.254902)
-                        RainbowBg.ZIndex = 1 + zi
-
-                        RainbowBtn.Name = "RainbowToggleButton"
-                        RainbowBtn.Parent = RainbowBg
-                        RainbowBtn.BackgroundColor3 = Color3.new(1, 1, 1)
-                        RainbowBtn.BackgroundTransparency = 1
-                        RainbowBtn.Position = UDim2.new(0, 2, 0, 2)
-                        RainbowBtn.Size = UDim2.new(0, 16, 0, 16)
-                        RainbowBtn.Image = "rbxassetid://3570695787"
-                        RainbowBtn.ImageColor3 = Color3.new(1, 0.341176, 0.341176)
-                        RainbowBtn.ImageTransparency = 1
-                        RainbowBtn.ZIndex = 1 + zi
-
-                        -- RGB value labels
-                        local function makeRgbLabel(name, xPos)
-                            local lbl = Instance.new("TextLabel")
-                            lbl.Name = name
-                            lbl.Parent = PickerPopup
-                            lbl.BackgroundColor3 = Color3.new(0.254902, 0.254902, 0.254902)
-                            lbl.BackgroundTransparency = 1
-                            lbl.BorderSizePixel = 0
-                            lbl.ClipsDescendants = true
-                            lbl.Position = UDim2.new(0, xPos, 0, 127)
-                            lbl.Size = UDim2.new(0, 50, 0, 16)
-                            lbl.ZIndex = 2 + zi
-                            lbl.Font = Enum.Font.SourceSansBold
-                            lbl.TextColor3 = Color3.new(1, 1, 1)
-                            lbl.TextSize = 14
-
-                            local round = Instance.new("ImageLabel")
-                            round.Active = true
-                            round.AnchorPoint = Vector2.new(0.5, 0.5)
-                            round.BackgroundColor3 = Color3.new(1, 1, 1)
-                            round.BackgroundTransparency = 1
-                            round.Position = UDim2.new(0.5, 0, 0.5, 0)
-                            round.Selectable = true
-                            round.Size = UDim2.new(1, 0, 1, 0)
-                            round.Image = "rbxassetid://3570695787"
-                            round.ImageColor3 = Color3.new(0.254902, 0.254902, 0.254902)
-                            round.ScaleType = Enum.ScaleType.Slice
-                            round.SliceCenter = Rect.new(100, 100, 100, 100)
-                            round.SliceScale = 0.04
-                            round.ZIndex = 1 + zi
-                            round.Parent = lbl
-
-                            return lbl
-                        end
-
-                        LabelR = makeRgbLabel("ColorValueR", 7)
-                        LabelR.Text = "R: 000"
-                        LabelG = makeRgbLabel("ColorValueG", 60)
-                        LabelG.Text = "G: 000"
-                        LabelB = makeRgbLabel("ColorValueB", 114)
-                        LabelB.Text = "B: 000"
-
-                        -- Hue strip
-                        HueHolder.Name = "RoundHueHolder"
-                        HueHolder.Parent = PickerPopup
-                        HueHolder.BackgroundColor3 = Color3.new(1, 1, 1)
-                        HueHolder.BackgroundTransparency = 1
+                        HueHolder.Name = "HueHolder"
+                        HueHolder.Parent = Popup
+                        HueHolder.BackgroundColor3 = T.ELEMENT
+                        HueHolder.BorderSizePixel = 0
                         HueHolder.ClipsDescendants = true
-                        HueHolder.Position = UDim2.new(0, 136, 0, 6)
-                        HueHolder.Size = UDim2.new(0, 28, 0, 114)
+                        HueHolder.Position = UDim2.new(0, 133, 0, 6)
+                        HueHolder.Size = UDim2.new(0, 20, 0, 114)
                         HueHolder.ZIndex = 2 + zi
-                        HueHolder.Image = "rbxassetid://4695575676"
-                        HueHolder.ImageColor3 = Color3.new(0.137, 0.137, 0.137)
-                        HueHolder.ScaleType = Enum.ScaleType.Slice
-                        HueHolder.SliceCenter = Rect.new(128, 128, 128, 128)
-                        HueHolder.SliceScale = 0.05
+                        corner(HueHolder, 5)
 
-                        HueBar.Name = "ColorHue"
+                        HueBar.Name = "HueBar"
                         HueBar.Parent = HueHolder
-                        HueBar.BackgroundColor3 = Color3.new(1, 1, 1)
                         HueBar.BackgroundTransparency = 1
-                        HueBar.BorderSizePixel = 0
-                        HueBar.Size = UDim2.new(0, 28, 0, 114)
+                        HueBar.Size = UDim2.new(1, 0, 1, 0)
                         HueBar.Image = "http://www.roblox.com/asset/?id=4801885250"
                         HueBar.ScaleType = Enum.ScaleType.Crop
                         HueBar.ZIndex = 1 + zi
 
                         HueMarker.Name = "HueMarker"
                         HueMarker.Parent = HueHolder
-                        HueMarker.BackgroundColor3 = Color3.new(0.294118, 0.294118, 0.294118)
+                        HueMarker.BackgroundColor3 = T.WHITE
                         HueMarker.BorderSizePixel = 0
-                        HueMarker.Position = UDim2.new(-0.25, 0, 0, 0)
-                        HueMarker.Size = UDim2.new(0, 42, 0, 5)
-                        HueMarker.ZIndex = 1 + zi
+                        HueMarker.Position = UDim2.new(0, -2, 0, 0)
+                        HueMarker.Size = UDim2.new(1, 4, 0, 3)
+                        HueMarker.ZIndex = 2 + zi
+                        corner(HueMarker, 2)
 
-                        -- Saturation square
-                        SatHolder.Name = "RoundSaturationHolder"
-                        SatHolder.Parent = PickerPopup
-                        SatHolder.BackgroundColor3 = Color3.new(1, 1, 1)
-                        SatHolder.BackgroundTransparency = 1
-                        SatHolder.ClipsDescendants = true
-                        SatHolder.Position = UDim2.new(0, 7, 0, 6)
-                        SatHolder.Size = UDim2.new(0, 122, 0, 114)
-                        SatHolder.ZIndex = 2 + zi
-                        SatHolder.Image = "rbxassetid://4695575676"
-                        SatHolder.ImageColor3 = Color3.new(0.137, 0.137, 0.137)
-                        SatHolder.ScaleType = Enum.ScaleType.Slice
-                        SatHolder.SliceCenter = Rect.new(128, 128, 128, 128)
-                        SatHolder.SliceScale = 0.05
+                        local function makeRgbLbl(xPos, text)
+                            local lbl = Instance.new("TextLabel")
+                            lbl.Parent = Popup
+                            lbl.BackgroundColor3 = T.ELEMENT
+                            lbl.BorderSizePixel = 0
+                            lbl.Position = UDim2.new(0, xPos, 0, 127)
+                            lbl.Size = UDim2.new(0, 46, 0, 16)
+                            lbl.ZIndex = 2 + zi
+                            lbl.Font = Enum.Font.GothamBold
+                            lbl.TextColor3 = T.TEXT
+                            lbl.TextSize = 9
+                            lbl.Text = text
+                            corner(lbl, 4)
+                            return lbl
+                        end
 
-                        SatSurface.Name = "ColorSelector"
-                        SatSurface.Parent = SatHolder
-                        SatSurface.BackgroundColor3 = defaultColor
-                        SatSurface.BorderSizePixel = 0
-                        SatSurface.Size = UDim2.new(0, 122, 0, 114)
-                        SatSurface.Image = "rbxassetid://4805274903"
-                        SatSurface.ZIndex = 1 + zi
+                        LabelR = makeRgbLbl(6, "R: 000")
+                        LabelG = makeRgbLbl(55, "G: 000")
+                        LabelB = makeRgbLbl(104, "B: 000")
 
-                        SatMarker.Name = "SaturationMarker"
-                        SatMarker.Parent = SatHolder
-                        SatMarker.BackgroundColor3 = Color3.new(1, 1, 1)
-                        SatMarker.BackgroundTransparency = 1
-                        SatMarker.Size = UDim2.new(0, 0, 0, 0)
-                        SatMarker.Image = "http://www.roblox.com/asset/?id=4805639000"
-                        SatMarker.ZIndex = 1 + zi
+                        RainRow.Name = "RainRow"
+                        RainRow.Parent = Popup
+                        RainRow.BackgroundTransparency = 1
+                        RainRow.Position = UDim2.new(0, 6, 0, 149)
+                        RainRow.Size = UDim2.new(1, -12, 0, 22)
+                        RainRow.ZIndex = 1 + zi
 
-                        -- Helpers
-                        local function updateRgbLabels()
-                            local c = ColorSwatch.ImageColor3
+                        RainLbl.Name = "RainLbl"
+                        RainLbl.Parent = RainRow
+                        RainLbl.BackgroundTransparency = 1
+                        RainLbl.Size = UDim2.new(1, -50, 1, 0)
+                        RainLbl.Font = Enum.Font.Gotham
+                        RainLbl.Text = "Rainbow"
+                        RainLbl.TextColor3 = T.TEXT
+                        RainLbl.TextSize = 10
+                        RainLbl.TextXAlignment = Enum.TextXAlignment.Left
+                        RainLbl.ZIndex = 2 + zi
+
+                        RainTrack.Name = "RainTrack"
+                        RainTrack.Parent = RainRow
+                        RainTrack.BackgroundColor3 = T.TOGGLE_OFF
+                        RainTrack.BorderSizePixel = 0
+                        RainTrack.AnchorPoint = Vector2.new(1, 0.5)
+                        RainTrack.Position = UDim2.new(1, 0, 0.5, 0)
+                        RainTrack.Size = UDim2.new(0, 36, 0, 18)
+                        RainTrack.ZIndex = 2 + zi
+                        corner(RainTrack, 9)
+
+                        RainKnob.Name = "RainKnob"
+                        RainKnob.Parent = RainTrack
+                        RainKnob.BackgroundColor3 = T.WHITE
+                        RainKnob.BorderSizePixel = 0
+                        RainKnob.AnchorPoint = Vector2.new(0, 0.5)
+                        RainKnob.Position = UDim2.new(0, 2, 0.5, 0)
+                        RainKnob.Size = UDim2.new(0, 14, 0, 14)
+                        RainKnob.ZIndex = 3 + zi
+                        corner(RainKnob, 7)
+
+                        RainHit.Name = "RainHit"
+                        RainHit.Parent = RainRow
+                        RainHit.BackgroundTransparency = 1
+                        RainHit.Size = UDim2.new(1, 0, 1, 0)
+                        RainHit.Text = ""
+                        RainHit.AutoButtonColor = false
+                        RainHit.ZIndex = 4 + zi
+
+                        local function updateRgb()
+                            local c = Swatch.BackgroundColor3
                             LabelR.Text = "R: " .. math.floor(c.R * 255)
                             LabelG.Text = "G: " .. math.floor(c.G * 255)
                             LabelB.Text = "B: " .. math.floor(c.B * 255)
                         end
 
                         local function applyHSV()
-                            local color = Color3.fromHSV(HSV.H, HSV.S, HSV.V)
-                            ColorSwatch.ImageColor3 = color
+                            local c = Color3.fromHSV(HSV.H, HSV.S, HSV.V)
+                            Swatch.BackgroundColor3 = c
                             SatSurface.BackgroundColor3 = Color3.fromHSV(HSV.H, 1, 1)
-                            callback(color)
-                            updateRgbLabels()
+                            callback(c)
+                            updateRgb()
                         end
 
-                        local function getSatUV(frame)
-                            local x = math.clamp((Mouse.X - frame.AbsolutePosition.X) / frame.AbsoluteSize.X, 0, 1)
-                            local y = math.clamp((Mouse.Y - frame.AbsolutePosition.Y) / frame.AbsoluteSize.Y, 0, 1)
-                            return x, y
-                        end
+                        updateRgb()
 
-                        local function getHueY(frame)
-                            return math.clamp(Mouse.Y - frame.AbsolutePosition.Y, -10, frame.AbsoluteSize.Y)
-                                   / frame.AbsoluteSize.Y
-                        end
-
-                        updateRgbLabels()
-
-                        -- Popup open/close
                         local function closePopup()
                             pickerOpen = false
-                            tween(PickerPopup, TWEEN_SLOW, { Size = UDim2.new(0, 0, 0, 175) })
+                            tween(Popup, TI_SLOW, { Size = UDim2.new(0, 0, 0, 175) })
                             Body.ClipsDescendants = true
                             SectionFrame.ClipsDescendants = true
+                            ItemContainer.ClipsDescendants = true
                         end
 
-                        ColorSwatch.MouseButton1Down:Connect(function()
+                        Swatch.MouseButton1Click:Connect(function()
                             if pickerOpen then
                                 closePopup()
                             else
                                 pickerOpen = true
                                 Body.ClipsDescendants = false
                                 SectionFrame.ClipsDescendants = false
-                                tween(PickerPopup, TWEEN_SLOW, { Size = UDim2.new(0, 171, 0, 175) })
+                                ItemContainer.ClipsDescendants = false
+                                tween(Popup, TI_SLOW, { Size = UDim2.new(0, 159, 0, 175) })
                             end
                         end)
 
-                        -- Saturation dragging
                         SatSurface.InputBegan:Connect(function(i)
                             if i.UserInputType == Enum.UserInputType.MouseButton1 and not rainbowOn then
                                 if satConn then satConn:Disconnect() end
                                 satConn = RunService.RenderStepped:Connect(function()
-                                    local u, v = getSatUV(SatHolder)
-                                    SatMarker.Position = UDim2.new(u, 0, v, 0)
-                                    HSV.S = u
-                                    HSV.V = 1 - v
+                                    local x = math.clamp((Mouse.X - SatHolder.AbsolutePosition.X) / SatHolder.AbsoluteSize.X, 0, 1)
+                                    local y = math.clamp((Mouse.Y - SatHolder.AbsolutePosition.Y) / SatHolder.AbsoluteSize.Y, 0, 1)
+                                    SatMarker.Position = UDim2.new(x, 0, y, 0)
+                                    HSV.S = x
+                                    HSV.V = 1 - y
                                     applyHSV()
                                 end)
                             end
                         end)
                         SatSurface.InputEnded:Connect(function(i)
                             if i.UserInputType == Enum.UserInputType.MouseButton1 and satConn then
-                                satConn:Disconnect()
-                                satConn = nil
+                                satConn:Disconnect() satConn = nil
                             end
                         end)
-                        SatSurface.MouseLeave:Connect(function()
-                            if satConn then satConn:Disconnect() satConn = nil end
-                        end)
 
-                        -- Hue dragging
                         HueBar.InputBegan:Connect(function(i)
                             if i.UserInputType == Enum.UserInputType.MouseButton1 and not rainbowOn then
                                 if hueConn then hueConn:Disconnect() end
                                 hueConn = RunService.RenderStepped:Connect(function()
-                                    local _, vNorm = getSatUV(HueHolder)
-                                    local y = getHueY(HueHolder)
-                                    HSV.H = 1 - vNorm
-                                    tween(HueMarker, TWEEN_SLIDE, { Position = UDim2.new(-0.25, 0, y, 0) })
+                                    local y = math.clamp((Mouse.Y - HueHolder.AbsolutePosition.Y) / HueHolder.AbsoluteSize.Y, 0, 1)
+                                    HSV.H = 1 - y
+                                    tween(HueMarker, TI_FAST, { Position = UDim2.new(0, -2, y, 0) })
                                     applyHSV()
                                 end)
                             end
                         end)
                         HueBar.InputEnded:Connect(function(i)
                             if i.UserInputType == Enum.UserInputType.MouseButton1 and hueConn then
-                                hueConn:Disconnect()
-                                hueConn = nil
+                                hueConn:Disconnect() hueConn = nil
                             end
                         end)
-                        HueBar.MouseLeave:Connect(function()
-                            if hueConn then hueConn:Disconnect() hueConn = nil end
-                        end)
 
-                        -- Rainbow mode
-                        RainbowBtn.MouseButton1Down:Connect(function()
+                        RainHit.MouseButton1Click:Connect(function()
                             rainbowOn = not rainbowOn
-                            tween(RainbowBtn, TWEEN_MED, { ImageTransparency = rainbowOn and 0 or 1 })
-
-                            while rainbowOn do
-                                local c = Color3.fromHSV(hue, 1, 1)
-                                ColorSwatch.ImageColor3 = c
-                                SatSurface.BackgroundColor3 = c
-                                callback(c)
-                                updateRgbLabels()
-                                wait()
-                            end
-                        end)
-
-                        -- Section/window collapse cleans up picker
-                        SectionToggle.MouseButton1Down:Connect(function()
-                            closePopup()
-                            if sectionOpen then
-                                shrinkSection(30)
-                                shrinkBody(30)
-                            else
-                                growSection(30)
-                                growBody(30)
-                            end
-                        end)
-
-                        ToggleBtn.MouseButton1Down:Connect(function()
-                            closePopup()
-                            onWindowToggleForSection()
-                        end)
-                    end,
-
-                    -- ── Button ────────────────────────────────────────────────
-                    CreateButton = function(_, label, callback)
-                        local buttonId = stripSpaces(label)
-
-                        local Holder = Instance.new("Frame")
-                        local Btn    = Instance.new("TextButton")
-                        local Round  = Instance.new("ImageLabel")
-
-                        Holder.Name = buttonId .. "ButtonHolder"
-                        Holder.Parent = SectionFrame
-                        Holder.BackgroundColor3 = Color3.new(0.137, 0.137, 0.137)
-                        Holder.BorderSizePixel = 0
-                        Holder.Size = UDim2.new(0, 170, 0, 30)
-
-                        Btn.Name = "Button"
-                        Btn.Parent = Holder
-                        Btn.BackgroundColor3 = Color3.new(0.254902, 0.254902, 0.254902)
-                        Btn.BackgroundTransparency = 1
-                        Btn.BorderSizePixel = 0
-                        Btn.Position = UDim2.new(0.052941, 0, 0, 0)
-                        Btn.Size = UDim2.new(0, 153, 0, 24)
-                        Btn.ZIndex = 2
-                        Btn.AutoButtonColor = false
-                        Btn.Font = Enum.Font.SourceSansBold
-                        Btn.Text = label
-                        Btn.TextColor3 = Color3.new(1, 1, 1)
-                        Btn.TextSize = 14
-                        Btn.TextScaled = true
-
-                        Round.Name = "ButtonRound"
-                        Round.Parent = Btn
-                        Round.Active = true
-                        Round.AnchorPoint = Vector2.new(0.5, 0.5)
-                        Round.BackgroundColor3 = Color3.new(1, 1, 1)
-                        Round.BackgroundTransparency = 1
-                        Round.BorderSizePixel = 0
-                        Round.ClipsDescendants = true
-                        Round.Position = UDim2.new(0.5, 0, 0.5, 0)
-                        Round.Selectable = true
-                        Round.Size = UDim2.new(1, 0, 1, 0)
-                        Round.Image = "rbxassetid://3570695787"
-                        Round.ImageColor3 = Color3.new(0.254902, 0.254902, 0.254902)
-                        Round.ScaleType = Enum.ScaleType.Slice
-                        Round.SliceCenter = Rect.new(100, 100, 100, 100)
-                        Round.SliceScale = 0.04
-
-                        Btn.MouseButton1Down:Connect(function()
-                            callback(Btn)
-                        end)
-
-                        SectionToggle.MouseButton1Down:Connect(function()
-                            if sectionOpen then
-                                shrinkSection(30)
-                                shrinkBody(30)
-                            else
-                                growSection(30)
-                                growBody(30)
-                            end
-                        end)
-
-                        ToggleBtn.MouseButton1Down:Connect(onWindowToggleForSection)
-                    end,
-
-                    -- ── Textbox ───────────────────────────────────────────────
-                    CreateTextbox = function(_, placeholder, callback)
-                        local tbId = stripSpaces(placeholder)
-
-                        local Holder = Instance.new("Frame")
-                        local TB     = Instance.new("TextBox")
-                        local Round  = Instance.new("ImageLabel")
-
-                        Holder.Name = tbId .. "TextBoxHolder"
-                        Holder.Parent = SectionFrame
-                        Holder.BackgroundColor3 = Color3.new(0.137, 0.137, 0.137)
-                        Holder.BorderSizePixel = 0
-                        Holder.Size = UDim2.new(0, 170, 0, 30)
-
-                        TB.Parent = Holder
-                        TB.BackgroundColor3 = Color3.new(0.254902, 0.254902, 0.254902)
-                        TB.BackgroundTransparency = 1
-                        TB.ClipsDescendants = true
-                        TB.Position = UDim2.new(0.053, 0, 0, 0)
-                        TB.Size = UDim2.new(0, 153, 0, 24)
-                        TB.ZIndex = 2
-                        TB.Font = Enum.Font.SourceSansBold
-                        TB.PlaceholderText = placeholder
-                        TB.Text = ""
-                        TB.TextColor3 = Color3.new(1, 1, 1)
-                        TB.TextSize = 14
-                        TB.TextScaled = true
-
-                        Round.Name = "TextBoxRound"
-                        Round.Parent = TB
-                        Round.Active = true
-                        Round.AnchorPoint = Vector2.new(0.5, 0.5)
-                        Round.BackgroundColor3 = Color3.new(1, 1, 1)
-                        Round.BackgroundTransparency = 1
-                        Round.BorderSizePixel = 0
-                        Round.ClipsDescendants = true
-                        Round.Position = UDim2.new(0.5, 0, 0.5, 0)
-                        Round.Selectable = true
-                        Round.Size = UDim2.new(1, 0, 1, 0)
-                        Round.Image = "rbxassetid://3570695787"
-                        Round.ImageColor3 = Color3.new(0.254902, 0.254902, 0.254902)
-                        Round.ScaleType = Enum.ScaleType.Slice
-                        Round.SliceCenter = Rect.new(100, 100, 100, 100)
-                        Round.SliceScale = 0.04
-
-                        TB.FocusLost:Connect(function(enterPressed)
-                            if enterPressed then
-                                callback(TB.Text)
-                            end
-                        end)
-
-                        SectionToggle.MouseButton1Down:Connect(function()
-                            if sectionOpen then
-                                shrinkSection(30)
-                                shrinkBody(30)
-                            else
-                                growSection(30)
-                                growBody(30)
-                            end
-                        end)
-
-                        ToggleBtn.MouseButton1Down:Connect(onWindowToggleForSection)
-                    end,
-
-                    -- ── Dropdown ──────────────────────────────────────────────
-                    CreateDropdown = function(_, label, options, defaultIndex, callback)
-                        local ddId = stripSpaces(label)
-                        local canvasScale = 1
-                        local selected = options[defaultIndex]
-                        local dropHeight = 0
-                        local isOpen = false
-                        local hasScrollbar = false
-
-                        local Holder       = Instance.new("Frame")
-                        local DisplayLabel = Instance.new("TextLabel")
-                        local DDRound      = Instance.new("ImageLabel")
-                        local ArrowBtn     = Instance.new("TextButton")
-                        local Popup        = Instance.new("ImageLabel")
-                        local Scroll       = Instance.new("ScrollingFrame")
-                        local ScrollLayout = Instance.new("UIListLayout")
-
-                        Holder.Name = ddId .. "DropdownHolder"
-                        Holder.Parent = SectionFrame
-                        Holder.BackgroundColor3 = Color3.new(0.137, 0.137, 0.137)
-                        Holder.BorderSizePixel = 0
-                        Holder.Size = UDim2.new(0, 170, 0, 30)
-
-                        DisplayLabel.Name = "DropdownTitle"
-                        DisplayLabel.Parent = Holder
-                        DisplayLabel.BackgroundColor3 = Color3.new(0.254902, 0.254902, 0.254902)
-                        DisplayLabel.BackgroundTransparency = 1
-                        DisplayLabel.BorderSizePixel = 0
-                        DisplayLabel.Position = UDim2.new(0.053, 0, 0, 0)
-                        DisplayLabel.Size = UDim2.new(0, 153, 0, 24)
-                        DisplayLabel.ZIndex = 2
-                        DisplayLabel.Font = Enum.Font.SourceSansBold
-                        DisplayLabel.Text = selected
-                        DisplayLabel.TextColor3 = Color3.new(1, 1, 1)
-                        DisplayLabel.TextSize = 14
-                        DisplayLabel.TextScaled = true
-
-                        DDRound.Name = "DropdownRound"
-                        DDRound.Parent = DisplayLabel
-                        DDRound.Active = true
-                        DDRound.AnchorPoint = Vector2.new(0.5, 0.5)
-                        DDRound.BackgroundColor3 = Color3.new(1, 1, 1)
-                        DDRound.BackgroundTransparency = 1
-                        DDRound.BorderSizePixel = 0
-                        DDRound.ClipsDescendants = true
-                        DDRound.Position = UDim2.new(0.5, 0, 0.5, 0)
-                        DDRound.Selectable = true
-                        DDRound.Size = UDim2.new(1, 0, 1, 0)
-                        DDRound.Image = "rbxassetid://3570695787"
-                        DDRound.ImageColor3 = Color3.new(0.254902, 0.254902, 0.254902)
-                        DDRound.ScaleType = Enum.ScaleType.Slice
-                        DDRound.SliceCenter = Rect.new(100, 100, 100, 100)
-                        DDRound.SliceScale = 0.04
-
-                        ArrowBtn.Name = "DropdownToggle"
-                        ArrowBtn.Parent = DisplayLabel
-                        ArrowBtn.BackgroundColor3 = Color3.new(1, 1, 1)
-                        ArrowBtn.BackgroundTransparency = 1
-                        ArrowBtn.Position = UDim2.new(0.816928, 0, 0, 0)
-                        ArrowBtn.Size = UDim2.new(0, 28, 0, 24)
-                        ArrowBtn.AutoButtonColor = false
-                        ArrowBtn.Font = Enum.Font.SourceSansBold
-                        ArrowBtn.Text = ">"
-                        ArrowBtn.TextColor3 = Color3.new(1, 1, 1)
-                        ArrowBtn.TextSize = 15
-
-                        Popup.Name = "DropdownMain"
-                        Popup.Parent = DisplayLabel
-                        Popup.BackgroundColor3 = Color3.new(0.137, 0.137, 0.137)
-                        Popup.BackgroundTransparency = 1
-                        Popup.ClipsDescendants = true
-                        Popup.Position = UDim2.new(1.09275, 0, -0.033666, 0)
-                        Popup.Size = UDim2.new(0, 0, 0, dropHeight)
-                        Popup.Image = "rbxassetid://3570695787"
-                        Popup.ImageColor3 = Color3.new(0.137, 0.137, 0.137)
-                        Popup.ScaleType = Enum.ScaleType.Slice
-                        Popup.SliceCenter = Rect.new(100, 100, 100, 100)
-                        Popup.SliceScale = 0.04
-
-                        Scroll.Parent = Popup
-                        Scroll.BackgroundColor3 = Color3.new(1, 1, 1)
-                        Scroll.BackgroundTransparency = 1
-                        Scroll.BorderSizePixel = 0
-                        Scroll.Size = UDim2.new(0, 153, 0, dropHeight)
-                        Scroll.BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
-                        Scroll.CanvasSize = UDim2.new(0, 0, canvasScale, 0)
-                        Scroll.ScrollBarThickness = 3
-                        Scroll.TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
-                        Scroll.ScrollingDirection = "Y"
-
-                        ScrollLayout.Name = "ButtonLayout"
-                        ScrollLayout.Parent = Scroll
-                        ScrollLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-                        -- Close helper
-                        local function closeDropdown()
-                            isOpen = false
-                            ArrowBtn.Text = ">"
-                            tween(ArrowBtn, TWEEN_MED, { Rotation = 0 })
-                            tween(DisplayLabel, TWEEN_MED, { TextColor3 = Color3.new(1, 1, 1) })
-                            DisplayLabel.Text = selected
-                            tween(Scroll, TWEEN_MED, { ScrollBarImageTransparency = 1 })
-                            tween(Scroll, TWEEN_MED, { Size = UDim2.new(0, 0, 0, dropHeight) })
-                            tween(Popup, TWEEN_MED, { Size = UDim2.new(0, 0, 0, dropHeight) })
-                        end
-
-                        -- Build option rows
-                        local rowCount = 0
-                        for _, optionText in ipairs(options) do
-                            local OptionBtn = Instance.new("TextButton")
-                            rowCount = rowCount + 1
-
-                            OptionBtn.Name = stripSpaces(optionText) .. "Button"
-                            OptionBtn.Parent = Scroll
-                            OptionBtn.BackgroundColor3 = Color3.new(0.215686, 0.215686, 0.215686)
-                            OptionBtn.BackgroundTransparency = 1
-                            OptionBtn.BorderSizePixel = 0
-                            OptionBtn.Size = UDim2.new(0, 153, 0, 25)
-                            OptionBtn.AutoButtonColor = false
-                            OptionBtn.Font = Enum.Font.SourceSansBold
-                            OptionBtn.Text = optionText
-                            OptionBtn.TextColor3 = Color3.new(1, 1, 1)
-                            OptionBtn.TextSize = 14
-                            OptionBtn.TextScaled = true
-
-                            if rowCount <= 4 then
-                                dropHeight = dropHeight + 25
-                                Popup.Size = UDim2.new(0, 0, 0, dropHeight)
-                            else
-                                hasScrollbar = true
-                            end
-                            if hasScrollbar then
-                                canvasScale = canvasScale + 0.25
-                                Scroll.CanvasSize = UDim2.new(0, 0, canvasScale, 0)
-                            end
-
-                            OptionBtn.InputBegan:Connect(function(i)
-                                if i.UserInputType == Enum.UserInputType.MouseMovement then
-                                    tween(OptionBtn, TWEEN_MED, { BackgroundTransparency = 0.5 })
+                            if rainbowOn then
+                                tween(RainTrack, TI_MED, { BackgroundColor3 = T.ACCENT })
+                                tween(RainKnob, TI_SPRING, { Position = UDim2.new(0, 20, 0.5, 0) })
+                                while rainbowOn do
+                                    local c = Color3.fromHSV(hue, 1, 1)
+                                    Swatch.BackgroundColor3 = c
+                                    SatSurface.BackgroundColor3 = c
+                                    callback(c)
+                                    updateRgb()
+                                    task.wait()
                                 end
-                            end)
-                            OptionBtn.InputEnded:Connect(function(i)
-                                if i.UserInputType == Enum.UserInputType.MouseMovement then
-                                    tween(OptionBtn, TWEEN_MED, { BackgroundTransparency = 1 })
-                                end
-                            end)
-
-                            OptionBtn.MouseButton1Down:Connect(function()
-                                selected = optionText
-                                callback(optionText)
-                                closeDropdown()
-                            end)
-                        end
-
-                        -- Arrow toggle
-                        ArrowBtn.MouseButton1Down:Connect(function()
-                            if isOpen then
-                                closeDropdown()
                             else
-                                Body.ClipsDescendants = false
-                                SectionFrame.ClipsDescendants = false
-                                isOpen = true
-                                ArrowBtn.Text = "<"
-                                tween(ArrowBtn, TWEEN_MED, { Rotation = -360 })
-                                tween(DisplayLabel, TWEEN_MED, { TextColor3 = Color3.new(0.698039, 0.698039, 0.698039) })
-                                DisplayLabel.Text = label
-                                tween(Scroll, TWEEN_MED, { ScrollBarImageTransparency = 0 })
-                                tween(Scroll, TWEEN_MED, { Size = UDim2.new(0, 153, 0, dropHeight) })
-                                tween(Popup, TWEEN_MED, { Size = UDim2.new(0, 153, 0, dropHeight) })
+                                tween(RainTrack, TI_MED, { BackgroundColor3 = T.TOGGLE_OFF })
+                                tween(RainKnob, TI_SPRING, { Position = UDim2.new(0, 2, 0.5, 0) })
                             end
-                        end)
-
-                        SectionToggle.MouseButton1Down:Connect(function()
-                            closeDropdown()
-                            Body.ClipsDescendants = true
-                            SectionFrame.ClipsDescendants = true
-                            if sectionOpen then
-                                shrinkSection(30)
-                                shrinkBody(30)
-                            else
-                                growSection(30)
-                                growBody(30)
-                            end
-                        end)
-
-                        ToggleBtn.MouseButton1Down:Connect(function()
-                            closeDropdown()
-                            Body.ClipsDescendants = true
-                            SectionFrame.ClipsDescendants = true
-                            onWindowToggleForSection()
                         end)
                     end,
                 }
