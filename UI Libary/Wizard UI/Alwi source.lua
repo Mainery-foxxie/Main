@@ -136,7 +136,7 @@ return {
         WindowRoot.Parent = Container
         WindowRoot.BackgroundColor3 = T.BG
         WindowRoot.BorderSizePixel = 0
-        WindowRoot.Position = UDim2.new(0, 20 + (windowOffset - 260), 0, 20)
+        WindowRoot.Position = UDim2.new(0, 20 + (windowOffset - 210), 0, 20)
         WindowRoot.Size = UDim2.new(0, WIN_W, 0, TOPBAR_H)
         WindowRoot.ZIndex = 2
         WindowRoot.ClipsDescendants = false
