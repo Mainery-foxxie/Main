@@ -8,7 +8,7 @@ if getgenv().Velocity_X_Loader then
     if a then
         pcall(function()
             a:Notify({
-                Title = 'Velocity X',
+                Title = 'Alwi Hub',
                 Description = 'This session is already loaded. Do you want to delete the config file?',
             }, {
                 OutlineColor = Color3.fromRGB(255, 80, 80),
@@ -17,7 +17,7 @@ if getgenv().Velocity_X_Loader then
             }, {
                 Callback = function(b)
                     if b then
-                        local c, d = 'Velocity X/VelocityX_Settings.json', false
+                        local c, d = 'Alwi Hub/AlwiHub_Settings.json', false
 
                         if isfile and delfile then
                             pcall(function()
@@ -48,7 +48,7 @@ if getgenv().Velocity_X_Loader then
                         pcall(function()
                             a:Notify({
                                 Title = 'Loader Already Running',
-                                Description = 'Velocity X is already active in this session.',
+                                Description = 'Alwi Hub is already active in this session.',
                             }, {
                                 OutlineColor = Color3.fromRGB(255, 50, 50),
                                 Time = 4,
@@ -63,7 +63,7 @@ if getgenv().Velocity_X_Loader then
             })
         end)
     else
-        warn'Velocity X is already active.'
+        warn'Alwi Hub is already active.'
     end
 
     return
@@ -160,7 +160,7 @@ local k = false
 
 pcall(function()
     if readfile and isfile then
-        local l = 'Velocity X/VelocityX_Settings.json'
+        local l = 'Alwi Hub/AlwiHubX_Settings.json'
 
         if isfile(l) then
             local m = c:JSONDecode(readfile(l))
@@ -219,7 +219,7 @@ if not k then
     o.BackgroundTransparency = 1
     o.Size = UDim2.new(1, 0, 0.1, 0)
     o.Position = UDim2.new(0, -1E3, 0.37, 0)
-    o.Text = 'Velocity X Loader V.1.1'
+    o.Text = 'Alwi Hub Loader V.1.1'
     o.Font = Enum.Font.Arcade
     o.TextScaled = true
     o.TextTransparency = 1
@@ -626,7 +626,7 @@ x.BackgroundTransparency = 1
 x.Position = UDim2.new(0.11, 0, 0.035, 0)
 x.Size = UDim2.new(0.72, 0, 0, 20)
 x.Font = Enum.Font.Arcade
-x.Text = 'Velocity X Loader'
+x.Text = 'Alwi Hub Loader'
 x.TextSize = 14
 x.TextXAlignment = Enum.TextXAlignment.Left
 x.TextColor3 = Color3.fromRGB(0, 255, 150)
@@ -931,7 +931,7 @@ do
     R.Position = UDim2.new(0, 0, 0.2, 0)
     R.Size = UDim2.new(1, 0, 0.3, 0)
     R.Font = Enum.Font.Arcade
-    R.Text = 'Are you sure you want\nto close Velocity X?'
+    R.Text = 'Are you sure you want\nto close Alwi Hub?'
     R.TextSize = 12
     R.TextColor3 = Color3.fromRGB(0, 255, 150)
     R.TextStrokeTransparency = 0
@@ -1768,7 +1768,7 @@ aR.Position = UDim2.new(0, 62, 0, 22)
 aR.Size = UDim2.new(1, -68, 0, 12)
 aR.BackgroundTransparency = 1
 aR.Font = Enum.Font.Arcade
-aR.Text = 'Creator of Velocity X'
+aR.Text = 'Creator of Alwi Hub'
 aR.TextSize = 8
 aR.TextXAlignment = Enum.TextXAlignment.Left
 aR.TextColor3 = Color3.fromRGB(180, 180, 255)
@@ -1923,7 +1923,7 @@ do
     aZ.Size = UDim2.new(1, -8, 1, -24)
     aZ.BackgroundTransparency = 1
     aZ.Font = Enum.Font.Arcade
-    aZ.Text = 'Hey is me Alwi, creator of Velocity X!\nI like furry \u{1f98a} (fox / kenomo) & fabulous beast\n"you shou yan" :3\nEnjoy the script! \u{2764}'
+    aZ.Text = 'Hey is me Alwi, creator of Alwi Hub!\nI like furry \u{1f98a} (fox / kenomo) & fabulous beast\n"you shou yan" :3\nEnjoy the script! \u{2764}'
     aZ.TextSize = 8
     aZ.TextXAlignment = Enum.TextXAlignment.Left
     aZ.TextYAlignment = Enum.TextYAlignment.Top
@@ -2529,8 +2529,8 @@ local function addToggle(a1, a2, a3, a4)
     }
 end
 
-local a1 = 'Velocity X'
-local a2, a3 = a1 .. '/VelocityX_Settings.json', 'v1.1'
+local a1 = 'Alwi Hub'
+local a2, a3 = a1 .. '/AlwiHub_Settings.json', 'v1.1'
 
 if makefolder then
     local a4 = pcall(function()
@@ -2659,7 +2659,7 @@ local function clearTeleportQueue()
         end)
     end
 
-    showNotification('Velocity X', 'Auto Executor cleared', Color3.fromRGB(255, 200, 0), 2)
+    showNotification('Alwi Hub', 'Auto Executor cleared', Color3.fromRGB(255, 200, 0), 2)
 end
 local function setButtonActive(a5, a6)
     if not a5 or not a5.Parent then
@@ -3825,3 +3825,4 @@ if not bx then
         end)
     end)
 end
+
