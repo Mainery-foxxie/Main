@@ -1,4 +1,4 @@
--- FluxHub 
+-- FluxHub UI Library v2
 local lib = {};
 local UIS = game:GetService("UserInputService");
 local TS = game:GetService("TweenService");
@@ -167,32 +167,25 @@ function lib:CreateWindow(title)
         ZIndex = 3
     })
 
-    -- Minimize button
-    local MinBtn = Create("TextButton", {
-        BackgroundColor3 = C.ITEM,
-        Size = UDim2.new(0, 22, 0, 22),
-        Position = UDim2.new(1, -30, 0.5, -11),
-        Text = "",
-        AutoButtonColor = false,
+    -- Minimize button (original style)
+    local MinBtn = Create("ImageButton", {
+        BackgroundTransparency = 1,
+        Image = "",
+        Position = UDim2.new(1, -28, 0, 0),
+        Size = UDim2.new(0, 28, 0, 36),
         Parent = TitleBar,
         ZIndex = 3
-    }, {
-        Create("UICorner", { CornerRadius = UDim.new(0, 5) }),
-        Create("UIStroke", {
-            ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-            Color = C.BORDER,
-            Transparency = 0.4
-        }),
-        Create("ImageLabel", {
-            Name = "Icon",
-            BackgroundTransparency = 1,
-            Size = UDim2.new(0, 12, 0, 12),
-            Position = UDim2.new(0.5, -6, 0.5, -6),
-            Image = "rbxassetid://6031094670",
-            ImageColor3 = C.SUBTEXT,
-            Rotation = 90,
-            ZIndex = 4
-        })
+    })
+    Create("ImageLabel", {
+        Name = "Icon",
+        BackgroundTransparency = 1,
+        Image = "rbxassetid://6031094670",
+        Size = UDim2.new(0, 16, 0, 16),
+        Position = UDim2.new(0.5, -8, 0.5, -8),
+        ImageColor3 = C.SUBTEXT,
+        Rotation = 90,
+        Parent = MinBtn,
+        ZIndex = 4
     })
 
     -- Drag
@@ -234,11 +227,9 @@ function lib:CreateWindow(title)
         end
     end)
     MinBtn.MouseEnter:Connect(function()
-        tween(MinBtn, 0.15, { BackgroundColor3 = C.BORDER })
         tween(MinBtn.Icon, 0.15, { ImageColor3 = C.TEXT })
     end)
     MinBtn.MouseLeave:Connect(function()
-        tween(MinBtn, 0.15, { BackgroundColor3 = C.ITEM })
         tween(MinBtn.Icon, 0.15, { ImageColor3 = C.SUBTEXT })
     end)
 
@@ -496,7 +487,7 @@ function lib:CreateWindow(title)
             local function sectionSize(section)
                 local size = 0
                 for _, v in pairs(section:FindFirstChildOfClass("Frame"):GetChildren()) do
-                    if not v:IsA("UIListLayout") then
+                    if v:IsA("GuiObject") then
                         size = size + (v.Size.Y.Offset + 4)
                     end
                 end
