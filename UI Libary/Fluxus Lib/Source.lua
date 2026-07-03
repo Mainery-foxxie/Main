@@ -1,5 +1,4 @@
 -- Last Updated 04/02/2022
--- Fixed + UI Improved: Toggle bool display, pill-style toggle, hover glows, Create() child-loop bug
 local lib = {};
 local UIS = game:GetService("UserInputService");
 local TS = game:GetService("TweenService");
@@ -482,11 +481,9 @@ function lib:CreateWindow(title)
                     end
                 end)
                 b1.MouseEnter:Connect(function()
-                    tween(b1:FindFirstChildOfClass("UIStroke"), 0.2, {Color = Color3.fromRGB(50, 52, 62)})
                     showTooltip(tooltip)
                 end)
                 b1.MouseLeave:Connect(function()
-                    tween(b1:FindFirstChildOfClass("UIStroke"), 0.2, {Color = Color3.fromRGB(24, 25, 30)})
                     hideTooltip()
                 end)
                 container.Size = UDim2.new(1, 0, 0, sectionSize(bg));
@@ -497,9 +494,8 @@ function lib:CreateWindow(title)
             function components:AddToggle(buttonTitle, tooltip, default, callback)
                 local t1 = {}
                 tooltip = tooltip or nil
-                t1.State = (default == true) -- explicit bool, not "default or false" which breaks if default=false
+                t1.State = (default == true) -- fix: "default or false" breaks when default is explicitly false
                 callback = callback or function() end
-
                 local b1 = Create("TextButton", {
                     BackgroundColor3 = Color3.fromRGB(13, 14, 16),
                     Size = UDim2.new(1, 0, 0, 30),
@@ -518,7 +514,7 @@ function lib:CreateWindow(title)
                     Create("TextLabel", {
                         BackgroundTransparency = 1,
                         Position = UDim2.new(0, 10, 0.5, -8),
-                        Size = UDim2.new(1, -100, 0, 14), -- narrower to make room for status label
+                        Size = UDim2.new(1, -10, 0, 14),
                         Font = window.Font,
                         Text = buttonTitle,
                         TextColor3 = Color3.new(1, 1, 1),
@@ -526,94 +522,52 @@ function lib:CreateWindow(title)
                         TextXAlignment = Enum.TextXAlignment.Left
                     })
                 })
-
-                -- Status label showing [ON] / [OFF]
-                local statusLabel = Create("TextLabel", {
-                    BackgroundTransparency = 1,
-                    Position = UDim2.new(1, -90, 0.5, -8),
-                    Size = UDim2.new(0, 55, 0, 14),
-                    Font = window.Font,
-                    Text = t1.State and "[ON]" or "[OFF]",
-                    TextColor3 = t1.State and window.AccentColor or Color3.fromRGB(120, 120, 130),
-                    TextSize = 13,
-                    TextXAlignment = Enum.TextXAlignment.Right,
-                    Parent = b1
-                })
-
-                -- Pill-style toggle track (40x20)
-                local toggleTrack = Create("Frame", {
-                    BackgroundColor3 = t1.State and window.AccentColor or Color3.fromRGB(30, 32, 38),
-                    Size = UDim2.new(0, 40, 0, 20),
-                    Position = UDim2.new(1, -46, 0.5, -10),
+                local toggle = Create("Frame", {
+                    BackgroundColor3 = Color3.fromRGB(20, 21, 25),
+                    Size = UDim2.new(0, 24, 0, 24),
+                    Position = UDim2.new(1, -30, 0.5, -12),
                     Parent = b1
                 }, {
-                    Create("UICorner", {
-                        CornerRadius = UDim.new(1, 0)
-                    }),
                     Create("UIStroke", {
                         ApplyStrokeMode = 1,
-                        Color = t1.State and window.AccentColor or Color3.fromRGB(40, 42, 50),
-                        Thickness = 1
-                    })
-                })
-
-                -- Sliding knob inside the pill
-                local toggleKnob = Create("Frame", {
-                    BackgroundColor3 = Color3.new(1, 1, 1),
-                    Size = UDim2.new(0, 14, 0, 14),
-                    Position = t1.State and UDim2.new(1, -17, 0.5, -7) or UDim2.new(0, 3, 0.5, -7),
-                    Parent = toggleTrack
-                }, {
+                        Color = t1.State and window.AccentColor or Color3.fromRGB(24, 25, 30)
+                    }),
                     Create("UICorner", {
-                        CornerRadius = UDim.new(1, 0)
+                        CornerRadius = UDim.new(0, 4)
+                    }),
+                    Create("ImageLabel", {
+                        BackgroundTransparency = 1,
+                        Size = UDim2.new(0, 20, 0, 20),
+                        Position = UDim2.new(0.5, -10, 0.5, -10),
+                        Image = "http://www.roblox.com/asset/?id=6031094667",
+                        ImageColor3 = window.AccentColor,
+                        ImageTransparency = t1.State and 0 or 1
                     })
                 })
 
-                -- Hover highlight on the row
+                b1.MouseButton1Click:Connect(function()
+                    t1.State = not t1.State;
+                    callback(t1.State)
+                    TS:Create(toggle.ImageLabel, TweenInfo.new(t1.State and 0.3 or 0.8, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = t1.State and UDim2.new(0, 20, 0, 20) or UDim2.new(0, 0, 0, 0), Position = t1.State and UDim2.new(0.5, -10, 0.5, -10) or UDim2.new(0.5, 0, 0.5, 0)}):Play()
+                    tween(toggle.ImageLabel, t1.State and 0.3 or 0.8, {ImageTransparency = t1.State and 0 or 1})
+                    tween(toggle.UIStroke, 0.3, {Color = t1.State and window.AccentColor or Color3.fromRGB(24, 25, 30)})
+                end)
                 b1.MouseEnter:Connect(function()
-                    tween(b1:FindFirstChildOfClass("UIStroke"), 0.2, {Color = Color3.fromRGB(50, 52, 62)})
                     showTooltip(tooltip)
                 end)
                 b1.MouseLeave:Connect(function()
-                    tween(b1:FindFirstChildOfClass("UIStroke"), 0.2, {Color = Color3.fromRGB(24, 25, 30)})
                     hideTooltip()
                 end)
-
-                local function applyToggleVisuals()
-                    -- Knob slides left/right
-                    tween(toggleKnob, 0.25, {
-                        Position = t1.State and UDim2.new(1, -17, 0.5, -7) or UDim2.new(0, 3, 0.5, -7)
-                    })
-                    -- Track fills with accent when ON
-                    tween(toggleTrack, 0.25, {
-                        BackgroundColor3 = t1.State and window.AccentColor or Color3.fromRGB(30, 32, 38)
-                    })
-                    tween(toggleTrack.UIStroke, 0.25, {
-                        Color = t1.State and window.AccentColor or Color3.fromRGB(40, 42, 50)
-                    })
-                    -- Status label text + color
-                    statusLabel.Text = t1.State and "[ON]" or "[OFF]"
-                    tween(statusLabel, 0.25, {
-                        TextColor3 = t1.State and window.AccentColor or Color3.fromRGB(120, 120, 130)
-                    })
-                end
-
-                b1.MouseButton1Click:Connect(function()
-                    t1.State = not t1.State
-                    callback(t1.State)
-                    applyToggleVisuals()
-                end)
-
                 container.Size = UDim2.new(1, 0, 0, sectionSize(bg));
                 bg.Size = UDim2.new(1, 0, 0, sectionSize(bg) + 30);
                 order = order + 1
-
                 function t1:SetState(state)
-                    t1.State = (state == true)
+                    t1.State = (state == true) -- fix: enforce boolean, same as init
                     callback(t1.State)
-                    applyToggleVisuals()
+                    TS:Create(toggle.ImageLabel, TweenInfo.new(t1.State and 0.3 or 0.8, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = t1.State and UDim2.new(0, 20, 0, 20) or UDim2.new(0, 0, 0, 0), Position = t1.State and UDim2.new(0.5, -10, 0.5, -10) or UDim2.new(0.5, 0, 0.5, 0)}):Play()
+                    tween(toggle.ImageLabel, t1.State and 0.3 or 0.8, {ImageTransparency = t1.State and 0 or 1})
+                    tween(toggle.UIStroke, 0.3, {Color = t1.State and window.AccentColor or Color3.fromRGB(24, 25, 30)})
                 end
-
                 return t1;
             end
 
