@@ -28,11 +28,10 @@ Container.BackgroundColor3 = Color3.new(1, 1, 1)
 Container.BackgroundTransparency = 1
 Container.Size = UDim2.new(0, 100, 0, 100)
 
--- Toggle visibility with RightControl or RightAlt
+-- Toggle visibility with RightControl
 UserInputService.InputBegan:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.RightControl
-    or input.KeyCode == Enum.KeyCode.RightAlt then
-        ScreenGui.Enabled = not ScreenGui.Enabled
+    if input.KeyCode == Enum.KeyCode.RightControl then
+        CoastifiedLibrary.Enabled = not CoastifiedLibrary.Enabled
     end
 end)
 
@@ -466,7 +465,7 @@ return {
                         local Holder        = Instance.new("Frame")
                         local TitleLbl      = Instance.new("TextLabel")
                         local ValueHolder   = Instance.new("ImageLabel")
-                        local ValueLbl      = Instance.new("TextLabel")
+                        local ValueBox      = Instance.new("TextBox")   -- editable textbox
                         local Track         = Instance.new("ImageLabel")
                         local Fill          = Instance.new("ImageLabel")
 
@@ -503,25 +502,28 @@ return {
                         ValueHolder.SliceCenter = Rect.new(100, 100, 100, 100)
                         ValueHolder.SliceScale = 0.02
 
-                        ValueLbl.Name = "SliderValue"
-                        ValueLbl.Parent = ValueHolder
-                        ValueLbl.BackgroundColor3 = Color3.new(1, 1, 1)
-                        ValueLbl.BackgroundTransparency = 1
-                        ValueLbl.Size = UDim2.new(0, 35, 0, 15)
-                        ValueLbl.Font = Enum.Font.SourceSansSemibold
-                        ValueLbl.Text = tostring(
+                        -- Editable TextBox so mobile users can type a value directly
+                        ValueBox.Name = "SliderValue"
+                        ValueBox.Parent = ValueHolder
+                        ValueBox.BackgroundColor3 = Color3.new(1, 1, 1)
+                        ValueBox.BackgroundTransparency = 1
+                        ValueBox.BorderSizePixel = 0
+                        ValueBox.Size = UDim2.new(1, 0, 1, 0)
+                        ValueBox.Font = Enum.Font.SourceSansSemibold
+                        ValueBox.Text = tostring(
                             useFloat and tonumber(string.format("%.2f", default or min))
                                       or (default or min)
                         )
-                        ValueLbl.TextColor3 = Color3.new(1, 1, 1)
-                        ValueLbl.TextSize = 14
+                        ValueBox.TextColor3 = Color3.new(1, 1, 1)
+                        ValueBox.TextSize = 14
+                        ValueBox.ClearTextOnFocus = true
+                        ValueBox.TextEditable = true
 
                         Track.Name = "SliderBackground"
                         Track.Parent = Holder
                         Track.BackgroundColor3 = Color3.new(0.254902, 0.254902, 0.254902)
                         Track.BackgroundTransparency = 1
                         Track.Position = UDim2.new(0.053, 0, 0.65, 0)
-                        Track.Active = true       -- REQUIRED: lets touch events register on Android
                         Track.Selectable = true
                         Track.Size = UDim2.new(0, 153, 0, 5)
                         Track.Image = "rbxassetid://3570695787"
@@ -542,30 +544,43 @@ return {
                         Fill.SliceCenter = Rect.new(100, 100, 100, 100)
                         Fill.SliceScale = 0.02
 
-                        local function updateSlider(input)
+                        -- Shared helper: set slider to a clamped value
+                        local function applyValue(value)
+                            value = math.clamp(value, min, max)
+                            if not useFloat then
+                                value = math.floor(value)
+                            end
+                            local scale = (value - min) / (max - min)
+                            tween(Fill, TWEEN_SLIDE, { Size = UDim2.new(scale, 0, 1.15, 0) })
+                            ValueBox.Text = tostring(
+                                useFloat and tonumber(string.format("%.2f", value)) or value
+                            )
+                            callback(value)
+                        end
+
+                        -- Update slider from a touch/mouse input position
+                        local function updateSliderFromInput(input)
                             local scale = math.clamp(
                                 (input.Position.X - Track.AbsolutePosition.X) / Track.AbsoluteSize.X,
                                 0, 1
                             )
-                            tween(Fill, TWEEN_SLIDE, { Size = UDim2.new(scale, 0, 1.15, 0) })
-
                             local rawValue = scale * (max - min) + min
-                            local value = useFloat and tonumber(string.format("%.2f", rawValue))
-                                                    or math.floor(rawValue)
-                            ValueLbl.Text = tostring(value)
-                            callback(value)
+                            applyValue(rawValue)
                         end
 
+                        -- Touch + mouse drag on the track
                         Track.InputBegan:Connect(function(i)
                             if i.UserInputType == Enum.UserInputType.MouseButton1
-                            or i.UserInputType == Enum.UserInputType.Touch then
+                                or i.UserInputType == Enum.UserInputType.Touch
+                            then
                                 dragging = true
-                                updateSlider(i)
+                                updateSliderFromInput(i)
                             end
                         end)
                         Track.InputEnded:Connect(function(i)
                             if i.UserInputType == Enum.UserInputType.MouseButton1
-                            or i.UserInputType == Enum.UserInputType.Touch then
+                                or i.UserInputType == Enum.UserInputType.Touch
+                            then
                                 dragging = false
                             end
                         end)
@@ -574,13 +589,23 @@ return {
                                 i.UserInputType == Enum.UserInputType.MouseMovement
                                 or i.UserInputType == Enum.UserInputType.Touch
                             ) then
-                                updateSlider(i)
+                                updateSliderFromInput(i)
                             end
                         end)
-                        -- Safety: release drag if finger lifts anywhere on screen
-                        UserInputService.InputEnded:Connect(function(i)
-                            if i.UserInputType == Enum.UserInputType.Touch then
-                                dragging = false
+
+                        -- TextBox: apply typed value on focus lost or Enter key
+                        ValueBox.FocusLost:Connect(function(enterPressed)
+                            local typed = tonumber(ValueBox.Text)
+                            if typed then
+                                applyValue(typed)
+                            else
+                                -- Restore current fill position as text
+                                local currentScale = Fill.Size.X.Scale
+                                local currentValue = currentScale * (max - min) + min
+                                ValueBox.Text = tostring(
+                                    useFloat and tonumber(string.format("%.2f", currentValue))
+                                             or math.floor(currentValue)
+                                )
                             end
                         end)
 
@@ -1072,7 +1097,7 @@ return {
                         Round.SliceScale = 0.04
 
                         TB.FocusLost:Connect(function(enterPressed)
-                            if enterPressed and callback then
+                            if enterPressed then
                                 callback(TB.Text)
                             end
                         end)
@@ -1088,13 +1113,6 @@ return {
                         end)
 
                         ToggleBtn.MouseButton1Down:Connect(onWindowToggleForSection)
-
-                        return {
-                            SetText = function(text)
-                                TB.Text = text
-                                TB.PlaceholderText = text
-                            end,
-                        }
                     end,
 
                     -- ── Dropdown ──────────────────────────────────────────────
@@ -1290,18 +1308,6 @@ return {
                         end)
                     end,
                 }
-            end,
-            -- Destroy the entire UI
-            Destroy = function()
-                ScreenGui:Destroy()
-            end,
-            -- Register a callback that fires when the UI is destroyed
-            OnDestroy = function(_, cb)
-                ScreenGui.AncestryChanged:Connect(function(_, parent)
-                    if parent == nil then
-                        cb()
-                    end
-                end)
             end,
         }
     end,
