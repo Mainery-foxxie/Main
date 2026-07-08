@@ -521,7 +521,7 @@ return {
                         Track.BackgroundColor3 = Color3.new(0.254902, 0.254902, 0.254902)
                         Track.BackgroundTransparency = 1
                         Track.Position = UDim2.new(0.053, 0, 0.65, 0)
-                        Track.Active = true       -- REQUIRED for touch input on Android
+                        Track.Active = true       -- REQUIRED: lets touch events register on Android
                         Track.Selectable = true
                         Track.Size = UDim2.new(0, 153, 0, 5)
                         Track.Image = "rbxassetid://3570695787"
@@ -577,7 +577,7 @@ return {
                                 updateSlider(i)
                             end
                         end)
-                        -- Safety net: release drag if finger lifts anywhere on screen
+                        -- Safety: release drag if finger lifts anywhere on screen
                         UserInputService.InputEnded:Connect(function(i)
                             if i.UserInputType == Enum.UserInputType.Touch then
                                 dragging = false
@@ -1072,7 +1072,7 @@ return {
                         Round.SliceScale = 0.04
 
                         TB.FocusLost:Connect(function(enterPressed)
-                            if enterPressed then
+                            if enterPressed and callback then
                                 callback(TB.Text)
                             end
                         end)
@@ -1088,6 +1088,13 @@ return {
                         end)
 
                         ToggleBtn.MouseButton1Down:Connect(onWindowToggleForSection)
+
+                        return {
+                            SetText = function(text)
+                                TB.Text = text
+                                TB.PlaceholderText = text
+                            end,
+                        }
                     end,
 
                     -- ── Dropdown ──────────────────────────────────────────────
@@ -1283,6 +1290,18 @@ return {
                         end)
                     end,
                 }
+            end,
+            -- Destroy the entire UI
+            Destroy = function()
+                ScreenGui:Destroy()
+            end,
+            -- Register a callback that fires when the UI is destroyed
+            OnDestroy = function(_, cb)
+                ScreenGui.AncestryChanged:Connect(function(_, parent)
+                    if parent == nil then
+                        cb()
+                    end
+                end)
             end,
         }
     end,
