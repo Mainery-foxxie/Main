@@ -28,10 +28,11 @@ Container.BackgroundColor3 = Color3.new(1, 1, 1)
 Container.BackgroundTransparency = 1
 Container.Size = UDim2.new(0, 100, 0, 100)
 
--- Toggle visibility with RightControl
+-- Toggle visibility with RightControl or RightAlt
 UserInputService.InputBegan:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.RightControl then
-        CoastifiedLibrary.Enabled = not CoastifiedLibrary.Enabled
+    if input.KeyCode == Enum.KeyCode.RightControl
+    or input.KeyCode == Enum.KeyCode.RightAlt then
+        ScreenGui.Enabled = not ScreenGui.Enabled
     end
 end)
 
@@ -457,7 +458,6 @@ return {
                     end,
 
                     -- ── Slider ────────────────────────────────────────────────
-                    -- FIXED: Added touch support
                     CreateSlider = function(_, label, min, max, default, isFloat, callback)
                         local sliderId = stripSpaces(label)
                         local dragging = false
@@ -521,6 +521,7 @@ return {
                         Track.BackgroundColor3 = Color3.new(0.254902, 0.254902, 0.254902)
                         Track.BackgroundTransparency = 1
                         Track.Position = UDim2.new(0.053, 0, 0.65, 0)
+                        Track.Active = true       -- REQUIRED for touch input on Android
                         Track.Selectable = true
                         Track.Size = UDim2.new(0, 153, 0, 5)
                         Track.Image = "rbxassetid://3570695787"
@@ -541,13 +542,13 @@ return {
                         Fill.SliceCenter = Rect.new(100, 100, 100, 100)
                         Fill.SliceScale = 0.02
 
-                        -- Unified update function using a position (Vector2)
-                        local function updateSliderFromPosition(pos)
+                        local function updateSlider(input)
                             local scale = math.clamp(
-                                (pos.X - Track.AbsolutePosition.X) / Track.AbsoluteSize.X,
+                                (input.Position.X - Track.AbsolutePosition.X) / Track.AbsoluteSize.X,
                                 0, 1
                             )
                             tween(Fill, TWEEN_SLIDE, { Size = UDim2.new(scale, 0, 1.15, 0) })
+
                             local rawValue = scale * (max - min) + min
                             local value = useFloat and tonumber(string.format("%.2f", rawValue))
                                                     or math.floor(rawValue)
@@ -555,24 +556,31 @@ return {
                             callback(value)
                         end
 
-                        -- Mouse & Touch start
                         Track.InputBegan:Connect(function(i)
-                            if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+                            if i.UserInputType == Enum.UserInputType.MouseButton1
+                            or i.UserInputType == Enum.UserInputType.Touch then
                                 dragging = true
-                                updateSliderFromPosition(i.Position)
+                                updateSlider(i)
                             end
                         end)
-                        -- Mouse & Touch end
                         Track.InputEnded:Connect(function(i)
-                            if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+                            if i.UserInputType == Enum.UserInputType.MouseButton1
+                            or i.UserInputType == Enum.UserInputType.Touch then
                                 dragging = false
                             end
                         end)
-
-                        -- Movement (mouse or touch)
                         UserInputService.InputChanged:Connect(function(i)
-                            if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
-                                updateSliderFromPosition(i.Position)
+                            if dragging and (
+                                i.UserInputType == Enum.UserInputType.MouseMovement
+                                or i.UserInputType == Enum.UserInputType.Touch
+                            ) then
+                                updateSlider(i)
+                            end
+                        end)
+                        -- Safety net: release drag if finger lifts anywhere on screen
+                        UserInputService.InputEnded:Connect(function(i)
+                            if i.UserInputType == Enum.UserInputType.Touch then
+                                dragging = false
                             end
                         end)
 
