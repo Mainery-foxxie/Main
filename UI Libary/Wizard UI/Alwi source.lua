@@ -457,6 +457,7 @@ return {
                     end,
 
                     -- ── Slider ────────────────────────────────────────────────
+                    -- FIXED: Added touch support
                     CreateSlider = function(_, label, min, max, default, isFloat, callback)
                         local sliderId = stripSpaces(label)
                         local dragging = false
@@ -540,13 +541,13 @@ return {
                         Fill.SliceCenter = Rect.new(100, 100, 100, 100)
                         Fill.SliceScale = 0.02
 
-                        local function updateSlider(input)
+                        -- Unified update function using a position (Vector2)
+                        local function updateSliderFromPosition(pos)
                             local scale = math.clamp(
-                                (input.Position.X - Track.AbsolutePosition.X) / Track.AbsoluteSize.X,
+                                (pos.X - Track.AbsolutePosition.X) / Track.AbsoluteSize.X,
                                 0, 1
                             )
                             tween(Fill, TWEEN_SLIDE, { Size = UDim2.new(scale, 0, 1.15, 0) })
-
                             local rawValue = scale * (max - min) + min
                             local value = useFloat and tonumber(string.format("%.2f", rawValue))
                                                     or math.floor(rawValue)
@@ -554,20 +555,24 @@ return {
                             callback(value)
                         end
 
+                        -- Mouse & Touch start
                         Track.InputBegan:Connect(function(i)
-                            if i.UserInputType == Enum.UserInputType.MouseButton1 then
+                            if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
                                 dragging = true
-                                updateSlider(i)
+                                updateSliderFromPosition(i.Position)
                             end
                         end)
+                        -- Mouse & Touch end
                         Track.InputEnded:Connect(function(i)
-                            if i.UserInputType == Enum.UserInputType.MouseButton1 then
+                            if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
                                 dragging = false
                             end
                         end)
+
+                        -- Movement (mouse or touch)
                         UserInputService.InputChanged:Connect(function(i)
-                            if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
-                                updateSlider(i)
+                            if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
+                                updateSliderFromPosition(i.Position)
                             end
                         end)
 
