@@ -204,9 +204,9 @@ if not _earlySkipIntro then
     local title: TextLabel = Instance.new("TextLabel")
     title.Parent               = gui
     title.BackgroundTransparency = 1
-    title.Size                 = UDim2.new(1, 0, 0.1, 0)
-    title.Position             = UDim2.new(0, -1000, 0.37, 0)
-    title.Text                 = "Alwi Hub Loader V.1.1"
+    title.Size                 = UDim2.new(1, 0, 0.12, 0)
+    title.Position             = UDim2.new(0, -1000, 0.34, 0)
+    title.Text                 = "Alwi Hub"
     title.Font                 = Enum.Font.Arcade
     title.TextScaled           = true
     title.TextTransparency     = 1
@@ -220,7 +220,7 @@ if not _earlySkipIntro then
     sub.BackgroundTransparency = 1
     sub.Size                 = UDim2.new(1, 0, 0.05, 0)
     sub.Position             = UDim2.new(0, 1000, 0.47, 0)
-    sub.Text                 = "UwU Does need furry?"
+    sub.Text                 = "✦ Loading your experience..."
     sub.Font                 = Enum.Font.Arcade
     sub.TextScaled           = true
     sub.TextColor3           = Color3.fromRGB(255, 255, 255)
@@ -229,11 +229,17 @@ if not _earlySkipIntro then
 
     local barBg: Frame = Instance.new("Frame")
     barBg.Parent           = gui
-    barBg.Size             = UDim2.new(0.4, 0, 0.015, 0)
+    barBg.Size             = UDim2.new(0.4, 0, 0, 6)
     barBg.Position         = UDim2.new(0.3, 0, 0.7, 0)
-    barBg.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    barBg.BackgroundColor3 = Color3.fromRGB(28, 28, 34)
     barBg.BorderSizePixel  = 0
     barBg.Visible          = false
+    do
+        local barBgStroke: UIStroke = Instance.new("UIStroke", barBg)
+        barBgStroke.Color       = Color3.fromRGB(60, 60, 80)
+        barBgStroke.Thickness   = 1
+        barBgStroke.Transparency = 0.5
+    end
 
     local corner: UICorner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(1, 0)
@@ -243,6 +249,7 @@ if not _earlySkipIntro then
     bar.Parent        = barBg
     bar.Size          = UDim2.new(0, 0, 1, 0)
     bar.BorderSizePixel = 0
+    bar.ZIndex        = 2
 
     local corner2: UICorner = Instance.new("UICorner")
     corner2.CornerRadius = UDim.new(1, 0)
@@ -254,14 +261,14 @@ if not _earlySkipIntro then
     local progressText: TextLabel = Instance.new("TextLabel")
     progressText.Parent               = gui
     progressText.BackgroundTransparency = 1
-    progressText.Size                 = UDim2.new(0.4, 0, 0.03, 0)
-    progressText.Position             = UDim2.new(0.3, 0, 0.725, 0)
+    progressText.Size                 = UDim2.new(0.4, 0, 0.04, 0)
+    progressText.Position             = UDim2.new(0.3, 0, 0.718, 0)
     progressText.Font                 = Enum.Font.Code
     progressText.TextScaled           = true
-    progressText.TextColor3           = Color3.fromRGB(255, 255, 255)
-    progressText.TextStrokeTransparency = 0.4
-    progressText.TextStrokeColor3     = Color3.fromRGB(120, 80, 0)
-    progressText.Text                 = "0/100"
+    progressText.TextColor3           = Color3.fromRGB(220, 220, 220)
+    progressText.TextStrokeTransparency = 0.5
+    progressText.TextStrokeColor3     = Color3.fromRGB(0, 0, 0)
+    progressText.Text                 = "0%"
     progressText.ZIndex               = 20
 
     local progressGradient: UIGradient = Instance.new("UIGradient")
@@ -300,6 +307,36 @@ if not _earlySkipIntro then
         end
     end)
 
+    -- Scanline vignette overlay on intro
+    local scanlineVig: Frame = Instance.new("Frame", gui)
+    scanlineVig.Size               = UDim2.new(1, 0, 1, 0)
+    scanlineVig.BackgroundColor3   = Color3.new(0, 0, 0)
+    scanlineVig.BackgroundTransparency = 1
+    scanlineVig.BorderSizePixel    = 0
+    scanlineVig.ZIndex             = 3
+    do
+        local vigGrad: UIGradient = Instance.new("UIGradient", scanlineVig)
+        vigGrad.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0,   Color3.new(0, 0, 0)),
+            ColorSequenceKeypoint.new(0.5, Color3.new(0, 0, 0)),
+            ColorSequenceKeypoint.new(1,   Color3.new(0, 0, 0)),
+        }
+        vigGrad.Transparency = NumberSequence.new{
+            NumberSequenceKeypoint.new(0,   0.5),
+            NumberSequenceKeypoint.new(0.5, 1),
+            NumberSequenceKeypoint.new(1,   0.5),
+        }
+        vigGrad.Rotation = 90
+    end
+    task.spawn(function()
+        task.wait(3.5)
+        pcall(function()
+            TweenService:Create(scanlineVig, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {
+                BackgroundTransparency = 0.85
+            }):Play()
+        end)
+    end)
+
     TweenService:Create(flash, TweenInfo.new(0.15), { BackgroundTransparency = 0.4 }):Play()
     task.wait(0.15)
     TweenService:Create(flash, TweenInfo.new(0.5),  { BackgroundTransparency = 1   }):Play()
@@ -314,7 +351,7 @@ if not _earlySkipIntro then
     task.wait(0.3)
 
     TweenService:Create(title, TweenInfo.new(1, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
-        Position = UDim2.new(0, 0, 0.37, 0), TextTransparency = 0
+        Position = UDim2.new(0, 0, 0.34, 0), TextTransparency = 0
     }):Play()
 
     task.wait(0.2)
@@ -328,11 +365,11 @@ if not _earlySkipIntro then
 
     task.spawn(function()
         for i: number = 0, 100 do
-            progressText.Text = i .. "/100"
+            progressText.Text = i .. "%"
             bar.Size = UDim2.new(i / 100, 0, 1, 0)
             task.wait(0.03)
         end
-        progressText.Text = "Loaded!"
+        progressText.Text = "✓ Ready"
         TweenService:Create(progressText, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
             Rotation = 2
         }):Play()
@@ -369,7 +406,7 @@ if not _earlySkipIntro then
         Size = UDim2.new(0, 0, 0, 0), Rotation = 180, ImageTransparency = 1
     }):Play()
     TweenService:Create(glow, TweenInfo.new(1), { ImageTransparency = 1, Size = UDim2.new(0, 0, 0, 0) }):Play()
-    TweenService:Create(title, TweenInfo.new(1), { Position = UDim2.new(0, -1000, 0.37, 0), TextTransparency = 1 }):Play()
+    TweenService:Create(title, TweenInfo.new(1), { Position = UDim2.new(0, -1000, 0.34, 0), TextTransparency = 1 }):Play()
     TweenService:Create(sub, TweenInfo.new(1),   { Position = UDim2.new(0, 1000,  0.47, 0), TextTransparency = 1 }):Play()
     TweenService:Create(barBg, TweenInfo.new(1), { BackgroundTransparency = 1 }):Play()
     TweenService:Create(bar, TweenInfo.new(1),   { BackgroundTransparency = 1 }):Play()
@@ -569,40 +606,123 @@ do
     Corner.CornerRadius = UDim.new(0, 8)
 end
 
+-- Top glass highlight strip
+local TopShimmer: Frame = Instance.new("Frame", MainBackground)
+TopShimmer.Size             = UDim2.new(0.7, 0, 0, 1)
+TopShimmer.Position         = UDim2.new(0.15, 0, 0, 2)
+TopShimmer.BorderSizePixel  = 0
+TopShimmer.ZIndex           = 2
+do
+    local ShimmerCorner: UICorner = Instance.new("UICorner", TopShimmer)
+    ShimmerCorner.CornerRadius = UDim.new(1, 0)
+    local ShimmerGrad: UIGradient = Instance.new("UIGradient", TopShimmer)
+    ShimmerGrad.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0,   Color3.fromRGB(255, 255, 255)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(200, 255, 240)),
+        ColorSequenceKeypoint.new(1,   Color3.fromRGB(255, 255, 255)),
+    }
+    ShimmerGrad.Transparency = NumberSequence.new{
+        NumberSequenceKeypoint.new(0,   1),
+        NumberSequenceKeypoint.new(0.2, 0.55),
+        NumberSequenceKeypoint.new(0.5, 0.3),
+        NumberSequenceKeypoint.new(0.8, 0.55),
+        NumberSequenceKeypoint.new(1,   1),
+    }
+end
+
+-- Accent bar on bottom of header
+local HeaderAccent: Frame = Instance.new("Frame", MainBackground)
+HeaderAccent.Size             = UDim2.new(1, 0, 0, 1)
+HeaderAccent.Position         = UDim2.new(0, 0, 0, 32)
+HeaderAccent.BorderSizePixel  = 0
+HeaderAccent.ZIndex           = 2
+do
+    local HAccentGrad: UIGradient = Instance.new("UIGradient", HeaderAccent)
+    HAccentGrad.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0,   Color3.fromRGB(0, 255, 120)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 200, 255)),
+        ColorSequenceKeypoint.new(1,   Color3.fromRGB(0, 255, 120)),
+    }
+    HAccentGrad.Transparency = NumberSequence.new{
+        NumberSequenceKeypoint.new(0,   1),
+        NumberSequenceKeypoint.new(0.1, 0.2),
+        NumberSequenceKeypoint.new(0.9, 0.2),
+        NumberSequenceKeypoint.new(1,   1),
+    }
+end
+
 local Logo: ImageButton = Instance.new("ImageButton", MainBackground)
 Logo.BackgroundTransparency = 1
 Logo.Position = UDim2.new(0, 6, 0, 6)
-Logo.Size     = UDim2.new(0, 25, 0, 25)
+Logo.Size     = UDim2.new(0, 22, 0, 22)
 Logo.Image    = "rbxassetid://103887859853708"
 Logo.Visible  = false
 
 local Name: TextLabel = Instance.new("TextLabel", MainBackground)
 Name.BackgroundTransparency = 1
-Name.Position             = UDim2.new(0.11, 0, 0.035, 0)
-Name.Size                 = UDim2.new(0.72, 0, 0, 20)
+Name.Position             = UDim2.new(0, 33, 0, 7)
+Name.Size                 = UDim2.new(0.72, 0, 0, 18)
 Name.Font                 = Enum.Font.Arcade
-Name.Text                 = "Alwi Hub Loader"
-Name.TextSize             = 14
+Name.Text                 = "Alwi Hub"
+Name.TextSize             = 13
 Name.TextXAlignment       = Enum.TextXAlignment.Left
-Name.TextColor3           = Color3.fromRGB(0, 255, 150)
-Name.TextStrokeTransparency = 0
-Name.TextStrokeColor3     = Color3.fromRGB(0, 0, 0)
+Name.TextColor3           = Color3.fromRGB(0, 255, 160)
+Name.TextStrokeTransparency = 0.3
+Name.TextStrokeColor3     = Color3.fromRGB(0, 80, 40)
 Name.Visible              = false
+do
+    local NameStroke: UIStroke = Instance.new("UIStroke", Name)
+    NameStroke.Color       = Color3.fromRGB(0, 200, 120)
+    NameStroke.Thickness   = 1
+    NameStroke.Transparency = 0.7
+end
 
 local InjectButton: TextButton = Instance.new("TextButton", MainBackground)
 InjectButton.BackgroundColor3     = Color3.fromRGB(255, 255, 255)
 InjectButton.BackgroundTransparency = 1
 InjectButton.AnchorPoint          = Vector2.new(0.5, 0.5)
-InjectButton.Position             = UDim2.new(0.5, 0, 0.46, 0)
-InjectButton.Size                 = UDim2.new(0.82, 0, 0, 48)
+InjectButton.Position             = UDim2.new(0.5, 0, 0.48, 0)
+InjectButton.Size                 = UDim2.new(0.80, 0, 0, 44)
 InjectButton.Font                 = Enum.Font.Arcade
 InjectButton.Text                 = "Initializing..."
 InjectButton.TextScaled           = true
-InjectButton.TextColor3           = Color3.new(0, 0, 0)
+InjectButton.TextColor3           = Color3.fromRGB(5, 5, 5)
 InjectButton.Visible              = false
 InjectButton.AutoButtonColor      = false
 
-Instance.new("UICorner", InjectButton).CornerRadius = UDim.new(0, 6)
+Instance.new("UICorner", InjectButton).CornerRadius = UDim.new(0, 8)
+
+-- Pulse glow ring behind button
+local BtnGlowRing: Frame = Instance.new("Frame", MainBackground)
+BtnGlowRing.AnchorPoint        = Vector2.new(0.5, 0.5)
+BtnGlowRing.Position           = UDim2.new(0.5, 0, 0.48, 0)
+BtnGlowRing.Size               = UDim2.new(0.80, 0, 0, 44)
+BtnGlowRing.BackgroundTransparency = 1
+BtnGlowRing.BorderSizePixel    = 0
+BtnGlowRing.ZIndex             = 0
+Instance.new("UICorner", BtnGlowRing).CornerRadius = UDim.new(0, 10)
+do
+    local GlowStroke: UIStroke = Instance.new("UIStroke", BtnGlowRing)
+    GlowStroke.Color       = Color3.fromRGB(0, 255, 140)
+    GlowStroke.Thickness   = 3
+    GlowStroke.Transparency = 0.7
+    task.spawn(function()
+        while BtnGlowRing and BtnGlowRing.Parent do
+            pcall(function()
+                TweenService:Create(GlowStroke, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                    Transparency = 0.3, Thickness = 5
+                }):Play()
+            end)
+            task.wait(1.2)
+            pcall(function()
+                TweenService:Create(GlowStroke, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                    Transparency = 0.7, Thickness = 3
+                }):Play()
+            end)
+            task.wait(1.2)
+        end
+    end)
+end
 
 local BtnGradient: UIGradient
 local BtnStroke:   UIStroke
@@ -696,14 +816,14 @@ end)
 local Version: TextLabel = Instance.new("TextLabel", MainBackground)
 Version.BackgroundTransparency = 1
 Version.AnchorPoint        = Vector2.new(1, 1)
-Version.Position           = UDim2.new(0.99, 0, 0.985, 0)
-Version.Size               = UDim2.new(0.36, 0, 0, 14)
+Version.Position           = UDim2.new(1, -6, 1, -4)
+Version.Size               = UDim2.new(0.40, 0, 0, 12)
 Version.Font               = Enum.Font.Arcade
 Version.Text               = "Loading..."
-Version.TextSize           = 11
+Version.TextSize           = 10
 Version.TextXAlignment     = Enum.TextXAlignment.Right
-Version.TextColor3         = Color3.fromRGB(0, 200, 255)
-Version.TextStrokeTransparency = 0.4
+Version.TextColor3         = Color3.fromRGB(0, 180, 240)
+Version.TextStrokeTransparency = 0.6
 Version.TextStrokeColor3   = Color3.fromRGB(0, 0, 0)
 Version.Visible            = false
 
@@ -712,16 +832,16 @@ local DISCORD_LINK: string = "https://discord.gg/jc6SAYtVNf"
 local GreetingCard: Frame = Instance.new("Frame", MainBackground)
 GreetingCard.Name                   = "GreetingCard"
 GreetingCard.AnchorPoint            = Vector2.new(0, 1)
-GreetingCard.Position               = UDim2.new(0.01, 0, 0.99, 0)
+GreetingCard.Position               = UDim2.new(0, 6, 1, -5)
 
-GreetingCard.Size                   = UDim2.new(0.60, 0, 0, 24)
-GreetingCard.BackgroundColor3       = Color3.fromRGB(15, 15, 20)
-GreetingCard.BackgroundTransparency = 0.30
+GreetingCard.Size                   = UDim2.new(0.60, 0, 0, 26)
+GreetingCard.BackgroundColor3       = Color3.fromRGB(8, 18, 14)
+GreetingCard.BackgroundTransparency = 0.25
 GreetingCard.BorderSizePixel        = 0
 GreetingCard.ClipsDescendants       = true
 GreetingCard.Visible                = false
 
-Instance.new("UICorner", GreetingCard).CornerRadius = UDim.new(0, 5)
+Instance.new("UICorner", GreetingCard).CornerRadius = UDim.new(0, 7)
 
 local GCardBar: Frame = Instance.new("Frame", GreetingCard)
 GCardBar.Size             = UDim2.new(0, 2, 1, 0)
@@ -909,17 +1029,19 @@ end)
 
 local CloseButton: TextButton = Instance.new("TextButton", MainBackground)
 CloseButton.BackgroundTransparency = 1
-CloseButton.Position  = UDim2.new(0.928, 0, 0, -2)
-CloseButton.Rotation  = 45
-CloseButton.Size      = UDim2.new(0, 25, 0, 25)
-CloseButton.Font      = Enum.Font.Arcade
-CloseButton.Text      = "+"
-CloseButton.TextSize  = 29
-CloseButton.Visible   = false
+CloseButton.AnchorPoint   = Vector2.new(1, 0)
+CloseButton.Position      = UDim2.new(1, -2, 0, -2)
+CloseButton.Rotation      = 45
+CloseButton.Size          = UDim2.new(0, 25, 0, 25)
+CloseButton.Font          = Enum.Font.Arcade
+CloseButton.Text          = "+"
+CloseButton.TextSize      = 29
+CloseButton.Visible       = false
 
 local SettingsIcon: ImageButton = Instance.new("ImageButton", MainBackground)
 SettingsIcon.BackgroundTransparency = 1
-SettingsIcon.Position          = UDim2.new(0.85, 0, 0.01, 0)
+SettingsIcon.AnchorPoint       = Vector2.new(1, 0)
+SettingsIcon.Position          = UDim2.new(1, -30, 0, 5)
 SettingsIcon.Size              = UDim2.new(0, 22, 0, 22)
 SettingsIcon.Image             = "rbxassetid://101339235267993"
 SettingsIcon.Visible           = false
@@ -1081,12 +1203,12 @@ local DeleteNoStroke: UIStroke = Instance.new("UIStroke", DeleteNoButton)
 DeleteNoStroke.Color     = Color3.fromRGB(255, 100, 100)
 DeleteNoStroke.Thickness = 1.5
 
-local PANEL_W: number = 222
-local PANEL_H: number = 245
+local PANEL_W: number = 234
+local PANEL_H: number = 256
 
 local SettingsPanel: ImageLabel = Instance.new("ImageLabel", MainBackground)
 SettingsPanel.AnchorPoint      = Vector2.new(1, 0)
-SettingsPanel.Position         = UDim2.new(0.85, 0, 0.09, 0)
+SettingsPanel.Position         = UDim2.new(1, -2, 0, 33)
 SettingsPanel.Size             = UDim2.new(0, PANEL_W, 0, PANEL_H)
 SettingsPanel.Image            = "rbxassetid://7877641241"
 SettingsPanel.BackgroundColor3 = Color3.new(1, 1, 1)
@@ -1191,9 +1313,9 @@ local function makeTabButton(
     return btn
 end
 
-local TabBtnSettings: TextButton = makeTabButton("⚙ Settings",    4,  66)
-local TabBtnInfo:     TextButton = makeTabButton("ℹ Information", 73,  82)
-local TabBtnCredit:   TextButton = makeTabButton("★ Credit",     158,  60)
+local TabBtnSettings: TextButton = makeTabButton("⚙ Settings",   4,  68)
+local TabBtnInfo:     TextButton = makeTabButton("⊹ Info",       75,  56)
+local TabBtnCredit:   TextButton = makeTabButton("★ Credit",    134,  64)
 
 local CONTENT_Y: number = 28
 
@@ -1211,8 +1333,13 @@ ScrollingFrame.ZIndex                = 3
 ScrollingFrame.Visible               = true
 
 local ToggleList: UIListLayout = Instance.new("UIListLayout", ScrollingFrame)
-ToggleList.Padding             = UDim.new(0, 8)
+ToggleList.Padding             = UDim.new(0, 5)
 ToggleList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+do
+    local ScrollPad: UIPadding = Instance.new("UIPadding", ScrollingFrame)
+    ScrollPad.PaddingTop    = UDim.new(0, 6)
+    ScrollPad.PaddingBottom = UDim.new(0, 6)
+end
 
 local InfoContent: ScrollingFrame = Instance.new("ScrollingFrame", SettingsPanel)
 InfoContent.Name                   = "InfoContent"
@@ -1248,10 +1375,12 @@ local function addInfoRow(icon: string, label: string, value: string, col: Color
     _infoOrder += 1
     local row: Frame = Instance.new("Frame", InfoContent)
     row.Size                  = UDim2.new(1, -6, 0, 17)
+    row.BackgroundColor3      = Color3.fromRGB(0, 255, 150)
     row.BackgroundTransparency = 1
     row.BorderSizePixel       = 0
     row.ZIndex                = 4
     row.LayoutOrder           = _infoOrder
+    Instance.new("UICorner", row).CornerRadius = UDim.new(0, 3)
 
     local lbl: TextLabel = Instance.new("TextLabel", row)
     lbl.BackgroundTransparency = 1
@@ -1627,17 +1756,33 @@ end
 
 local AvatarCard: Frame = Instance.new("Frame", CreditContent)
 AvatarCard.LayoutOrder        = 1
-AvatarCard.Size               = UDim2.new(1, 0, 0, 78)
-AvatarCard.BackgroundColor3   = Color3.fromRGB(10, 10, 18)
-AvatarCard.BackgroundTransparency = 0.3
+AvatarCard.Size               = UDim2.new(1, 0, 0, 82)
+AvatarCard.BackgroundColor3   = Color3.fromRGB(6, 14, 12)
+AvatarCard.BackgroundTransparency = 0.2
 AvatarCard.BorderSizePixel    = 0
 AvatarCard.ZIndex             = 4
-Instance.new("UICorner", AvatarCard).CornerRadius = UDim.new(0, 6)
+Instance.new("UICorner", AvatarCard).CornerRadius = UDim.new(0, 8)
 do
     local AvatarCardStroke: UIStroke = Instance.new("UIStroke", AvatarCard)
-    AvatarCardStroke.Color        = Color3.fromRGB(0, 200, 255)
-    AvatarCardStroke.Thickness    = 1
-    AvatarCardStroke.Transparency = 0.5
+    AvatarCardStroke.Color        = Color3.fromRGB(0, 255, 150)
+    AvatarCardStroke.Thickness    = 1.5
+    AvatarCardStroke.Transparency = 0.35
+    task.spawn(function()
+        while AvatarCard and AvatarCard.Parent do
+            pcall(function()
+                TweenService:Create(AvatarCardStroke, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                    Color = Color3.fromRGB(0, 200, 255), Transparency = 0.6
+                }):Play()
+            end)
+            task.wait(2)
+            pcall(function()
+                TweenService:Create(AvatarCardStroke, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                    Color = Color3.fromRGB(0, 255, 150), Transparency = 0.35
+                }):Play()
+            end)
+            task.wait(2)
+        end
+    end)
 end
 
 local AvatarImg: ImageLabel = Instance.new("ImageLabel", AvatarCard)
@@ -2211,9 +2356,9 @@ local ACTIVE_COL:   Color3 = Color3.fromRGB(0, 255, 150)
 local INACTIVE_COL: Color3 = Color3.fromRGB(140, 140, 140)
 
 local TAB_POSITIONS: {[string]: {xPos: number, width: number, btn: TextButton}} = {
-    settings = { xPos = 4,   width = 66, btn = TabBtnSettings },
-    info     = { xPos = 73,  width = 82, btn = TabBtnInfo     },
-    credit   = { xPos = 158, width = 60, btn = TabBtnCredit   },
+    settings = { xPos = 4,   width = 68, btn = TabBtnSettings },
+    info     = { xPos = 75,  width = 56, btn = TabBtnInfo     },
+    credit   = { xPos = 134, width = 64, btn = TabBtnCredit   },
 }
 
 local currentTab: string = "settings"
@@ -2248,7 +2393,7 @@ local function resetToSettingsTab()
     TabBtnInfo.TextColor3     = INACTIVE_COL
     TabBtnCredit.TextColor3   = INACTIVE_COL
     TabIndicator.Position     = UDim2.new(0, 4, 1, 0)
-    TabIndicator.Size         = UDim2.new(0, 66, 0, 2)
+    TabIndicator.Size         = UDim2.new(0, 68, 0, 2)
 end
 
 TabBtnSettings.MouseButton1Click:Connect(function() switchTab("settings") end)
@@ -2393,18 +2538,21 @@ local function addToggle(
     local COL_STROKE_OFF: Color3 = Color3.fromRGB(70, 70, 80)
 
     local toggleFrame: Frame = Instance.new("Frame", parent)
-    toggleFrame.Size                 = UDim2.new(0, 180, 0, 26)
-    toggleFrame.BackgroundTransparency = 1
+    toggleFrame.Size                 = UDim2.new(1, -8, 0, 28)
+    toggleFrame.BackgroundColor3     = Color3.fromRGB(0, 20, 14)
+    toggleFrame.BackgroundTransparency = 0.75
+    toggleFrame.BorderSizePixel      = 0
     toggleFrame.ZIndex               = 2
+    Instance.new("UICorner", toggleFrame).CornerRadius = UDim.new(0, 5)
 
     -- Label
     local label: TextLabel = Instance.new("TextLabel", toggleFrame)
     label.BackgroundTransparency = 1
-    label.Position          = UDim2.new(0, 0, 0, 0)
-    label.Size              = UDim2.new(1, -(PILL_W + 10), 1, 0)
+    label.Position          = UDim2.new(0, 8, 0, 0)
+    label.Size              = UDim2.new(1, -(PILL_W + 18), 1, 0)
     label.Font              = Enum.Font.Arcade
     label.Text              = labelText
-    label.TextColor3        = Color3.fromRGB(220, 220, 220)
+    label.TextColor3        = Color3.fromRGB(200, 200, 200)
     label.TextSize          = 10
     label.TextXAlignment    = Enum.TextXAlignment.Left
     label.ZIndex            = 2
@@ -3183,7 +3331,7 @@ end
 MainBackground.Visible = true
 MainBackground.Size    = UDim2.new(0, 0, 0, 0)
 TweenService:Create(MainBackground, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-    Size = UDim2.new(0, 318, 0, 162), ImageTransparency = 0.2
+    Size = UDim2.new(0, 330, 0, 172), ImageTransparency = 0.15
 }):Play()
 task.wait(0.4)
 
@@ -3306,21 +3454,21 @@ end)
 
 local openConsoleButton: TextButton = Instance.new("TextButton")
 openConsoleButton.Name               = "OpenConsoleButton"
-openConsoleButton.Size               = UDim2.new(0, 180, 0, 30)
-openConsoleButton.BackgroundColor3   = Color3.fromRGB(255, 255, 255)
-openConsoleButton.BackgroundTransparency = 0.9
+openConsoleButton.Size               = UDim2.new(1, -8, 0, 28)
+openConsoleButton.BackgroundColor3   = Color3.fromRGB(0, 30, 50)
+openConsoleButton.BackgroundTransparency = 0.65
 openConsoleButton.BorderSizePixel    = 0
 openConsoleButton.Font               = Enum.Font.Arcade
-openConsoleButton.Text               = "Open Console"
+openConsoleButton.Text               = "⌨ Open Console"
 openConsoleButton.TextColor3         = Color3.fromRGB(0, 200, 255)
-openConsoleButton.TextSize           = 12
+openConsoleButton.TextSize           = 11
 openConsoleButton.ZIndex             = 2
-Instance.new("UICorner", openConsoleButton).CornerRadius = UDim.new(0, 4)
+Instance.new("UICorner", openConsoleButton).CornerRadius = UDim.new(0, 5)
 do
     local consoleBtnStroke: UIStroke = Instance.new("UIStroke", openConsoleButton)
     consoleBtnStroke.Color       = Color3.fromRGB(0, 200, 255)
-    consoleBtnStroke.Thickness   = 1.5
-    consoleBtnStroke.Transparency = 0.5
+    consoleBtnStroke.Thickness   = 1.2
+    consoleBtnStroke.Transparency = 0.45
 end
 openConsoleButton.Parent = ScrollingFrame
 openConsoleButton.MouseButton1Click:Connect(function()
@@ -3331,21 +3479,21 @@ end)
 
 local deleteConfigButton: TextButton = Instance.new("TextButton")
 deleteConfigButton.Name               = "DeleteConfigButton"
-deleteConfigButton.Size               = UDim2.new(0, 180, 0, 30)
-deleteConfigButton.BackgroundColor3   = Color3.fromRGB(255, 255, 255)
-deleteConfigButton.BackgroundTransparency = 0.9
+deleteConfigButton.Size               = UDim2.new(1, -8, 0, 28)
+deleteConfigButton.BackgroundColor3   = Color3.fromRGB(50, 10, 10)
+deleteConfigButton.BackgroundTransparency = 0.60
 deleteConfigButton.BorderSizePixel    = 0
 deleteConfigButton.Font               = Enum.Font.Arcade
-deleteConfigButton.Text               = "Delete Config"
+deleteConfigButton.Text               = "🗑 Delete Config"
 deleteConfigButton.TextColor3         = Color3.fromRGB(255, 100, 100)
-deleteConfigButton.TextSize           = 12
+deleteConfigButton.TextSize           = 11
 deleteConfigButton.ZIndex             = 2
-Instance.new("UICorner", deleteConfigButton).CornerRadius = UDim.new(0, 4)
+Instance.new("UICorner", deleteConfigButton).CornerRadius = UDim.new(0, 5)
 do
     local delBtnStroke: UIStroke = Instance.new("UIStroke", deleteConfigButton)
-    delBtnStroke.Color       = Color3.fromRGB(255, 100, 100)
-    delBtnStroke.Thickness   = 1.5
-    delBtnStroke.Transparency = 0.5
+    delBtnStroke.Color       = Color3.fromRGB(255, 80, 80)
+    delBtnStroke.Thickness   = 1.2
+    delBtnStroke.Transparency = 0.45
 end
 deleteConfigButton.Parent = ScrollingFrame
 
@@ -3440,26 +3588,131 @@ InjectButton.MouseButton1Click:Connect(function()
     if RealZzHub then RealZzHub:Destroy() end
 end)
 
-SettingsIcon.MouseEnter:Connect(function()
-    if SettingsPanel and not SettingsPanel.Visible then
+-- UIScale on the panel for the open punch effect
+local PanelScale: UIScale = Instance.new("UIScale", SettingsPanel)
+PanelScale.Scale = 1
+
+local _settingsPanelAnimating: boolean = false
+
+local function openSettingsPanel()
+    if _settingsPanelAnimating then return end
+    _settingsPanelAnimating = true
+
+    -- Icon: press squish → spin to 45° open state
+    pcall(function()
+        TweenService:Create(SettingsIconScale,
+            TweenInfo.new(0.10, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+            { Scale = 0.72 }):Play()
+    end)
+    task.delay(0.10, function()
         pcall(function()
             TweenService:Create(SettingsIconScale,
-                TweenInfo.new(0.20, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-                { Scale = 1.22 }):Play()
+                TweenInfo.new(0.55, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
+                { Scale = 1 }):Play()
             TweenService:Create(SettingsIcon,
-                TweenInfo.new(0.32, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-                { Rotation = 42, ImageTransparency = 0 }):Play()
+                TweenInfo.new(0.40, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+                { Rotation = 90, ImageTransparency = 0 }):Play()
+        end)
+    end)
+
+    -- Panel: start from top-right corner (where the icon is), scale + fade in
+    resetToSettingsTab()
+    SettingsPanel.Visible           = true
+    SettingsPanel.Size              = UDim2.new(0, PANEL_W, 0, 0)
+    SettingsPanel.ImageTransparency = 1
+    PanelScale.Scale                = 0.88
+
+    -- Slight delay so icon squish is visible first
+    task.delay(0.05, function()
+        pcall(function()
+            -- Height expands downward from the anchor (top-right)
+            TweenService:Create(SettingsPanel,
+                TweenInfo.new(0.32, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+                { Size = UDim2.new(0, PANEL_W, 0, PANEL_H), ImageTransparency = 0 }):Play()
+            -- Scale punch: overshoot then settle
+            TweenService:Create(PanelScale,
+                TweenInfo.new(0.38, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+                { Scale = 1 }):Play()
+        end)
+    end)
+
+    task.delay(0.38, function()
+        _settingsPanelAnimating = false
+    end)
+
+    setButtonActive(InjectButton, false)
+    setButtonActive(CloseButton,  false)
+    onPanelOpen()
+end
+
+local function closeSettingsPanel(callback: (() -> ())?)
+    if _settingsPanelAnimating then
+        if callback then callback() end
+        return
+    end
+    _settingsPanelAnimating = true
+
+    -- Icon: spin back to 0 with a spring snap
+    pcall(function()
+        TweenService:Create(SettingsIconScale,
+            TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+            { Scale = 0.78 }):Play()
+    end)
+    task.delay(0.08, function()
+        pcall(function()
+            TweenService:Create(SettingsIconScale,
+                TweenInfo.new(0.50, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
+                { Scale = 1 }):Play()
+            TweenService:Create(SettingsIcon,
+                TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.In),
+                { Rotation = 0, ImageTransparency = 0.2 }):Play()
+        end)
+    end)
+
+    -- Panel: shrink upward toward the icon (height collapses, slight scale down)
+    pcall(function()
+        TweenService:Create(PanelScale,
+            TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+            { Scale = 0.92 }):Play()
+        TweenService:Create(SettingsPanel,
+            TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+            { Size = UDim2.new(0, PANEL_W, 0, 0), ImageTransparency = 1 }):Play()
+    end)
+
+    task.delay(0.24, function()
+        if SettingsPanel then
+            SettingsPanel.Visible           = false
+            SettingsPanel.Size              = UDim2.new(0, PANEL_W, 0, PANEL_H)
+            SettingsPanel.ImageTransparency = 0
+        end
+        PanelScale.Scale = 1
+        _settingsPanelAnimating = false
+        resetToSettingsTab()
+        if callback then callback() end
+    end)
+end
+
+SettingsIcon.MouseEnter:Connect(function()
+    if SettingsPanel and not SettingsPanel.Visible and not _settingsPanelAnimating then
+        pcall(function()
+            TweenService:Create(SettingsIconScale,
+                TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+                { Scale = 1.25 }):Play()
+            TweenService:Create(SettingsIcon,
+                TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                { Rotation = 36, ImageTransparency = 0 }):Play()
         end)
     end
 end)
+
 SettingsIcon.MouseLeave:Connect(function()
-    if SettingsPanel and not SettingsPanel.Visible then
+    if SettingsPanel and not SettingsPanel.Visible and not _settingsPanelAnimating then
         pcall(function()
             TweenService:Create(SettingsIconScale,
-                TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+                TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
                 { Scale = 1 }):Play()
             TweenService:Create(SettingsIcon,
-                TweenInfo.new(0.40, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
+                TweenInfo.new(0.45, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
                 { Rotation = 0, ImageTransparency = 0.2 }):Play()
         end)
     end
@@ -3468,68 +3721,15 @@ end)
 SettingsIcon.MouseButton1Click:Connect(function()
     if not SettingsPanel then return end
     if SettingsPanel.Visible then
-
-        pcall(function()
-            TweenService:Create(SettingsIconScale,
-                TweenInfo.new(0.10, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-                { Scale = 0.76 }):Play()
-            TweenService:Create(SettingsIcon,
-                TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-                { Rotation = -30 }):Play()
-            task.delay(0.12, function()
-                pcall(function()
-                    TweenService:Create(SettingsIconScale,
-                        TweenInfo.new(0.42, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
-                        { Scale = 1 }):Play()
-                    TweenService:Create(SettingsIcon,
-                        TweenInfo.new(0.48, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
-                        { Rotation = 0, ImageTransparency = 0.2 }):Play()
-                end)
-            end)
+        closeSettingsPanel(function()
+            if ConfirmFrame and not ConfirmFrame.Visible and DeleteConfirmFrame and not DeleteConfirmFrame.Visible then
+                setButtonActive(InjectButton, true)
+                setButtonActive(CloseButton,  true)
+                setButtonActive(SettingsIcon, true)
+            end
         end)
-        TweenService:Create(SettingsPanel, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-            Size = UDim2.new(0, 0, 0, 0), ImageTransparency = 1
-        }):Play()
-        task.wait(0.15)
-        if SettingsPanel then
-            SettingsPanel.Visible           = false
-            SettingsPanel.Size              = UDim2.new(0, PANEL_W, 0, PANEL_H)
-            SettingsPanel.ImageTransparency = 0
-        end
-        resetToSettingsTab()
-        if ConfirmFrame and not ConfirmFrame.Visible and DeleteConfirmFrame and not DeleteConfirmFrame.Visible then
-            setButtonActive(InjectButton, true)
-            setButtonActive(CloseButton,  true)
-        end
     else
-
-        pcall(function()
-            TweenService:Create(SettingsIconScale,
-                TweenInfo.new(0.10, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-                { Scale = 0.76 }):Play()
-            TweenService:Create(SettingsIcon,
-                TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-                { Rotation = 82 }):Play()
-            task.delay(0.12, function()
-                pcall(function()
-                    TweenService:Create(SettingsIconScale,
-                        TweenInfo.new(0.42, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
-                        { Scale = 1 }):Play()
-                    TweenService:Create(SettingsIcon,
-                        TweenInfo.new(0.48, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-                        { Rotation = 45, ImageTransparency = 0 }):Play()
-                end)
-            end)
-        end)
-        resetToSettingsTab()
-        SettingsPanel.Visible = true
-        SettingsPanel.Size    = UDim2.new(0, 0, 0, 0)
-        TweenService:Create(SettingsPanel, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, PANEL_W, 0, PANEL_H), ImageTransparency = 0
-        }):Play()
-        setButtonActive(InjectButton, false)
-        setButtonActive(CloseButton,  false)
-        onPanelOpen()
+        openSettingsPanel()
     end
 end)
 
