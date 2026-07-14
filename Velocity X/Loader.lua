@@ -2363,38 +2363,213 @@ local TAB_POSITIONS: {[string]: {xPos: number, width: number, btn: TextButton}} 
 
 local currentTab: string = "settings"
 
+-- Tab order for direction detection (left → right)
+local TAB_ORDER: {string} = { "settings", "info", "credit" }
+local function tabIndex(name: string): number
+    for i, v in TAB_ORDER do if v == name then return i end end
+    return 1
+end
+
+-- Content frame lookup
+local function getContent(name: string): GuiObject?
+    if name == "settings" then return ScrollingFrame
+    elseif name == "info"  then return InfoContent
+    elseif name == "credit" then return CreditContent
+    end
+    return nil
+end
+
+-- Per-button UIScale instances for press bounce
+local _btnScales: {[TextButton]: UIScale} = {}
+for _, tbl in TAB_POSITIONS do
+    local s: UIScale = Instance.new("UIScale", tbl.btn)
+    s.Scale = 1
+    _btnScales[tbl.btn] = s
+end
+
+local _tabAnimating: boolean = false
+
 local function switchTab(tabName: string)
-    if tabName == currentTab then return end
+    if tabName == currentTab or _tabAnimating then return end
+    _tabAnimating = true
+
+    local fromName: string  = currentTab
+    local fromContent: GuiObject? = getContent(fromName)
+    local toContent:   GuiObject? = getContent(tabName)
+    if not toContent then _tabAnimating = false return end
+
+    -- Detect direction: sliding right or left
+    local fromIdx: number = tabIndex(fromName)
+    local toIdx:   number = tabIndex(tabName)
+    local goRight: boolean = toIdx > fromIdx  -- new tab is to the right
+    local slideOut: number = goRight and -PANEL_W or  PANEL_W  -- old slides out left
+    local slideIn:  number = goRight and  PANEL_W or -PANEL_W  -- new enters from right
+
+    -- Update currentTab now
     currentTab = tabName
 
-    ScrollingFrame.Visible = (tabName == "settings")
-    InfoContent.Visible    = (tabName == "info")
-    CreditContent.Visible  = (tabName == "credit")
-
-    for name: string, tbl: any in TAB_POSITIONS do
-        tbl.btn.TextColor3 = (name == tabName) and ACTIVE_COL or INACTIVE_COL
-    end
-
+    -- ── Indicator animation ──────────────────────────────────────────────────
     local tbl: any = TAB_POSITIONS[tabName]
+    -- First squash indicator to a dot (width → 4), then stretch to new position
     pcall(function()
         TweenService:Create(TabIndicator,
-            TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-            { Position = UDim2.new(0, tbl.xPos, 1, 0), Size = UDim2.new(0, tbl.width, 0, 2) }
+            TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+            { Size = UDim2.new(0, 4, 0, 3) }
         ):Play()
+    end)
+    task.delay(0.12, function()
+        pcall(function()
+            -- Snap X to roughly midpoint of destination while still squashed
+            TabIndicator.Position = UDim2.new(0, tbl.xPos + tbl.width * 0.5 - 2, 1, 0)
+            TweenService:Create(TabIndicator,
+                TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+                {
+                    Position = UDim2.new(0, tbl.xPos, 1, 0),
+                    Size     = UDim2.new(0, tbl.width, 0, 2),
+                }
+            ):Play()
+        end)
+    end)
+
+    -- ── Tab button colors + press bounce ─────────────────────────────────────
+    for name: string, t: any in TAB_POSITIONS do
+        local btn: TextButton = t.btn
+        local isActive: boolean = (name == tabName)
+        local sc: UIScale? = _btnScales[btn]
+
+        if isActive then
+            -- Press squish then spring back
+            if sc then
+                pcall(function()
+                    TweenService:Create(sc,
+                        TweenInfo.new(0.10, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+                        { Scale = 0.80 }
+                    ):Play()
+                end)
+                task.delay(0.10, function()
+                    pcall(function()
+                        TweenService:Create(sc,
+                            TweenInfo.new(0.38, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
+                            { Scale = 1 }
+                        ):Play()
+                    end)
+                end)
+            end
+            pcall(function()
+                TweenService:Create(btn,
+                    TweenInfo.new(0.20, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                    { TextColor3 = ACTIVE_COL }
+                ):Play()
+            end)
+        else
+            -- Inactive buttons fade to grey
+            pcall(function()
+                TweenService:Create(btn,
+                    TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                    { TextColor3 = INACTIVE_COL }
+                ):Play()
+            end)
+        end
+    end
+
+    -- ── Content slide-out (old frame) ────────────────────────────────────────
+    if fromContent then
+        fromContent.ClipsDescendants = true
+        pcall(function()
+            TweenService:Create(fromContent,
+                TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+                { Position = UDim2.new(0, slideOut, 0, CONTENT_Y) }
+            ):Play()
+        end)
+        task.delay(0.18, function()
+            if fromContent then
+                fromContent.Visible  = false
+                fromContent.Position = UDim2.new(0, 0, 0, CONTENT_Y)
+            end
+        end)
+    end
+
+    -- ── Content slide-in (new frame) ─────────────────────────────────────────
+    -- Position new frame off-screen in the incoming direction, make visible, slide to 0
+    toContent.Position = UDim2.new(0, slideIn, 0, CONTENT_Y)
+    toContent.Visible  = true
+    toContent.ClipsDescendants = true
+
+    task.delay(0.10, function()  -- slight overlap so transition feels snappy
+        pcall(function()
+            TweenService:Create(toContent,
+                TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                { Position = UDim2.new(0, 0, 0, CONTENT_Y) }
+            ):Play()
+        end)
+        task.delay(0.25, function()
+            _tabAnimating = false
+        end)
     end)
 end
 
 local function resetToSettingsTab()
     currentTab = "settings"
+    _tabAnimating = false
+
+    ScrollingFrame.Position  = UDim2.new(0, 0, 0, CONTENT_Y)
+    InfoContent.Position     = UDim2.new(0, 0, 0, CONTENT_Y)
+    CreditContent.Position   = UDim2.new(0, 0, 0, CONTENT_Y)
+
     ScrollingFrame.Visible = true
     InfoContent.Visible    = false
     CreditContent.Visible  = false
+
     TabBtnSettings.TextColor3 = ACTIVE_COL
     TabBtnInfo.TextColor3     = INACTIVE_COL
     TabBtnCredit.TextColor3   = INACTIVE_COL
-    TabIndicator.Position     = UDim2.new(0, 4, 1, 0)
-    TabIndicator.Size         = UDim2.new(0, 68, 0, 2)
+
+    -- Reset button scales instantly
+    for _, sc in _btnScales do sc.Scale = 1 end
+
+    TabIndicator.Position = UDim2.new(0, 4, 1, 0)
+    TabIndicator.Size     = UDim2.new(0, 68, 0, 2)
 end
+
+-- ── Tab button hover glow ─────────────────────────────────────────────────
+local function connectTabHover(btn: TextButton)
+    btn.MouseEnter:Connect(function()
+        if btn.TextColor3 == ACTIVE_COL then return end -- already active
+        local sc: UIScale? = _btnScales[btn]
+        pcall(function()
+            if sc then
+                TweenService:Create(sc,
+                    TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+                    { Scale = 1.12 }
+                ):Play()
+            end
+            TweenService:Create(btn,
+                TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                { TextColor3 = Color3.fromRGB(200, 200, 200) }
+            ):Play()
+        end)
+    end)
+    btn.MouseLeave:Connect(function()
+        if btn.TextColor3 == ACTIVE_COL then return end
+        local sc: UIScale? = _btnScales[btn]
+        pcall(function()
+            if sc then
+                TweenService:Create(sc,
+                    TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                    { Scale = 1 }
+                ):Play()
+            end
+            TweenService:Create(btn,
+                TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                { TextColor3 = INACTIVE_COL }
+            ):Play()
+        end)
+    end)
+end
+
+connectTabHover(TabBtnSettings)
+connectTabHover(TabBtnInfo)
+connectTabHover(TabBtnCredit)
 
 TabBtnSettings.MouseButton1Click:Connect(function() switchTab("settings") end)
 TabBtnInfo.MouseButton1Click:Connect(function()     switchTab("info")     end)
