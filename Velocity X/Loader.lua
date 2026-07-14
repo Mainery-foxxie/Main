@@ -827,7 +827,95 @@ Version.TextStrokeTransparency = 0.6
 Version.TextStrokeColor3   = Color3.fromRGB(0, 0, 0)
 Version.Visible            = false
 
-local DISCORD_LINK: string = "https://discord.gg/jc6SAYtVNf"
+-- ── Discord invite resolver (mirrors discord.luau) ───────────────────────────
+local _DISCORD_INVITE_CODE: string = "mJm4etTYjk"
+local _DISCORD_SERVER_ID:   string = "1525943679133552811"
+local _DISCORD_BASE_URL:    string = "https://discord.gg/" .. _DISCORD_INVITE_CODE
+local DISCORD_LINK: string         = _DISCORD_BASE_URL  -- updated async below
+
+local _DISCORD_HEADERS: {[string]: string} = {
+    ["Accept"]     = "application/json",
+    ["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+}
+
+local function _discordIsSupported(fn: any): boolean
+    return type(fn) == "function"
+end
+
+local function _discordFetch(url: string): {success: boolean, statusCode: number?, body: string?}
+    local ok, res = pcall(HttpService.RequestAsync, HttpService, {
+        Url = url, Method = "GET", Headers = _DISCORD_HEADERS,
+    })
+    if ok and res then return { success = true, statusCode = res.StatusCode, body = res.Body } end
+
+    if _discordIsSupported(syn and syn.request or nil) then
+        local ok2, r2 = pcall(syn.request, { Url = url, Method = "GET", Headers = _DISCORD_HEADERS })
+        if ok2 and r2 then return { success = true, statusCode = r2.StatusCode, body = r2.Body } end
+    end
+    if _discordIsSupported(http and http.request or nil) then
+        local ok3, r3 = pcall(http.request, { Url = url, Method = "GET", Headers = _DISCORD_HEADERS })
+        if ok3 and r3 then return { success = true, statusCode = r3.StatusCode, body = r3.Body } end
+    end
+    if _discordIsSupported(request) then
+        local ok4, r4 = pcall(request, { Url = url, Method = "GET", Headers = _DISCORD_HEADERS })
+        if ok4 and r4 then return { success = true, statusCode = r4.StatusCode, body = r4.Body } end
+    end
+    return { success = false, statusCode = nil, body = nil }
+end
+
+local function _discordCopyToClipboard(text: string): boolean
+    if _discordIsSupported(setclipboard) then
+        local ok = pcall(setclipboard, text); if ok then return true end
+    end
+    if _discordIsSupported(toclipboard) then
+        local ok = pcall(toclipboard, text); if ok then return true end
+    end
+    if _discordIsSupported(Clipboard) and _discordIsSupported(Clipboard and Clipboard.set or nil) then
+        local ok = pcall(Clipboard.set, text); if ok then return true end
+    end
+    return false
+end
+
+local function _discordResolveLink(): string
+    local inviteUrl = string.format(
+        "https://discord.com/api/v10/invites/%s?with_counts=true&with_expiration=true",
+        _DISCORD_INVITE_CODE
+    )
+    local r1 = _discordFetch(inviteUrl)
+    if r1.success and r1.statusCode == 200 then return _DISCORD_BASE_URL end
+
+    local widgetUrl = string.format(
+        "https://discord.com/api/v10/guilds/%s/widget.json",
+        _DISCORD_SERVER_ID
+    )
+    local r2 = _discordFetch(widgetUrl)
+    if r2.success and r2.statusCode == 200 and r2.body then
+        local ok, data = pcall(HttpService.JSONDecode, HttpService, r2.body)
+        if ok and type(data) == "table" and type(data.instant_invite) == "string" then
+            return data.instant_invite
+        end
+    end
+    return _DISCORD_BASE_URL
+end
+
+-- Resolve link in background and show hello notification on first load
+task.spawn(function()
+    local ok, resolved = pcall(_discordResolveLink)
+    DISCORD_LINK = (ok and type(resolved) == "string") and resolved or _DISCORD_BASE_URL
+
+    -- Greet the user by name now that the link is ready
+    local displayName: string = "Player"
+    pcall(function() displayName = Players.LocalPlayer.DisplayName end)
+
+    task.wait(1.5) -- let the main UI finish its reveal animation first
+    pcall(showNotification,
+        "Welcome, " .. displayName .. "! 👋",
+        "Alwi Hub is ready. Join our Discord for updates!",
+        Color3.fromRGB(0, 200, 255),
+        5,
+        "rbxassetid://7733960981"  -- Discord logo icon
+    )
+end)
 
 local GreetingCard: Frame = Instance.new("Frame", MainBackground)
 GreetingCard.Name                   = "GreetingCard"
@@ -892,7 +980,13 @@ GCardSub.TextScaled             = true
 GCardSub.TextXAlignment         = Enum.TextXAlignment.Left
 GCardSub.TextColor3             = Color3.fromRGB(160, 160, 255)
 GCardSub.TextTransparency       = 1
-GCardSub.Text                   = DISCORD_LINK
+GCardSub.Text = DISCORD_LINK
+-- Update label once the async resolver finishes
+task.spawn(function()
+    task.wait(0.1) -- yield so the resolver task.spawn above can set DISCORD_LINK first
+    repeat task.wait(0.2) until DISCORD_LINK ~= _DISCORD_BASE_URL or task.wait(3)
+    pcall(function() GCardSub.Text = DISCORD_LINK end)
+end)
 
 do
     local GCardSubConstraint: UITextSizeConstraint = Instance.new("UITextSizeConstraint", GCardSub)
@@ -963,7 +1057,15 @@ pcall(UpdateGreeting)
 
 GCardClick.MouseButton1Click:Connect(function()
     if not _greetingShowDiscord then return end
-    pcall(setclipboard, DISCORD_LINK)
+    -- Optimistically copy cached link immediately, then refresh in background
+    _discordCopyToClipboard(DISCORD_LINK)
+    task.spawn(function()
+        local ok, fresh = pcall(_discordResolveLink)
+        if ok and type(fresh) == "string" then
+            DISCORD_LINK = fresh
+            _discordCopyToClipboard(fresh)
+        end
+    end)
 
     GCardRipple.Size                 = UDim2.new(0, 0, 0, 0)
     GCardRipple.BackgroundTransparency = 0.55
