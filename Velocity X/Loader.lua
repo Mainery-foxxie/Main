@@ -139,6 +139,29 @@ else
     CoreGui = cloneref(game:GetService("CoreGui"))
 end
 
+-- ── neriumR icon pack ────────────────────────────────────────────────────────
+local icons: {[string]: string} = {}
+pcall(function()
+    local loaded = loadstring(game:HttpGet(
+        "https://raw.githubusercontent.com/Van1a/neriumR/refs/heads/main/components/icons.lua"
+    ))().assets  -- key is .assets (NOT .assest)
+    if loaded and type(loaded) == "table" then icons = loaded end
+end)
+-- Get icon asset ID, falls back to "" so callers never crash
+local function icon(name: string): string
+    return icons["lucide-" .. name] or ""
+end
+-- Create a small ImageLabel icon inline (used in rows/headers)
+local function makeIconLabel(parent: Instance, assetId: string, size: number, col: Color3?): ImageLabel
+    local img: ImageLabel = Instance.new("ImageLabel", parent)
+    img.BackgroundTransparency = 1
+    img.Size        = UDim2.new(0, size, 0, size)
+    img.Image       = assetId
+    img.ImageColor3 = col or Color3.fromRGB(160, 160, 160)
+    img.ZIndex      = 5
+    return img
+end
+
 local gui: ScreenGui = Instance.new("ScreenGui")
 gui.Name            = "Introvert"
 gui.Parent          = CoreGui
@@ -220,7 +243,7 @@ if not _earlySkipIntro then
     sub.BackgroundTransparency = 1
     sub.Size                 = UDim2.new(1, 0, 0.05, 0)
     sub.Position             = UDim2.new(0, 1000, 0.47, 0)
-    sub.Text                 = "✦ Loading your experience..."
+    sub.Text                 = "Loading your experience..."
     sub.Font                 = Enum.Font.Arcade
     sub.TextScaled           = true
     sub.TextColor3           = Color3.fromRGB(255, 255, 255)
@@ -421,6 +444,7 @@ if _earlySkipIntro then
 end
 
 local Notify: any = nil
+do
 local notifyOk: boolean, notifyErr: any = pcall(function()
     local src: string = game:HttpGet(
         "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/UI%20Libary/Nofication/BocusLuke.lua"
@@ -434,6 +458,7 @@ if not notifyOk then
     print("[VelocityX] Reason: " .. tostring(notifyErr))
     print("[VelocityX] Falling back to print-based notifications.")
 end
+end -- notifyOk
 
 local function showNotification(
     title: string,
@@ -504,10 +529,12 @@ local function GetGreetingAndTime(): (string, string, string)
     return greeting, emoji, timeStr
 end
 
+do
 local _b64chars: string = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 local _b64lut: { [number]: number } = {}
 for i: number = 1, #_b64chars do
     _b64lut[string.byte(_b64chars, i)] = i - 1
+end
 end
 
 local function base64_decode(data: string): string
@@ -537,7 +564,13 @@ local function base64_decode(data: string): string
     return pad > 0 and result:sub(1, #result - pad) or result
 end
 
+do
 local _b64Pattern: string = "^[A-Za-z0-9+/]+=?=?$"
+local function _isBase64(s: string): boolean
+    return (#s > 0) and (#s % 4 == 0) and (s:match(_b64Pattern) ~= nil)
+end
+end
+
 local function _isBase64(s: string): boolean
     return (#s > 0) and (#s % 4 == 0) and (s:match(_b64Pattern) ~= nil)
 end
@@ -591,15 +624,19 @@ Gradient.Color = ColorSequence.new{
 }
 Gradient.Rotation = 45
 
+do
 local ShadowStroke: UIStroke = Instance.new("UIStroke", MainBackground)
 ShadowStroke.Color       = Color3.fromRGB(0, 100, 150)
 ShadowStroke.Thickness   = 4.5
 ShadowStroke.Transparency = 0.6
+end
 
+do
 local EdgeStroke: UIStroke = Instance.new("UIStroke", MainBackground)
 EdgeStroke.Thickness   = 3.5
 EdgeStroke.Transparency = 0.3
 EdgeStroke.Color       = Color3.fromRGB(0, 255, 120)
+end
 
 do
     local Corner: UICorner = Instance.new("UICorner", MainBackground)
@@ -1168,10 +1205,12 @@ ConfirmGradient.Color = ColorSequence.new{
     ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 170, 255)),
 }
 ConfirmGradient.Rotation = 45
+do
 local ConfirmStroke: UIStroke = Instance.new("UIStroke", ConfirmFrame)
 ConfirmStroke.Color        = Color3.fromRGB(0, 200, 255)
 ConfirmStroke.Thickness    = 2
 ConfirmStroke.Transparency = 0.3
+end
 Instance.new("UICorner", ConfirmFrame).CornerRadius = UDim.new(0, 8)
 
 do
@@ -1202,9 +1241,11 @@ do
     YesGradient.Color    = ConfirmGradient.Color
     YesGradient.Rotation = 90
 end
+do
 local YesStroke: UIStroke = Instance.new("UIStroke", YesButton)
 YesStroke.Color     = Color3.fromRGB(0, 255, 150)
 YesStroke.Thickness = 1.5
+end
 
 local NoButton: TextButton = Instance.new("TextButton", ConfirmFrame)
 NoButton.BackgroundColor3     = Color3.fromRGB(255, 255, 255)
@@ -1221,9 +1262,11 @@ do
     NoGradient.Color    = ConfirmGradient.Color
     NoGradient.Rotation = 90
 end
+do
 local NoStroke: UIStroke = Instance.new("UIStroke", NoButton)
 NoStroke.Color     = Color3.fromRGB(0, 255, 150)
 NoStroke.Thickness = 1.5
+end
 
 local DeleteConfirmFrame: ImageLabel = Instance.new("ImageLabel", MainBackground)
 DeleteConfirmFrame.Name             = "DeleteConfirmFrame"
@@ -1279,9 +1322,11 @@ do
     }
     DeleteYesGradient.Rotation = 90
 end
+do
 local DeleteYesStroke: UIStroke = Instance.new("UIStroke", DeleteYesButton)
 DeleteYesStroke.Color     = Color3.fromRGB(255, 100, 100)
 DeleteYesStroke.Thickness = 1.5
+end
 
 local DeleteNoButton: TextButton = Instance.new("TextButton", DeleteConfirmFrame)
 DeleteNoButton.BackgroundColor3     = Color3.fromRGB(255, 255, 255)
@@ -1301,9 +1346,11 @@ do
     }
     DeleteNoGradient.Rotation = 90
 end
+do
 local DeleteNoStroke: UIStroke = Instance.new("UIStroke", DeleteNoButton)
 DeleteNoStroke.Color     = Color3.fromRGB(255, 100, 100)
 DeleteNoStroke.Thickness = 1.5
+end
 
 local PANEL_W: number = 234
 local PANEL_H: number = 256
@@ -1395,29 +1442,80 @@ do
 end
 Instance.new("UICorner", TabIndicator).CornerRadius = UDim.new(1, 0)
 
-local TAB_BTN_Y: number = 5
+-- Tab buttons: 3 tabs spanning full PANEL_W (234px) with 4px margins
+-- Settings: 4..80 (w=76), Info: 82..156 (w=74), Credit: 158..230 (w=72)
 local function makeTabButton(
     text: string,
     xPos: number,
     w: number,
-    icon: string?
+    iconName: string
 ): TextButton
     local btn: TextButton = Instance.new("TextButton", TabBar)
     btn.BackgroundTransparency = 1
-    btn.Position           = UDim2.new(0, xPos, 0, TAB_BTN_Y)
-    btn.Size               = UDim2.new(0, w, 0, 18)
+    btn.Position           = UDim2.new(0, xPos, 0, 0)
+    btn.Size               = UDim2.new(0, w, 1, -2)
     btn.Font               = Enum.Font.Arcade
     btn.TextSize           = 9
-    btn.TextColor3         = Color3.fromRGB(160, 160, 160)
+    btn.TextColor3         = Color3.fromRGB(140, 140, 140)
     btn.TextXAlignment     = Enum.TextXAlignment.Center
     btn.ZIndex             = 6
-    btn.Text               = text
+    btn.Text               = ""  -- text drawn via label below so icon fits cleanly
+    btn.AutoButtonColor    = false
+
+    -- Inner icon + label row (centered together)
+    local row: Frame = Instance.new("Frame", btn)
+    row.BackgroundTransparency = 1
+    row.AnchorPoint = Vector2.new(0.5, 0.5)
+    row.Position    = UDim2.new(0.5, 0, 0.5, 0)
+    row.Size        = UDim2.new(1, -4, 1, 0)
+    row.ZIndex      = 7
+
+    local iconImg: ImageLabel = Instance.new("ImageLabel", row)
+    iconImg.BackgroundTransparency = 1
+    iconImg.Name        = "TabIcon"
+    iconImg.AnchorPoint = Vector2.new(0, 0.5)
+    iconImg.Position    = UDim2.new(0, 0, 0.5, 0)
+    iconImg.Size        = UDim2.new(0, 10, 0, 10)
+    iconImg.Image       = icon(iconName)
+    iconImg.ImageColor3 = Color3.fromRGB(140, 140, 140)
+    iconImg.ZIndex      = 7
+
+    local lbl: TextLabel = Instance.new("TextLabel", row)
+    lbl.BackgroundTransparency = 1
+    lbl.Name           = "TabLabel"
+    lbl.AnchorPoint    = Vector2.new(0, 0.5)
+    lbl.Position       = UDim2.new(0, 14, 0.5, 0)
+    lbl.Size           = UDim2.new(1, -14, 1, 0)
+    lbl.Font           = Enum.Font.Arcade
+    lbl.TextSize       = 9
+    lbl.TextColor3     = Color3.fromRGB(140, 140, 140)
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.ZIndex         = 7
+    lbl.Text           = text
+
     return btn
 end
 
-local TabBtnSettings: TextButton = makeTabButton("⚙ Settings",   4,  68)
-local TabBtnInfo:     TextButton = makeTabButton("⊹ Info",       75,  56)
-local TabBtnCredit:   TextButton = makeTabButton("★ Credit",    134,  64)
+local TabBtnSettings: TextButton = makeTabButton("Settings", 4,   76, "settings")
+local TabBtnInfo:     TextButton = makeTabButton("Info",     82,  74, "info")
+local TabBtnCredit:   TextButton = makeTabButton("Credit",   158, 72, "star")
+
+-- Icon color updater (called by switchTab and resetToSettingsTab)
+local function updateTabIcons(activeTab: string)
+    local map: {[TextButton]: {iconName: string, tab: string}} = {
+        [TabBtnSettings] = { iconName = "settings", tab = "settings" },
+        [TabBtnInfo]     = { iconName = "info",     tab = "info"     },
+        [TabBtnCredit]   = { iconName = "star",     tab = "credit"   },
+    }
+    for btn, v in map do
+        local isActive = (v.tab == activeTab)
+        local col = isActive and Color3.fromRGB(0, 255, 150) or Color3.fromRGB(140, 140, 140)
+        local iconImg = btn:FindFirstChild("TabIcon", true)
+        local lbl     = btn:FindFirstChild("TabLabel", true)
+        if iconImg then iconImg.ImageColor3 = col end
+        if lbl     then lbl.TextColor3      = col end
+    end
+end
 
 local CONTENT_Y: number = 28
 
@@ -1473,27 +1571,37 @@ do
 end
 
 local _infoOrder: number = 0
-local function addInfoRow(icon: string, label: string, value: string, col: Color3?): TextLabel
+local function addInfoRow(iconName: string, label: string, value: string, col: Color3?): TextLabel
     _infoOrder += 1
     local row: Frame = Instance.new("Frame", InfoContent)
-    row.Size                  = UDim2.new(1, -6, 0, 17)
-    row.BackgroundColor3      = Color3.fromRGB(0, 255, 150)
+    row.Size                   = UDim2.new(1, -6, 0, 17)
+    row.BackgroundColor3       = Color3.fromRGB(0, 255, 150)
     row.BackgroundTransparency = 1
-    row.BorderSizePixel       = 0
-    row.ZIndex                = 4
-    row.LayoutOrder           = _infoOrder
+    row.BorderSizePixel        = 0
+    row.ZIndex                 = 4
+    row.LayoutOrder            = _infoOrder
     Instance.new("UICorner", row).CornerRadius = UDim.new(0, 3)
+
+    -- Icon image
+    local iconImg: ImageLabel = Instance.new("ImageLabel", row)
+    iconImg.BackgroundTransparency = 1
+    iconImg.AnchorPoint = Vector2.new(0, 0.5)
+    iconImg.Position    = UDim2.new(0, 1, 0.5, 0)
+    iconImg.Size        = UDim2.new(0, 10, 0, 10)
+    iconImg.Image       = icon(iconName)
+    iconImg.ImageColor3 = Color3.fromRGB(120, 120, 120)
+    iconImg.ZIndex      = 5
 
     local lbl: TextLabel = Instance.new("TextLabel", row)
     lbl.BackgroundTransparency = 1
-    lbl.Position  = UDim2.new(0, 0, 0, 0)
-    lbl.Size      = UDim2.new(0.46, 0, 1, 0)
+    lbl.Position  = UDim2.new(0, 14, 0, 0)
+    lbl.Size      = UDim2.new(0.44, -14, 1, 0)
     lbl.Font      = Enum.Font.Arcade
     lbl.TextSize  = 8
     lbl.TextXAlignment = Enum.TextXAlignment.Left
     lbl.TextColor3     = Color3.fromRGB(140, 140, 140)
     lbl.ZIndex         = 4
-    lbl.Text           = icon .. " " .. label
+    lbl.Text           = label
 
     local val: TextLabel = Instance.new("TextLabel", row)
     val.BackgroundTransparency = 1
@@ -1521,106 +1629,179 @@ local function addInfoDivider(layoutOrder: number)
     _infoOrder           = layoutOrder
 end
 
-local function addInfoHeader(txt: string): TextLabel
+local function addInfoHeader(iconName: string, txt: string): TextLabel
     _infoOrder += 1
-    local h: TextLabel = Instance.new("TextLabel", InfoContent)
-    h.Size                  = UDim2.new(1, -6, 0, 16)
+    local wrap: Frame = Instance.new("Frame", InfoContent)
+    wrap.Size                   = UDim2.new(1, -6, 0, 16)
+    wrap.BackgroundTransparency = 1
+    wrap.BorderSizePixel        = 0
+    wrap.ZIndex                 = 4
+    wrap.LayoutOrder            = _infoOrder
+
+    local iconImg: ImageLabel = Instance.new("ImageLabel", wrap)
+    iconImg.BackgroundTransparency = 1
+    iconImg.AnchorPoint = Vector2.new(0, 0.5)
+    iconImg.Position    = UDim2.new(0, 0, 0.5, 0)
+    iconImg.Size        = UDim2.new(0, 11, 0, 11)
+    iconImg.Image       = icon(iconName)
+    iconImg.ImageColor3 = Color3.fromRGB(0, 255, 150)
+    iconImg.ZIndex      = 5
+
+    local h: TextLabel = Instance.new("TextLabel", wrap)
     h.BackgroundTransparency = 1
-    h.Font                  = Enum.Font.Arcade
-    h.TextSize              = 9
-    h.TextXAlignment        = Enum.TextXAlignment.Left
-    h.TextColor3            = Color3.fromRGB(0, 255, 150)
-    h.ZIndex                = 4
-    h.LayoutOrder           = _infoOrder
-    h.Text                  = txt
+    h.Position  = UDim2.new(0, 15, 0, 0)
+    h.Size      = UDim2.new(1, -15, 1, 0)
+    h.Font      = Enum.Font.Arcade
+    h.TextSize  = 9
+    h.TextXAlignment = Enum.TextXAlignment.Left
+    h.TextColor3     = Color3.fromRGB(0, 255, 150)
+    h.ZIndex         = 4
+    h.Text           = txt
     return h
 end
 
-local function addCopyRow(icon: string, label: string, value: string, col: Color3?)
+local function addCopyRow(iconName: string, label: string, value: string, col: Color3?)
     _infoOrder += 1
     local row: Frame = Instance.new("Frame", InfoContent)
-    row.Size                  = UDim2.new(1, -6, 0, 17)
+    row.Size                   = UDim2.new(1, -6, 0, 17)
     row.BackgroundTransparency = 1
-    row.BorderSizePixel       = 0
-    row.ZIndex                = 4
-    row.LayoutOrder           = _infoOrder
+    row.BorderSizePixel        = 0
+    row.ZIndex                 = 4
+    row.LayoutOrder            = _infoOrder
+
+    -- Row icon
+    local iconImg: ImageLabel = Instance.new("ImageLabel", row)
+    iconImg.BackgroundTransparency = 1
+    iconImg.AnchorPoint = Vector2.new(0, 0.5)
+    iconImg.Position    = UDim2.new(0, 1, 0.5, 0)
+    iconImg.Size        = UDim2.new(0, 10, 0, 10)
+    iconImg.Image       = icon(iconName)
+    iconImg.ImageColor3 = Color3.fromRGB(120, 120, 120)
+    iconImg.ZIndex      = 5
 
     local lbl: TextLabel = Instance.new("TextLabel", row)
     lbl.BackgroundTransparency = 1
-    lbl.Position  = UDim2.new(0, 0, 0, 0)
-    lbl.Size      = UDim2.new(0.45, 0, 1, 0)
+    lbl.Position  = UDim2.new(0, 14, 0, 0)
+    lbl.Size      = UDim2.new(0.42, -14, 1, 0)
     lbl.Font      = Enum.Font.Arcade
     lbl.TextSize  = 8
     lbl.TextXAlignment = Enum.TextXAlignment.Left
     lbl.TextColor3     = Color3.fromRGB(140, 140, 140)
     lbl.ZIndex         = 4
-    lbl.Text           = icon .. " " .. label
+    lbl.Text           = label
 
+    -- Copy button with clipboard icon
     local copyBtn: TextButton = Instance.new("TextButton", row)
-    copyBtn.BackgroundColor3  = Color3.fromRGB(0, 150, 200)
+    copyBtn.BackgroundColor3       = Color3.fromRGB(0, 150, 200)
     copyBtn.BackgroundTransparency = 0.75
-    copyBtn.BorderSizePixel   = 0
-    copyBtn.AnchorPoint       = Vector2.new(1, 0.5)
-    copyBtn.Position          = UDim2.new(1, 0, 0.5, 0)
-    copyBtn.Size              = UDim2.new(0.52, 0, 0, 13)
-    copyBtn.Font              = Enum.Font.Arcade
-    copyBtn.TextSize          = 7
-    copyBtn.TextColor3        = col or Color3.fromRGB(0, 230, 200)
-    copyBtn.ZIndex            = 5
-    copyBtn.TextTruncate      = Enum.TextTruncate.AtEnd
+    copyBtn.BorderSizePixel        = 0
+    copyBtn.AnchorPoint            = Vector2.new(1, 0.5)
+    copyBtn.Position               = UDim2.new(1, 0, 0.5, 0)
+    copyBtn.Size                   = UDim2.new(0.52, 0, 0, 13)
+    copyBtn.Font                   = Enum.Font.Arcade
+    copyBtn.TextSize               = 7
+    copyBtn.TextColor3             = col or Color3.fromRGB(0, 230, 200)
+    copyBtn.ZIndex                 = 5
+    copyBtn.TextTruncate           = Enum.TextTruncate.AtEnd
     Instance.new("UICorner", copyBtn).CornerRadius = UDim.new(0, 3)
 
-    local shortVal: string = #value > 16 and value:sub(1, 13) .. "…" or value
-    copyBtn.Text = shortVal
+    -- Clipboard icon inside copy button
+    local copyIconImg: ImageLabel = Instance.new("ImageLabel", copyBtn)
+    copyIconImg.BackgroundTransparency = 1
+    copyIconImg.AnchorPoint = Vector2.new(0, 0.5)
+    copyIconImg.Position    = UDim2.new(0, 2, 0.5, 0)
+    copyIconImg.Size        = UDim2.new(0, 8, 0, 8)
+    copyIconImg.Image       = icon("clipboard")
+    copyIconImg.ImageColor3 = col or Color3.fromRGB(0, 230, 200)
+    copyIconImg.ZIndex      = 6
+
+    local shortVal: string = #value > 14 and value:sub(1, 11) .. "…" or value
+    copyBtn.Text = "  " .. shortVal  -- leading space for icon room
 
     copyBtn.MouseButton1Click:Connect(function()
         pcall(setclipboard, value)
-        copyBtn.Text = "✓ Copied!"
+        copyIconImg.Image = icon("check")
+        copyIconImg.ImageColor3 = Color3.fromRGB(0, 255, 150)
+        copyBtn.Text = "  Copied!"
+        copyBtn.TextColor3 = Color3.fromRGB(0, 255, 150)
         task.delay(1.5, function()
-            pcall(function() copyBtn.Text = shortVal end)
+            pcall(function()
+                copyIconImg.Image = icon("clipboard")
+                copyIconImg.ImageColor3 = col or Color3.fromRGB(0, 230, 200)
+                copyBtn.Text = "  " .. shortVal
+                copyBtn.TextColor3 = col or Color3.fromRGB(0, 230, 200)
+            end)
         end)
     end)
 end
 
-local function addActionCopyRow(icon: string, label: string, fn: () -> string, col: Color3?)
+local function addActionCopyRow(iconName: string, label: string, fn: () -> string, col: Color3?)
     _infoOrder += 1
     local row: Frame = Instance.new("Frame", InfoContent)
-    row.Size                  = UDim2.new(1, -6, 0, 17)
+    row.Size                   = UDim2.new(1, -6, 0, 17)
     row.BackgroundTransparency = 1
-    row.BorderSizePixel       = 0
-    row.ZIndex                = 4
-    row.LayoutOrder           = _infoOrder
+    row.BorderSizePixel        = 0
+    row.ZIndex                 = 4
+    row.LayoutOrder            = _infoOrder
+
+    local iconImg: ImageLabel = Instance.new("ImageLabel", row)
+    iconImg.BackgroundTransparency = 1
+    iconImg.AnchorPoint = Vector2.new(0, 0.5)
+    iconImg.Position    = UDim2.new(0, 1, 0.5, 0)
+    iconImg.Size        = UDim2.new(0, 10, 0, 10)
+    iconImg.Image       = icon(iconName)
+    iconImg.ImageColor3 = Color3.fromRGB(120, 120, 120)
+    iconImg.ZIndex      = 5
 
     local lbl: TextLabel = Instance.new("TextLabel", row)
     lbl.BackgroundTransparency = 1
-    lbl.Position  = UDim2.new(0, 0, 0, 0)
-    lbl.Size      = UDim2.new(0.42, 0, 1, 0)
+    lbl.Position  = UDim2.new(0, 14, 0, 0)
+    lbl.Size      = UDim2.new(0.40, -14, 1, 0)
     lbl.Font      = Enum.Font.Arcade
     lbl.TextSize  = 8
     lbl.TextXAlignment = Enum.TextXAlignment.Left
     lbl.TextColor3     = Color3.fromRGB(140, 140, 140)
     lbl.ZIndex         = 4
-    lbl.Text           = icon .. " " .. label
+    lbl.Text           = label
 
     local copyBtn: TextButton = Instance.new("TextButton", row)
-    copyBtn.BackgroundColor3  = Color3.fromRGB(0, 150, 200)
+    copyBtn.BackgroundColor3       = Color3.fromRGB(0, 150, 200)
     copyBtn.BackgroundTransparency = 0.70
-    copyBtn.BorderSizePixel   = 0
-    copyBtn.AnchorPoint       = Vector2.new(1, 0.5)
-    copyBtn.Position          = UDim2.new(1, 0, 0.5, 0)
-    copyBtn.Size              = UDim2.new(0.55, 0, 0, 13)
-    copyBtn.Font              = Enum.Font.Arcade
-    copyBtn.TextSize          = 7
-    copyBtn.TextColor3        = col or Color3.fromRGB(0, 230, 200)
-    copyBtn.ZIndex            = 5
-    copyBtn.Text              = "📋 Copy"
+    copyBtn.BorderSizePixel        = 0
+    copyBtn.AnchorPoint            = Vector2.new(1, 0.5)
+    copyBtn.Position               = UDim2.new(1, 0, 0.5, 0)
+    copyBtn.Size                   = UDim2.new(0.55, 0, 0, 13)
+    copyBtn.Font                   = Enum.Font.Arcade
+    copyBtn.TextSize               = 7
+    copyBtn.TextColor3             = col or Color3.fromRGB(0, 230, 200)
+    copyBtn.ZIndex                 = 5
+    copyBtn.Text                   = "  Copy"
     Instance.new("UICorner", copyBtn).CornerRadius = UDim.new(0, 3)
+
+    local copyIconImg: ImageLabel = Instance.new("ImageLabel", copyBtn)
+    copyIconImg.BackgroundTransparency = 1
+    copyIconImg.AnchorPoint = Vector2.new(0, 0.5)
+    copyIconImg.Position    = UDim2.new(0, 2, 0.5, 0)
+    copyIconImg.Size        = UDim2.new(0, 8, 0, 8)
+    copyIconImg.Image       = icon("clipboard")
+    copyIconImg.ImageColor3 = col or Color3.fromRGB(0, 230, 200)
+    copyIconImg.ZIndex      = 6
 
     copyBtn.MouseButton1Click:Connect(function()
         local content = fn()
         pcall(setclipboard, content)
-        copyBtn.Text = "✓ Copied!"
-        task.delay(1.5, function() pcall(function() copyBtn.Text = "📋 Copy" end) end)
+        copyIconImg.Image = icon("check")
+        copyIconImg.ImageColor3 = Color3.fromRGB(0, 255, 150)
+        copyBtn.Text      = "  Copied!"
+        copyBtn.TextColor3 = Color3.fromRGB(0, 255, 150)
+        task.delay(1.5, function()
+            pcall(function()
+                copyIconImg.Image = icon("clipboard")
+                copyIconImg.ImageColor3 = col or Color3.fromRGB(0, 230, 200)
+                copyBtn.Text       = "  Copy"
+                copyBtn.TextColor3 = col or Color3.fromRGB(0, 230, 200)
+            end)
+        end)
     end)
 end
 
@@ -1631,18 +1812,18 @@ end
 
 local function checkPremium(): string
     local ok, mt = pcall(function() return Players.LocalPlayer.MembershipType end)
-    if ok then return mt == Enum.MembershipType.None and "✗ None" or "✓ Premium" end
+    if ok then return mt == Enum.MembershipType.None and "None" or "Premium" end
     return "N/A"
 end
 
 local infoDeviceType = safeStr(function()
     local plat = game:GetService("UserInputService"):GetPlatform()
-    return plat == Enum.Platform.Windows  and "💻 PC"
-        or plat == Enum.Platform.OSX      and "🍎 Mac"
-        or plat == Enum.Platform.Android  and "📱 Android"
-        or plat == Enum.Platform.IOS      and "📱 iOS"
-        or "❓ Unknown"
-end, "❓ Unknown")
+    return plat == Enum.Platform.Windows  and "PC"
+        or plat == Enum.Platform.OSX      and "Mac"
+        or plat == Enum.Platform.Android  and "Android"
+        or plat == Enum.Platform.IOS      and "iOS"
+        or "Unknown"
+end, "Unknown")
 
 local infoExe  = safeStr(function() return identifyexecutor() end, "Unknown")
 local infoTime = safeStr(function() return os.date("%Y-%m-%d %H:%M:%S") end, "N/A")
@@ -1663,44 +1844,44 @@ end, "N/A")
 local infoTeleport = "game:GetService('TeleportService'):TeleportToPlaceInstance("
     .. infoGameId .. ", '" .. infoJobId .. "', game.Players.LocalPlayer)"
 
-addInfoHeader("📊 Session Information")
+addInfoHeader("layout-dashboard", "Session")
 addInfoDivider(_infoOrder + 1)
 
-local timeValLbl = addInfoRow("🕐", "Time",    infoTime,     Color3.fromRGB(200, 200, 100))
-addInfoRow(infoDeviceType:sub(1,2), "Device", infoDeviceType:sub(4), Color3.fromRGB(150, 210, 255))
-addInfoRow("⚙",  "Executor",  infoExe,        Color3.fromRGB(180, 180, 255))
-local premiumValLbl = addInfoRow("👑", "Premium", infoPremium, Color3.fromRGB(255, 215, 0))
+local timeValLbl = addInfoRow("clock",   "Time",     infoTime,    Color3.fromRGB(200, 200, 100))
+addInfoRow("smartphone",                 "Device",   infoDeviceType, Color3.fromRGB(150, 210, 255))
+addInfoRow("cog",                        "Executor", infoExe,     Color3.fromRGB(180, 180, 255))
+local premiumValLbl = addInfoRow("crown","Premium",  infoPremium, Color3.fromRGB(255, 215, 0))
 
 addInfoDivider(_infoOrder + 1)
-addInfoHeader("📈 Performance")
+addInfoHeader("trending-up", "Performance")
 addInfoDivider(_infoOrder + 1)
 
-local fpsValLbl  = addInfoRow("⚡", "FPS",  "—",    Color3.fromRGB(80,  255, 120))
-local pingValLbl = addInfoRow("📡", "Ping", "— ms", Color3.fromRGB(80,  200, 255))
+local fpsValLbl  = addInfoRow("gauge",  "FPS",  "—",    Color3.fromRGB(80, 255, 120))
+local pingValLbl = addInfoRow("signal", "Ping", "— ms", Color3.fromRGB(80, 200, 255))
 
 addInfoDivider(_infoOrder + 1)
-addInfoHeader("🎮 Game")
+addInfoHeader("gamepad-2", "Game")
 addInfoDivider(_infoOrder + 1)
 
-addInfoRow("📛", "Name",     infoGameName,  Color3.fromRGB(0, 220, 180))
-addInfoRow("🆔", "Place ID", infoGameId,    Color3.fromRGB(200, 200, 200))
-addCopyRow( "🔗", "Job ID",  infoJobId,     Color3.fromRGB(100, 200, 255))
+addInfoRow("tag",  "Name",     infoGameName, Color3.fromRGB(0, 220, 180))
+addInfoRow("hash", "Place ID", infoGameId,   Color3.fromRGB(200, 200, 200))
+addCopyRow("link", "Job ID",   infoJobId,    Color3.fromRGB(100, 200, 255))
 
 addInfoDivider(_infoOrder + 1)
-addInfoHeader("👤 Player")
+addInfoHeader("user", "Player")
 addInfoDivider(_infoOrder + 1)
 
-addInfoRow("📛", "Name",    infoPlrName,  Color3.fromRGB(0, 220, 180))
-addInfoRow("🆔", "User ID", infoPlrId,    Color3.fromRGB(200, 200, 200))
-addCopyRow( "🔑", "HWID",   infoHwid,     Color3.fromRGB(255, 150, 100))
+addInfoRow("tag",  "Name",    infoPlrName, Color3.fromRGB(0, 220, 180))
+addInfoRow("hash", "User ID", infoPlrId,   Color3.fromRGB(200, 200, 200))
+addCopyRow("key",  "HWID",    infoHwid,    Color3.fromRGB(255, 150, 100))
 
 addInfoDivider(_infoOrder + 1)
-addInfoHeader("📍 Position  (live)")
+addInfoHeader("map-pin", "Position (live)")
 addInfoDivider(_infoOrder + 1)
 
-local posXLbl = addInfoRow("➡", "X", "—", Color3.fromRGB(255, 100, 100))
-local posYLbl = addInfoRow("⬆", "Y", "—", Color3.fromRGB(100, 255, 100))
-local posZLbl = addInfoRow("🔵", "Z", "—", Color3.fromRGB(100, 150, 255))
+local posXLbl = addInfoRow("move-horizontal", "X", "—", Color3.fromRGB(255, 100, 100))
+local posYLbl = addInfoRow("arrow-up",        "Y", "—", Color3.fromRGB(100, 255, 100))
+local posZLbl = addInfoRow("move-3d",         "Z", "—", Color3.fromRGB(100, 150, 255))
 
 local function _tweenCopyFn(): string
     local ok, po = pcall(function()
@@ -1716,7 +1897,7 @@ local function _tweenCopyFn(): string
         .. "tween:Play()",
         x, y, z)
 end
-addActionCopyRow("🎬", "Copy Tween", _tweenCopyFn, Color3.fromRGB(100, 200, 255))
+addActionCopyRow("rotate-cw", "Copy Tween", _tweenCopyFn, Color3.fromRGB(100, 200, 255))
 
 local function _cfCopyFn(): string
     local ok, pos = pcall(function()
@@ -1728,12 +1909,12 @@ local function _cfCopyFn(): string
     return string.format(
         "game.Players.LocalPlayer.Character:PivotTo(CFrame.new(Vector3.new(%s)))", o)
 end
-addActionCopyRow("📌", "Copy CFrame", _cfCopyFn, Color3.fromRGB(0, 255, 150))
+addActionCopyRow("move-3d", "Copy CFrame", _cfCopyFn, Color3.fromRGB(0, 255, 150))
 
 addInfoDivider(_infoOrder + 1)
-addInfoHeader("📋 Teleport Statement")
+addInfoHeader("send", "Teleport Cmd")
 addInfoDivider(_infoOrder + 1)
-addCopyRow("🚀", "Copy cmd", infoTeleport, Color3.fromRGB(0, 255, 150))
+addCopyRow("rocket", "Copy cmd", infoTeleport, Color3.fromRGB(0, 255, 150))
 
 local CREATOR_USER_ID: number = 1291925
 
@@ -2458,17 +2639,17 @@ local ACTIVE_COL:   Color3 = Color3.fromRGB(0, 255, 150)
 local INACTIVE_COL: Color3 = Color3.fromRGB(140, 140, 140)
 
 local TAB_POSITIONS: {[string]: {xPos: number, width: number, btn: TextButton}} = {
-    settings = { xPos = 4,   width = 68, btn = TabBtnSettings },
-    info     = { xPos = 75,  width = 56, btn = TabBtnInfo     },
-    credit   = { xPos = 134, width = 64, btn = TabBtnCredit   },
+    settings = { xPos = 4,   width = 76, btn = TabBtnSettings },
+    info     = { xPos = 82,  width = 74, btn = TabBtnInfo     },
+    credit   = { xPos = 158, width = 72, btn = TabBtnCredit   },
 }
 
 local currentTab: string = "settings"
 
 -- Tab order for direction detection (left → right)
-local TAB_ORDER: {string} = { "settings", "info", "credit" }
 local function tabIndex(name: string): number
-    for i, v in TAB_ORDER do if v == name then return i end end
+    local _tab_order = { "settings", "info", "credit" }
+    for i, v in _tab_order do if v == name then return i end end
     return 1
 end
 
@@ -2558,18 +2739,12 @@ local function switchTab(tabName: string)
                 end)
             end
             pcall(function()
-                TweenService:Create(btn,
-                    TweenInfo.new(0.20, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-                    { TextColor3 = ACTIVE_COL }
-                ):Play()
+                tweenTabColor(btn, ACTIVE_COL, 0.20)
             end)
         else
             -- Inactive buttons fade to grey
             pcall(function()
-                TweenService:Create(btn,
-                    TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-                    { TextColor3 = INACTIVE_COL }
-                ):Play()
+                tweenTabColor(btn, INACTIVE_COL, 0.18)
             end)
         end
     end
@@ -2622,49 +2797,58 @@ local function resetToSettingsTab()
     InfoContent.Visible    = false
     CreditContent.Visible  = false
 
-    TabBtnSettings.TextColor3 = ACTIVE_COL
-    TabBtnInfo.TextColor3     = INACTIVE_COL
-    TabBtnCredit.TextColor3   = INACTIVE_COL
+    setTabColor(TabBtnSettings, ACTIVE_COL)
+    setTabColor(TabBtnInfo,     INACTIVE_COL)
+    setTabColor(TabBtnCredit,   INACTIVE_COL)
 
     -- Reset button scales instantly
     for _, sc in _btnScales do sc.Scale = 1 end
 
     TabIndicator.Position = UDim2.new(0, 4, 1, 0)
-    TabIndicator.Size     = UDim2.new(0, 68, 0, 2)
+    TabIndicator.Size     = UDim2.new(0, 76, 0, 2)
+end
+
+-- Helper: set tab button active/inactive color on both child label and icon
+local function setTabColor(btn: TextButton, col: Color3)
+    local lbl  = btn:FindFirstChild("TabLabel", true)
+    local iimg = btn:FindFirstChild("TabIcon",  true)
+    if lbl  then lbl.TextColor3   = col end
+    if iimg then iimg.ImageColor3 = col end
+end
+
+local function tweenTabColor(btn: TextButton, col: Color3, t: number)
+    local lbl  = btn:FindFirstChild("TabLabel", true)
+    local iimg = btn:FindFirstChild("TabIcon",  true)
+    if lbl  then pcall(function() TweenService:Create(lbl,  TweenInfo.new(t, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { TextColor3  = col }):Play() end) end
+    if iimg then pcall(function() TweenService:Create(iimg, TweenInfo.new(t, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { ImageColor3 = col }):Play() end) end
 end
 
 -- ── Tab button hover glow ─────────────────────────────────────────────────
 local function connectTabHover(btn: TextButton)
     btn.MouseEnter:Connect(function()
-        if btn.TextColor3 == ACTIVE_COL then return end -- already active
+        local lbl = btn:FindFirstChild("TabLabel", true)
+        if lbl and lbl.TextColor3 == ACTIVE_COL then return end
         local sc: UIScale? = _btnScales[btn]
         pcall(function()
             if sc then
                 TweenService:Create(sc,
                     TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-                    { Scale = 1.12 }
-                ):Play()
+                    { Scale = 1.12 }):Play()
             end
-            TweenService:Create(btn,
-                TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-                { TextColor3 = Color3.fromRGB(200, 200, 200) }
-            ):Play()
+            tweenTabColor(btn, Color3.fromRGB(200, 200, 200), 0.15)
         end)
     end)
     btn.MouseLeave:Connect(function()
-        if btn.TextColor3 == ACTIVE_COL then return end
+        local lbl = btn:FindFirstChild("TabLabel", true)
+        if lbl and lbl.TextColor3 == ACTIVE_COL then return end
         local sc: UIScale? = _btnScales[btn]
         pcall(function()
             if sc then
                 TweenService:Create(sc,
                     TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-                    { Scale = 1 }
-                ):Play()
+                    { Scale = 1 }):Play()
             end
-            TweenService:Create(btn,
-                TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-                { TextColor3 = INACTIVE_COL }
-            ):Play()
+            tweenTabColor(btn, INACTIVE_COL, 0.18)
         end)
     end)
 end
@@ -2677,7 +2861,10 @@ TabBtnSettings.MouseButton1Click:Connect(function() switchTab("settings") end)
 TabBtnInfo.MouseButton1Click:Connect(function()     switchTab("info")     end)
 TabBtnCredit.MouseButton1Click:Connect(function()   switchTab("credit")   end)
 
-TabBtnSettings.TextColor3 = ACTIVE_COL
+-- Set initial active state
+setTabColor(TabBtnSettings, ACTIVE_COL)
+setTabColor(TabBtnInfo,     INACTIVE_COL)
+setTabColor(TabBtnCredit,   INACTIVE_COL)
 
 task.spawn(function()
     local imgUrl: string = getThumbnail(CREATOR_USER_ID)
@@ -3406,9 +3593,11 @@ do
     }
     ErrRetryGrad.Rotation = 90
 end
+do
 local ErrRetryStroke: UIStroke = Instance.new("UIStroke", ErrRetryBtn)
 ErrRetryStroke.Color     = Color3.fromRGB(255, 80, 80)
 ErrRetryStroke.Thickness = 1
+end
 
 local ErrDismissBtn: TextButton = Instance.new("TextButton", ErrorPanel)
 ErrDismissBtn.AnchorPoint            = Vector2.new(1, 0)
@@ -3736,7 +3925,7 @@ openConsoleButton.BackgroundColor3   = Color3.fromRGB(0, 30, 50)
 openConsoleButton.BackgroundTransparency = 0.65
 openConsoleButton.BorderSizePixel    = 0
 openConsoleButton.Font               = Enum.Font.Arcade
-openConsoleButton.Text               = "⌨ Open Console"
+openConsoleButton.Text               = "  Open Console"
 openConsoleButton.TextColor3         = Color3.fromRGB(0, 200, 255)
 openConsoleButton.TextSize           = 11
 openConsoleButton.ZIndex             = 2
@@ -3748,6 +3937,16 @@ do
     consoleBtnStroke.Transparency = 0.45
 end
 openConsoleButton.Parent = ScrollingFrame
+do
+    local consoleIcon: ImageLabel = Instance.new("ImageLabel", openConsoleButton)
+    consoleIcon.BackgroundTransparency = 1
+    consoleIcon.AnchorPoint = Vector2.new(0, 0.5)
+    consoleIcon.Position    = UDim2.new(0, 6, 0.5, 0)
+    consoleIcon.Size        = UDim2.new(0, 13, 0, 13)
+    consoleIcon.Image       = icon("terminal")
+    consoleIcon.ImageColor3 = Color3.fromRGB(0, 200, 255)
+    consoleIcon.ZIndex      = 3
+end
 openConsoleButton.MouseButton1Click:Connect(function()
     pcall(function()
         game:GetService("StarterGui"):SetCore("DevConsoleVisible", true)
@@ -3761,7 +3960,7 @@ deleteConfigButton.BackgroundColor3   = Color3.fromRGB(50, 10, 10)
 deleteConfigButton.BackgroundTransparency = 0.60
 deleteConfigButton.BorderSizePixel    = 0
 deleteConfigButton.Font               = Enum.Font.Arcade
-deleteConfigButton.Text               = "🗑 Delete Config"
+deleteConfigButton.Text               = "  Delete Config"
 deleteConfigButton.TextColor3         = Color3.fromRGB(255, 100, 100)
 deleteConfigButton.TextSize           = 11
 deleteConfigButton.ZIndex             = 2
@@ -3773,6 +3972,16 @@ do
     delBtnStroke.Transparency = 0.45
 end
 deleteConfigButton.Parent = ScrollingFrame
+do
+    local deleteIcon: ImageLabel = Instance.new("ImageLabel", deleteConfigButton)
+    deleteIcon.BackgroundTransparency = 1
+    deleteIcon.AnchorPoint = Vector2.new(0, 0.5)
+    deleteIcon.Position    = UDim2.new(0, 6, 0.5, 0)
+    deleteIcon.Size        = UDim2.new(0, 13, 0, 13)
+    deleteIcon.Image       = icon("trash-2")
+    deleteIcon.ImageColor3 = Color3.fromRGB(255, 100, 100)
+    deleteIcon.ZIndex      = 3
+end
 
 local function updateCanvasSize()
     local totalHeight: number = 0
