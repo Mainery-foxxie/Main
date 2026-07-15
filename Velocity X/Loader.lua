@@ -139,19 +139,18 @@ else
     CoreGui = cloneref(game:GetService("CoreGui"))
 end
 
--- ── neriumR icon pack ────────────────────────────────────────────────────────
 local icons: {[string]: string} = {}
 pcall(function()
     local loaded = loadstring(game:HttpGet(
-        "https://raw.githubusercontent.com/Van1a/neriumR/refs/heads/main/components/icons.lua"
-    ))().assets  -- key is .assets (NOT .assest)
+        "https://raw.githubusercontent.com/Religius-Star/Main/refs/heads/main/config/icon.json"
+    ))().assets  
     if loaded and type(loaded) == "table" then icons = loaded end
 end)
--- Get icon asset ID, falls back to "" so callers never crash
+
 local function icon(name: string): string
     return icons["lucide-" .. name] or ""
 end
--- Create a small ImageLabel icon inline (used in rows/headers)
+
 local function makeIconLabel(parent: Instance, assetId: string, size: number, col: Color3?): ImageLabel
     local img: ImageLabel = Instance.new("ImageLabel", parent)
     img.BackgroundTransparency = 1
