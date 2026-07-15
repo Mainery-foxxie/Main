@@ -139,15 +139,15 @@ else
     CoreGui = cloneref(game:GetService("CoreGui"))
 end
 
--- ── wut ────────────────────────────────────────────────────────
+-- ── neriumR icon pack ────────────────────────────────────────────────────────
 local icons: {[string]: string} = {}
 pcall(function()
     local loaded = loadstring(game:HttpGet(
-        "https://raw.githubusercontent.com/Religius-Star/Main/refs/heads/main/config/icon.json"
+        "https://raw.githubusercontent.com/Van1a/neriumR/refs/heads/main/components/icons.lua"
     ))().assets  -- key is .assets (NOT .assest)
     if loaded and type(loaded) == "table" then icons = loaded end
 end)
-
+-- Get icon asset ID, falls back to "" so callers never crash
 local function icon(name: string): string
     return icons["lucide-" .. name] or ""
 end
@@ -2672,6 +2672,21 @@ end
 
 local _tabAnimating: boolean = false
 
+-- Helpers: set/tween tab button label + icon color (defined before switchTab and resetToSettingsTab)
+local function setTabColor(btn: TextButton, col: Color3)
+    local lbl  = btn:FindFirstChild("TabLabel", true)
+    local iimg = btn:FindFirstChild("TabIcon",  true)
+    if lbl  then lbl.TextColor3   = col end
+    if iimg then iimg.ImageColor3 = col end
+end
+
+local function tweenTabColor(btn: TextButton, col: Color3, t: number)
+    local lbl  = btn:FindFirstChild("TabLabel", true)
+    local iimg = btn:FindFirstChild("TabIcon",  true)
+    if lbl  then pcall(function() TweenService:Create(lbl,  TweenInfo.new(t, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { TextColor3  = col }):Play() end) end
+    if iimg then pcall(function() TweenService:Create(iimg, TweenInfo.new(t, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { ImageColor3 = col }):Play() end) end
+end
+
 local function switchTab(tabName: string)
     if tabName == currentTab or _tabAnimating then return end
     _tabAnimating = true
@@ -2809,20 +2824,6 @@ local function resetToSettingsTab()
 end
 
 -- Helper: set tab button active/inactive color on both child label and icon
-local function setTabColor(btn: TextButton, col: Color3)
-    local lbl  = btn:FindFirstChild("TabLabel", true)
-    local iimg = btn:FindFirstChild("TabIcon",  true)
-    if lbl  then lbl.TextColor3   = col end
-    if iimg then iimg.ImageColor3 = col end
-end
-
-local function tweenTabColor(btn: TextButton, col: Color3, t: number)
-    local lbl  = btn:FindFirstChild("TabLabel", true)
-    local iimg = btn:FindFirstChild("TabIcon",  true)
-    if lbl  then pcall(function() TweenService:Create(lbl,  TweenInfo.new(t, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { TextColor3  = col }):Play() end) end
-    if iimg then pcall(function() TweenService:Create(iimg, TweenInfo.new(t, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { ImageColor3 = col }):Play() end) end
-end
-
 -- ── Tab button hover glow ─────────────────────────────────────────────────
 local function connectTabHover(btn: TextButton)
     btn.MouseEnter:Connect(function()
