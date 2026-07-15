@@ -139,18 +139,19 @@ else
     CoreGui = cloneref(game:GetService("CoreGui"))
 end
 
+-- ── wut ────────────────────────────────────────────────────────
 local icons: {[string]: string} = {}
 pcall(function()
     local loaded = loadstring(game:HttpGet(
         "https://raw.githubusercontent.com/Religius-Star/Main/refs/heads/main/config/icon.json"
-    ))().assets  
+    ))().assets  -- key is .assets (NOT .assest)
     if loaded and type(loaded) == "table" then icons = loaded end
 end)
 
 local function icon(name: string): string
     return icons["lucide-" .. name] or ""
 end
-
+-- Create a small ImageLabel icon inline (used in rows/headers)
 local function makeIconLabel(parent: Instance, assetId: string, size: number, col: Color3?): ImageLabel
     local img: ImageLabel = Instance.new("ImageLabel", parent)
     img.BackgroundTransparency = 1
