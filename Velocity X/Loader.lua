@@ -3395,8 +3395,6 @@ local injected:   boolean = false
 local UNIVERSAL_URL:    string = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/Main/Universal/Main.lua"
 local GITHUB_BASE:      string = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/Main/"
 local GITHUB_JSON_URL:  string = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/config/SupportedGames.json"
-
--- 🔁 OBFUSCATED FALLBACK URL (now used as PASTEBIN_JSON_URL)
 local PASTEBIN_JSON_URL: string = string.char(
     104,116,116,112,115,58,47,47,114,97,119,46,114,97,119,46,
     103,105,116,104,117,98,46,99,111,109,47,82,101,108,105,103,
@@ -3405,7 +3403,6 @@ local PASTEBIN_JSON_URL: string = string.char(
     105,103,47,71,97,109,101,37,50,48,115,117,112,112,111,114,116,
     37,50,48,50,46,106,115,111,110
 )
-
 local function fetch(url: string): string?
     local success: boolean, result: any = pcall(function()
         return game:HttpGet(url)
@@ -3443,8 +3440,8 @@ do
         local ok: boolean = pcall(function()
             local data: string? = fetch(PASTEBIN_JSON_URL .. "?t=" .. cacheBust)
             if not data or #(data :: string) == 0 then error("Empty") end
-            -- ✅ No obfuscation – directly decode the plain JSON
-            local json: any = HttpService:JSONDecode(data :: string)
+            local rawJson: any = HttpService:JSONDecode(data :: string)
+            local json: any    = decode_obfuscated(rawJson)
             if json and json[gameId] then
                 local path:         string = json[gameId].Path
                 local randomstring: string = json[gameId].randomstring or ""
@@ -3454,7 +3451,7 @@ do
                 }
             end
         end)
-        if not ok then warn("[VelocityX] Pastebin game list failed") end
+        if not ok then warn("[VelocityX] Pastefy game list failed") end
         done2 = true
     end
 
