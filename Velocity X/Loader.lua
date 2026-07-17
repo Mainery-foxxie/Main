@@ -529,12 +529,10 @@ local function GetGreetingAndTime(): (string, string, string)
     return greeting, emoji, timeStr
 end
 
-do
 local _b64chars: string = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 local _b64lut: { [number]: number } = {}
 for i: number = 1, #_b64chars do
     _b64lut[string.byte(_b64chars, i)] = i - 1
-end
 end
 
 local function base64_decode(data: string): string
@@ -564,13 +562,7 @@ local function base64_decode(data: string): string
     return pad > 0 and result:sub(1, #result - pad) or result
 end
 
-do
 local _b64Pattern: string = "^[A-Za-z0-9+/]+=?=?$"
-local function _isBase64(s: string): boolean
-    return (#s > 0) and (#s % 4 == 0) and (s:match(_b64Pattern) ~= nil)
-end
-end
-
 local function _isBase64(s: string): boolean
     return (#s > 0) and (#s % 4 == 0) and (s:match(_b64Pattern) ~= nil)
 end
@@ -2039,13 +2031,14 @@ end
 
 local AvatarCard: Frame = Instance.new("Frame", CreditContent)
 AvatarCard.LayoutOrder        = 1
-AvatarCard.Size               = UDim2.new(1, 0, 0, 82)
+AvatarCard.Size               = UDim2.new(1, 0, 0, 268)
 AvatarCard.BackgroundColor3   = Color3.fromRGB(6, 14, 12)
 AvatarCard.BackgroundTransparency = 0.2
 AvatarCard.BorderSizePixel    = 0
 AvatarCard.ZIndex             = 4
+AvatarCard.ClipsDescendants   = false
 Instance.new("UICorner", AvatarCard).CornerRadius = UDim.new(0, 8)
-do
+do -- AvatarCardStroke
     local AvatarCardStroke: UIStroke = Instance.new("UIStroke", AvatarCard)
     AvatarCardStroke.Color        = Color3.fromRGB(0, 255, 150)
     AvatarCardStroke.Thickness    = 1.5
@@ -2068,9 +2061,10 @@ do
     end)
 end
 
+-- Avatar image
 local AvatarImg: ImageLabel = Instance.new("ImageLabel", AvatarCard)
-AvatarImg.AnchorPoint        = Vector2.new(0, 0.5)
-AvatarImg.Position           = UDim2.new(0, 6, 0.5, 0)
+AvatarImg.AnchorPoint        = Vector2.new(0, 0)
+AvatarImg.Position           = UDim2.new(0, 6, 0, 6)
 AvatarImg.Size               = UDim2.new(0, 50, 0, 50)
 AvatarImg.BackgroundColor3   = Color3.fromRGB(20, 20, 30)
 AvatarImg.BorderSizePixel    = 0
@@ -2112,36 +2106,60 @@ AvatarLoadingLbl.TextSize          = 10
 AvatarLoadingLbl.TextColor3        = Color3.fromRGB(0, 200, 255)
 AvatarLoadingLbl.ZIndex            = 6
 
-local CreatorName: TextLabel = Instance.new("TextLabel", AvatarCard)
-CreatorName.AnchorPoint        = Vector2.new(0, 0)
-CreatorName.Position           = UDim2.new(0, 62, 0, 6)
-CreatorName.Size               = UDim2.new(1, -68, 0, 16)
-CreatorName.BackgroundTransparency = 1
-CreatorName.Font               = Enum.Font.Arcade
-CreatorName.Text               = "zachparsons1 (alwi)"
-CreatorName.TextSize           = 13
-CreatorName.TextXAlignment     = Enum.TextXAlignment.Left
-CreatorName.TextColor3         = Color3.fromRGB(0, 255, 150)
-CreatorName.TextStrokeTransparency = 0.3
-CreatorName.TextStrokeColor3   = Color3.fromRGB(0, 0, 0)
-CreatorName.ZIndex             = 5
+-- Name / Title / Status / Button
+do
+    local CreatorName: TextLabel = Instance.new("TextLabel", AvatarCard)
+    CreatorName.Position           = UDim2.new(0, 62, 0, 6)
+    CreatorName.Size               = UDim2.new(0, 30, 0, 14)
+    CreatorName.BackgroundTransparency = 1
+    CreatorName.Font               = Enum.Font.Arcade
+    CreatorName.Text               = "alwi"
+    CreatorName.TextScaled         = true
+    CreatorName.TextXAlignment     = Enum.TextXAlignment.Left
+    CreatorName.TextColor3         = Color3.fromRGB(0, 255, 150)
+    CreatorName.TextStrokeTransparency = 0.3
+    CreatorName.TextStrokeColor3   = Color3.fromRGB(0, 0, 0)
+    CreatorName.ZIndex             = 5
 
-local CreatorTitle: TextLabel = Instance.new("TextLabel", AvatarCard)
-CreatorTitle.AnchorPoint       = Vector2.new(0, 0)
-CreatorTitle.Position          = UDim2.new(0, 62, 0, 22)
-CreatorTitle.Size              = UDim2.new(1, -68, 0, 12)
-CreatorTitle.BackgroundTransparency = 1
-CreatorTitle.Font              = Enum.Font.Arcade
-CreatorTitle.Text              = "Creator of Alwi Hub"
-CreatorTitle.TextSize          = 8
-CreatorTitle.TextXAlignment    = Enum.TextXAlignment.Left
-CreatorTitle.TextColor3        = Color3.fromRGB(180, 180, 255)
-CreatorTitle.ZIndex            = 5
+    -- "Owner" tag pill right beside the name
+    local OwnerTagPill: Frame = Instance.new("Frame", AvatarCard)
+    OwnerTagPill.Position        = UDim2.new(0, 96, 0, 7)
+    OwnerTagPill.Size            = UDim2.new(0, 40, 0, 12)
+    OwnerTagPill.BorderSizePixel = 0
+    OwnerTagPill.ZIndex          = 7
+    Instance.new("UICorner", OwnerTagPill).CornerRadius = UDim.new(1, 0)
+    do
+        local OGrad: UIGradient = Instance.new("UIGradient", OwnerTagPill)
+        OGrad.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 220, 120)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 180, 255)),
+        }
+        OGrad.Rotation = 90
+    end
+    local OwnerTagLbl: TextLabel = Instance.new("TextLabel", OwnerTagPill)
+    OwnerTagLbl.Size = UDim2.new(1, 0, 1, 0)
+    OwnerTagLbl.BackgroundTransparency = 1
+    OwnerTagLbl.Font = Enum.Font.Arcade
+    OwnerTagLbl.Text = "Owner"
+    OwnerTagLbl.TextScaled = true
+    OwnerTagLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    OwnerTagLbl.ZIndex = 8
+
+    local CreatorTitle: TextLabel = Instance.new("TextLabel", AvatarCard)
+    CreatorTitle.Position          = UDim2.new(0, 62, 0, 22)
+    CreatorTitle.Size              = UDim2.new(1, -68, 0, 11)
+    CreatorTitle.BackgroundTransparency = 1
+    CreatorTitle.Font              = Enum.Font.Arcade
+    CreatorTitle.Text              = "Creator of Alwi Hub"
+    CreatorTitle.TextSize          = 8
+    CreatorTitle.TextXAlignment    = Enum.TextXAlignment.Left
+    CreatorTitle.TextColor3        = Color3.fromRGB(180, 180, 255)
+    CreatorTitle.ZIndex            = 5
+end
 
 local StatusLabel: TextLabel = Instance.new("TextLabel", AvatarCard)
-StatusLabel.AnchorPoint       = Vector2.new(0, 0)
 StatusLabel.Position          = UDim2.new(0, 62, 0, 34)
-StatusLabel.Size              = UDim2.new(1, -68, 0, 14)
+StatusLabel.Size              = UDim2.new(1, -68, 0, 12)
 StatusLabel.BackgroundTransparency = 1
 StatusLabel.Font              = Enum.Font.Arcade
 StatusLabel.Text              = "Offline"
@@ -2151,9 +2169,8 @@ StatusLabel.TextColor3        = STATUS_COLOR_OFFLINE
 StatusLabel.ZIndex            = 5
 
 local RobloxBadge: TextButton = Instance.new("TextButton", AvatarCard)
-RobloxBadge.AnchorPoint       = Vector2.new(0, 0)
-RobloxBadge.Position          = UDim2.new(0, 62, 0, 50)
-RobloxBadge.Size              = UDim2.new(1, -68, 0, 18)
+RobloxBadge.Position          = UDim2.new(0, 62, 0, 48)
+RobloxBadge.Size              = UDim2.new(1, -68, 0, 16)
 RobloxBadge.BackgroundColor3  = Color3.fromRGB(226, 35, 26)
 RobloxBadge.BackgroundTransparency = 0.15
 RobloxBadge.BorderSizePixel   = 0
@@ -2174,209 +2191,190 @@ local RobloxBadgeScale: UIScale = Instance.new("UIScale", RobloxBadge)
 RobloxBadgeScale.Scale = 1
 
 EffectClick2 = function(c, p)
-	local Mouse = game.Players.LocalPlayer:GetMouse()
-
-	local relativeX = Mouse.X - c.AbsolutePosition.X
-	local relativeY = Mouse.Y - c.AbsolutePosition.Y
-
-	if relativeX < 0 or relativeY < 0 or relativeX > c.AbsoluteSize.X or relativeY > c.AbsoluteSize.Y then
-		return
-	end
-
-	local ClickButtonCircle = Instance.new("Frame")
-	ClickButtonCircle.Parent = p
-	ClickButtonCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	ClickButtonCircle.BackgroundTransparency = 0.5
-	ClickButtonCircle.BorderSizePixel = 0
-	ClickButtonCircle.AnchorPoint = Vector2.new(0.5, 0.5)
-	ClickButtonCircle.Position = UDim2.new(0, relativeX, 0, relativeY)
-	ClickButtonCircle.Size = UDim2.new(0, 0, 0, 0)
-	ClickButtonCircle.ZIndex = 10
-
-	local UIGradient_2 = Instance.new("UIGradient")
-	UIGradient_2.Parent = ClickButtonCircle
-	UIGradient_2.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 127)), ColorSequenceKeypoint.new(0.482699, Color3.fromRGB(0, 170, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(85, 85, 255))}
-	UIGradient_2.Rotation = 48
-
-	local UICorner = Instance.new("UICorner")
-	UICorner.CornerRadius = UDim.new(1, 0)
-	UICorner.Parent = ClickButtonCircle
-
-	local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-
-	local goal = {
-		Size = UDim2.new(0, c.AbsoluteSize.X * 1.5, 0, c.AbsoluteSize.X * 1.5),
-		BackgroundTransparency = 1
-	}
-
-	local expandTween = TweenService:Create(ClickButtonCircle, tweenInfo, goal)
-
-	expandTween.Completed:Connect(function()
-		ClickButtonCircle:Destroy()
-	end)
-
-	expandTween:Play()
+    local Mouse = game.Players.LocalPlayer:GetMouse()
+    local relativeX = Mouse.X - c.AbsolutePosition.X
+    local relativeY = Mouse.Y - c.AbsolutePosition.Y
+    if relativeX < 0 or relativeY < 0 or relativeX > c.AbsoluteSize.X or relativeY > c.AbsoluteSize.Y then return end
+    local ClickButtonCircle = Instance.new("Frame")
+    ClickButtonCircle.Parent = p
+    ClickButtonCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    ClickButtonCircle.BackgroundTransparency = 0.5
+    ClickButtonCircle.BorderSizePixel = 0
+    ClickButtonCircle.AnchorPoint = Vector2.new(0.5, 0.5)
+    ClickButtonCircle.Position = UDim2.new(0, relativeX, 0, relativeY)
+    ClickButtonCircle.Size = UDim2.new(0, 0, 0, 0)
+    ClickButtonCircle.ZIndex = 10
+    local UIGradient_2 = Instance.new("UIGradient")
+    UIGradient_2.Parent = ClickButtonCircle
+    UIGradient_2.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 127)), ColorSequenceKeypoint.new(0.482699, Color3.fromRGB(0, 170, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(85, 85, 255))}
+    UIGradient_2.Rotation = 48
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(1, 0)
+    UICorner.Parent = ClickButtonCircle
+    local expandTween = TweenService:Create(ClickButtonCircle, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, c.AbsoluteSize.X * 1.5, 0, c.AbsoluteSize.X * 1.5),
+        BackgroundTransparency = 1
+    })
+    expandTween.Completed:Connect(function() ClickButtonCircle:Destroy() end)
+    expandTween:Play()
 end
-
 
 RobloxBadge.MouseButton1Click:Connect(function()
     pcall(setclipboard, "https://www.roblox.com/users/1291925/profile")
-
     task.spawn(function()
         pcall(function()
-            TweenService:Create(RobloxBadgeScale,
-                TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
-                { Scale = 0.88 }):Play()
+            TweenService:Create(RobloxBadgeScale, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Scale = 0.88 }):Play()
             task.wait(0.09)
-            TweenService:Create(RobloxBadgeScale,
-                TweenInfo.new(0.45, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
-                { Scale = 1 }):Play()
+            TweenService:Create(RobloxBadgeScale, TweenInfo.new(0.45, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), { Scale = 1 }):Play()
         end)
     end)
-
     RobloxBadge.Text = "✓ Copied!"
-    task.delay(2, function()
-        pcall(function() RobloxBadge.Text = "Roblox Profile" end)
-    end)
+    task.delay(2, function() pcall(function() RobloxBadge.Text = "Roblox Profile" end) end)
 end)
 
-local BioCard: Frame = Instance.new("Frame", CreditContent)
-BioCard.LayoutOrder           = 2
-BioCard.Size                  = UDim2.new(1, 0, 0, 70)
-BioCard.BackgroundColor3      = Color3.fromRGB(10, 10, 18)
-BioCard.BackgroundTransparency = 0.3
-BioCard.BorderSizePixel       = 0
-BioCard.ZIndex                = 4
-BioCard.ClipsDescendants      = true
-Instance.new("UICorner", BioCard).CornerRadius = UDim.new(0, 6)
+-- ── Divider 1 ─────────────────────────────────────────────────────────────
 do
-    local BioCardStroke: UIStroke = Instance.new("UIStroke", BioCard)
-    BioCardStroke.Color        = Color3.fromRGB(0, 200, 255)
-    BioCardStroke.Thickness    = 1
-    BioCardStroke.Transparency = 0.5
-
-    local BioTitle: TextLabel = Instance.new("TextLabel", BioCard)
-    BioTitle.Position          = UDim2.new(0, 6, 0, 4)
-    BioTitle.Size              = UDim2.new(1, -8, 0, 12)
-    BioTitle.BackgroundTransparency = 1
-    BioTitle.Font              = Enum.Font.Arcade
-    BioTitle.Text              = "About"
-    BioTitle.TextSize          = 9
-    BioTitle.TextXAlignment    = Enum.TextXAlignment.Left
-    BioTitle.TextColor3        = Color3.fromRGB(0, 200, 255)
-    BioTitle.ZIndex            = 5
-
-    local BioDivider: Frame = Instance.new("Frame", BioCard)
-    BioDivider.Position           = UDim2.new(0, 4, 0, 17)
-    BioDivider.Size               = UDim2.new(1, -8, 0, 1)
-    BioDivider.BackgroundColor3   = Color3.fromRGB(0, 200, 255)
-    BioDivider.BackgroundTransparency = 0.6
-    BioDivider.BorderSizePixel    = 0
-    BioDivider.ZIndex             = 5
-
-    local BioText: TextLabel = Instance.new("TextLabel", BioCard)
-    BioText.Position          = UDim2.new(0, 6, 0, 20)
-    BioText.Size              = UDim2.new(1, -8, 1, -24)
-    BioText.BackgroundTransparency = 1
-    BioText.Font              = Enum.Font.Arcade
-    BioText.Text              = "Hey is me Alwi, creator of Alwi Hub!\nI like furry 🦊 (fox / kenomo) & fabulous beast\n\"you shou yan\" :3\nEnjoy the script! ❤"
-    BioText.TextSize          = 8
-    BioText.TextXAlignment    = Enum.TextXAlignment.Left
-    BioText.TextYAlignment    = Enum.TextYAlignment.Top
-    BioText.TextWrapped       = true
-    BioText.TextColor3        = Color3.fromRGB(210, 210, 210)
-    BioText.ZIndex            = 5
-
-    local FoxPaw: TextLabel = Instance.new("TextLabel", BioCard)
-    FoxPaw.AnchorPoint        = Vector2.new(1, 1)
-    FoxPaw.Position           = UDim2.new(1, -4, 1, -4)
-    FoxPaw.Size               = UDim2.new(0, 24, 0, 24)
-    FoxPaw.BackgroundTransparency = 1
-    FoxPaw.Font               = Enum.Font.GothamBold
-    FoxPaw.Text               = "🐾"
-    FoxPaw.TextSize           = 14
-    FoxPaw.TextTransparency   = 0.3
-    FoxPaw.ZIndex             = 5
+    local Div1: Frame = Instance.new("Frame", AvatarCard)
+    Div1.Position = UDim2.new(0, 4, 0, 68)
+    Div1.Size     = UDim2.new(1, -8, 0, 1)
+    Div1.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
+    Div1.BackgroundTransparency = 0.6
+    Div1.BorderSizePixel = 0
+    Div1.ZIndex = 5
 end
 
+-- ── About section ─────────────────────────────────────────────────────────
 do
-    local TagsOuter: Frame = Instance.new("Frame", CreditContent)
-    TagsOuter.LayoutOrder           = 3
-    TagsOuter.Size                  = UDim2.new(1, 0, 0, 40)
-    TagsOuter.BackgroundTransparency = 1
-    TagsOuter.BorderSizePixel       = 0
-    TagsOuter.ZIndex                = 4
+    local AboutHdr: TextLabel = Instance.new("TextLabel", AvatarCard)
+    AboutHdr.Position = UDim2.new(0, 6, 0, 71)
+    AboutHdr.Size     = UDim2.new(1, -8, 0, 11)
+    AboutHdr.BackgroundTransparency = 1
+    AboutHdr.Font     = Enum.Font.Arcade
+    AboutHdr.Text     = "About me :"
+    AboutHdr.TextSize = 8
+    AboutHdr.TextXAlignment = Enum.TextXAlignment.Left
+    AboutHdr.TextColor3 = Color3.fromRGB(0, 200, 255)
+    AboutHdr.ZIndex   = 5
 
-    local function makeTagsRow(parent: Frame, yOffset: number): Frame
-        local row: Frame = Instance.new("Frame", parent)
-        row.Position              = UDim2.new(0, 0, 0, yOffset)
-        row.Size                  = UDim2.new(1, 0, 0, 16)
+    local BioText: TextLabel = Instance.new("TextLabel", AvatarCard)
+    BioText.Position  = UDim2.new(0, 6, 0, 83)
+    BioText.Size      = UDim2.new(1, -12, 0, 42)
+    BioText.BackgroundTransparency = 1
+    BioText.Font      = Enum.Font.Arcade
+    BioText.Text      = "Hey is me Alwi, creator of Alwi Hub!\nI like furry 🦊 (fox / kenomo) & fabulous beast\n\"you shou yan\" :3  Enjoy the script! ❤"
+    BioText.TextSize  = 8
+    BioText.TextXAlignment = Enum.TextXAlignment.Left
+    BioText.TextYAlignment = Enum.TextYAlignment.Top
+    BioText.TextWrapped = true
+    BioText.TextColor3 = Color3.fromRGB(210, 210, 210)
+    BioText.ZIndex    = 5
+
+    local FoxPaw: TextLabel = Instance.new("TextLabel", AvatarCard)
+    FoxPaw.AnchorPoint = Vector2.new(1, 0)
+    FoxPaw.Position    = UDim2.new(1, -4, 0, 107)
+    FoxPaw.Size        = UDim2.new(0, 20, 0, 18)
+    FoxPaw.BackgroundTransparency = 1
+    FoxPaw.Font        = Enum.Font.GothamBold
+    FoxPaw.Text        = "🐾"
+    FoxPaw.TextSize    = 12
+    FoxPaw.TextTransparency = 0.3
+    FoxPaw.ZIndex      = 5
+end
+
+-- ── Divider 2 ─────────────────────────────────────────────────────────────
+do
+    local Div2: Frame = Instance.new("Frame", AvatarCard)
+    Div2.Position = UDim2.new(0, 4, 0, 128)
+    Div2.Size     = UDim2.new(1, -8, 0, 1)
+    Div2.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
+    Div2.BackgroundTransparency = 0.6
+    Div2.BorderSizePixel = 0
+    Div2.ZIndex = 5
+end
+
+-- ── Tags ──────────────────────────────────────────────────────────────────
+do
+    local TagsHdr: TextLabel = Instance.new("TextLabel", AvatarCard)
+    TagsHdr.Position = UDim2.new(0, 6, 0, 131)
+    TagsHdr.Size     = UDim2.new(1, -8, 0, 10)
+    TagsHdr.BackgroundTransparency = 1
+    TagsHdr.Font     = Enum.Font.Arcade
+    TagsHdr.Text     = "Tags :"
+    TagsHdr.TextSize = 7
+    TagsHdr.TextXAlignment = Enum.TextXAlignment.Left
+    TagsHdr.TextColor3 = Color3.fromRGB(0, 200, 255)
+    TagsHdr.ZIndex   = 5
+
+    local TS_a = game:GetService("TextService")
+    local function makeARow(yOff: number): Frame
+        local row: Frame = Instance.new("Frame", AvatarCard)
+        row.Position = UDim2.new(0, 4, 0, yOff)
+        row.Size     = UDim2.new(1, -8, 0, 16)
         row.BackgroundTransparency = 1
-        row.BorderSizePixel       = 0
-        row.ZIndex                = 4
+        row.BorderSizePixel = 0
+        row.ZIndex   = 5
         local ll: UIListLayout = Instance.new("UIListLayout", row)
-        ll.FillDirection          = Enum.FillDirection.Horizontal
-        ll.HorizontalAlignment    = Enum.HorizontalAlignment.Left
-        ll.VerticalAlignment      = Enum.VerticalAlignment.Center
-        ll.Padding                = UDim.new(0, 4)
+        ll.FillDirection       = Enum.FillDirection.Horizontal
+        ll.HorizontalAlignment = Enum.HorizontalAlignment.Left
+        ll.VerticalAlignment   = Enum.VerticalAlignment.Center
+        ll.Padding             = UDim.new(0, 4)
         return row
     end
+    local ARow1: Frame = makeARow(143)
+    local ARow2: Frame = makeARow(161)
 
-    local TagRow1: Frame = makeTagsRow(TagsOuter, 0)
-    local TagRow2: Frame = makeTagsRow(TagsOuter, 22)
-
-    local TS_tags = game:GetService("TextService")
-    local function addTag(parent: Frame, txt: string, col: Color3)
+    local function addATag(parent: Frame, txt: string, col: Color3)
         local tag: TextLabel = Instance.new("TextLabel", parent)
         tag.BackgroundColor3       = col
-        tag.BackgroundTransparency = 0.5
+        tag.BackgroundTransparency = 0.4
         tag.BorderSizePixel        = 0
         tag.Font                   = Enum.Font.Arcade
         tag.Text                   = txt
         tag.TextSize               = 7
         tag.TextColor3             = Color3.fromRGB(255, 255, 255)
-        tag.ZIndex                 = 5
+        tag.ZIndex                 = 6
         Instance.new("UICorner", tag).CornerRadius = UDim.new(1, 0)
-        local sz: Vector2 = TS_tags:GetTextSize(txt, 7, Enum.Font.Arcade, Vector2.new(200, 20))
-        tag.Size = UDim2.new(0, sz.X + 10, 0, 14)
+        local sz: Vector2 = TS_a:GetTextSize(txt, 7, Enum.Font.Arcade, Vector2.new(200, 20))
+        tag.Size = UDim2.new(0, sz.X + 12, 0, 14)
     end
 
-    addTag(TagRow1, "fox",      Color3.fromRGB(255, 115, 15))
-    addTag(TagRow1, "kenomo",       Color3.fromRGB(110, 70, 210))
-    addTag(TagRow1, "furry",        Color3.fromRGB(190, 55, 115))
-    addTag(TagRow1, "like fabulous beast",    Color3.fromRGB(0,  150, 220))
-
-    addTag(TagRow2, "Lua 3yr",   Color3.fromRGB(30,  160, 100))
-    addTag(TagRow2, "Introvert", Color3.fromRGB(60,  90,  180))
-    addTag(TagRow2, "Ragebait",  Color3.fromRGB(200, 50,  50))
+    addATag(ARow1, "fox",                 Color3.fromRGB(255, 115, 15))
+    addATag(ARow1, "kenomo",              Color3.fromRGB(110, 70,  210))
+    addATag(ARow1, "furry",               Color3.fromRGB(190, 55,  115))
+    addATag(ARow1, "like fabulous beast", Color3.fromRGB(0,   150, 220))
+    addATag(ARow2, "Lua 3yr",             Color3.fromRGB(30,  160, 100))
+    addATag(ARow2, "Introvert",           Color3.fromRGB(60,  90,  180))
+    addATag(ARow2, "Ragebait",            Color3.fromRGB(200, 50,  50))
 end
 
-local UIS = game:GetService("UserInputService")
-
+-- ── Divider 3 ─────────────────────────────────────────────────────────────
 do
-    local SocialSep: Frame = Instance.new("Frame", CreditContent)
-    SocialSep.LayoutOrder            = 4
-    SocialSep.Size                   = UDim2.new(1, 0, 0, 1)
-    SocialSep.BackgroundColor3       = Color3.fromRGB(0, 200, 255)
-    SocialSep.BackgroundTransparency = 0.6
-    SocialSep.BorderSizePixel        = 0
-    SocialSep.ZIndex                 = 4
-
-    local SocialHdr: TextLabel = Instance.new("TextLabel", CreditContent)
-    SocialHdr.LayoutOrder            = 5
-    SocialHdr.Size                   = UDim2.new(1, 0, 0, 14)
-    SocialHdr.BackgroundTransparency = 1
-    SocialHdr.Font                   = Enum.Font.Arcade
-    SocialHdr.Text                   = "🌐 Social"
-    SocialHdr.TextSize               = 8
-    SocialHdr.TextXAlignment         = Enum.TextXAlignment.Left
-    SocialHdr.TextColor3             = Color3.fromRGB(0, 200, 255)
-    SocialHdr.ZIndex                 = 4
+    local Div3: Frame = Instance.new("Frame", AvatarCard)
+    Div3.Position = UDim2.new(0, 4, 0, 181)
+    Div3.Size     = UDim2.new(1, -8, 0, 1)
+    Div3.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
+    Div3.BackgroundTransparency = 0.6
+    Div3.BorderSizePixel = 0
+    Div3.ZIndex = 5
 end
 
-local SocialRow: ScrollingFrame = Instance.new("ScrollingFrame", CreditContent)
-SocialRow.LayoutOrder            = 6
-SocialRow.Size                   = UDim2.new(1, 0, 0, 80)
+-- ── Social ────────────────────────────────────────────────────────────────
+do
+    local SocialHdr: TextLabel = Instance.new("TextLabel", AvatarCard)
+    SocialHdr.Position = UDim2.new(0, 6, 0, 184)
+    SocialHdr.Size     = UDim2.new(1, -8, 0, 11)
+    SocialHdr.BackgroundTransparency = 1
+    SocialHdr.Font     = Enum.Font.Arcade
+    SocialHdr.Text     = "Social :"
+    SocialHdr.TextSize = 8
+    SocialHdr.TextXAlignment = Enum.TextXAlignment.Left
+    SocialHdr.TextColor3 = Color3.fromRGB(0, 200, 255)
+    SocialHdr.ZIndex   = 5
+end
+
+local SocialRow: ScrollingFrame = Instance.new("ScrollingFrame", AvatarCard)
+SocialRow.Position               = UDim2.new(0, 0, 0, 197)
+SocialRow.Size                   = UDim2.new(1, 0, 0, 58)
 SocialRow.BackgroundTransparency = 1
 SocialRow.BorderSizePixel        = 0
 SocialRow.ZIndex                 = 4
@@ -2385,255 +2383,458 @@ SocialRow.ScrollBarImageColor3   = Color3.fromRGB(0, 200, 255)
 SocialRow.ScrollingDirection     = Enum.ScrollingDirection.X
 SocialRow.AutomaticCanvasSize    = Enum.AutomaticSize.X
 SocialRow.CanvasSize             = UDim2.new(0, 0, 0, 0)
-
 do
     local SocialList: UIListLayout = Instance.new("UIListLayout", SocialRow)
-    SocialList.FillDirection        = Enum.FillDirection.Horizontal
-    SocialList.HorizontalAlignment  = Enum.HorizontalAlignment.Left
-    SocialList.VerticalAlignment    = Enum.VerticalAlignment.Center
-    SocialList.Padding              = UDim.new(0, 10)
-
+    SocialList.FillDirection       = Enum.FillDirection.Horizontal
+    SocialList.HorizontalAlignment = Enum.HorizontalAlignment.Left
+    SocialList.VerticalAlignment   = Enum.VerticalAlignment.Center
+    SocialList.Padding             = UDim.new(0, 10)
     local SocialPad: UIPadding = Instance.new("UIPadding", SocialRow)
     SocialPad.PaddingLeft   = UDim.new(0, 4)
     SocialPad.PaddingRight  = UDim.new(0, 4)
-    SocialPad.PaddingTop    = UDim.new(0, 4)
+    SocialPad.PaddingTop    = UDim.new(0, 6)
     SocialPad.PaddingBottom = UDim.new(0, 4)
 end
 
+-- Social button builder
 local function makeSocialBtn(
-    assetId: string?,
-    emoji:   string?,
-    label:   string,
-    link:    string,
-    colA:    Color3,
-    colB:    Color3
+    iconId: string,
+    imgId: string?,
+    label: string,
+    link: string,
+    bgCol: Color3,
+    strokeCol: Color3
 )
-    local card: Frame = Instance.new("Frame", SocialRow)
-    card.BackgroundTransparency = 1
-    card.BorderSizePixel        = 0
-    card.Size                   = UDim2.new(0, 58, 1, 0)
-    card.ZIndex                 = 4
-
-    local cardScale: UIScale = Instance.new("UIScale", card)
-    cardScale.Scale = 1
-
-    local btn: ImageButton = Instance.new("ImageButton", card)
-    btn.AnchorPoint        = Vector2.new(0.5, 0)
-    btn.Position           = UDim2.new(0.5, 0, 0, 4)
-    btn.Size               = UDim2.new(0, 40, 0, 40)
-    btn.BackgroundColor3   = colA
-    btn.BackgroundTransparency = 0.25
-    btn.BorderSizePixel    = 0
-    btn.ZIndex             = 5
-    btn.Image              = ""
-    btn.ClipsDescendants   = true
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(1, 0)
-
-    local btnGrad: UIGradient = Instance.new("UIGradient", btn)
-    btnGrad.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, colA),
-        ColorSequenceKeypoint.new(1, colB),
-    }
-    btnGrad.Rotation = 135
-
-    local stroke: UIStroke = Instance.new("UIStroke", btn)
-    stroke.Color        = colA
-    stroke.Thickness    = 1.5
-    stroke.Transparency = 0.35
-
-    if assetId then
-        local img: ImageLabel = Instance.new("ImageLabel", btn)
-        img.AnchorPoint            = Vector2.new(0.5, 0.5)
-        img.Position               = UDim2.new(0.5, 0, 0.5, 0)
-        img.Size                   = UDim2.new(0.65, 0, 0.65, 0)
-        img.BackgroundTransparency = 1
-        img.Image                  = "rbxassetid://" .. assetId
-        img.ZIndex                 = 6
-    else
-        local lbl2: TextLabel = Instance.new("TextLabel", btn)
-        lbl2.AnchorPoint            = Vector2.new(0.5, 0.5)
-        lbl2.Position               = UDim2.new(0.5, 0, 0.5, 0)
-        lbl2.Size                   = UDim2.new(1, 0, 1, 0)
-        lbl2.BackgroundTransparency = 1
-        lbl2.Font                   = Enum.Font.GothamBold
-        lbl2.Text                   = emoji or "?"
-        lbl2.TextSize               = 18
-        lbl2.TextColor3             = Color3.fromRGB(255, 255, 255)
-        lbl2.ZIndex                 = 6
+    local btn: TextButton = Instance.new("TextButton", SocialRow)
+    btn.BackgroundColor3       = bgCol
+    btn.BackgroundTransparency = 0.2
+    btn.BorderSizePixel        = 0
+    btn.Size                   = UDim2.new(0, 80, 0, 44)
+    btn.Font                   = Enum.Font.Arcade
+    btn.Text                   = ""
+    btn.ZIndex                 = 5
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+    do
+        local btnStroke: UIStroke = Instance.new("UIStroke", btn)
+        btnStroke.Color       = strokeCol
+        btnStroke.Thickness   = 1
+        btnStroke.Transparency = 0.5
     end
 
-    local nameLbl: TextLabel = Instance.new("TextLabel", card)
-    nameLbl.AnchorPoint            = Vector2.new(0.5, 0)
-    nameLbl.Position               = UDim2.new(0.5, 0, 0, 46)
-    nameLbl.Size                   = UDim2.new(1, 4, 0, 12)
-    nameLbl.BackgroundTransparency = 1
-    nameLbl.Font                   = Enum.Font.Arcade
-    nameLbl.Text                   = label
-    nameLbl.TextSize               = 7
-    nameLbl.TextXAlignment         = Enum.TextXAlignment.Center
-    nameLbl.TextColor3             = Color3.fromRGB(175, 175, 175)
-    nameLbl.ZIndex                 = 4
+    -- Icon image
+    local img: ImageLabel = Instance.new("ImageLabel", btn)
+    img.AnchorPoint            = Vector2.new(0.5, 0)
+    img.Position               = UDim2.new(0.5, 0, 0, 4)
+    img.Size                   = UDim2.new(0, 22, 0, 22)
+    img.BackgroundTransparency = 1
+    img.Image                  = imgId or ("rbxassetid://" .. iconId)
+    img.ImageColor3            = Color3.fromRGB(255, 255, 255)
+    img.ZIndex                 = 6
 
-    btn.MouseEnter:Connect(function()
-        pcall(function()
-            TweenService:Create(cardScale,
-                TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-                { Scale = 1.14 }
-            ):Play()
+    -- Label
+    local lbl: TextLabel = Instance.new("TextLabel", btn)
+    lbl.AnchorPoint            = Vector2.new(0.5, 1)
+    lbl.Position               = UDim2.new(0.5, 0, 1, -4)
+    lbl.Size                   = UDim2.new(1, -4, 0, 12)
+    lbl.BackgroundTransparency = 1
+    lbl.Font                   = Enum.Font.Arcade
+    lbl.Text                   = label
+    lbl.TextSize               = 7
+    lbl.TextColor3             = Color3.fromRGB(230, 230, 230)
+    lbl.ZIndex                 = 6
 
-            TweenService:Create(btn,
-                TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-                { BackgroundTransparency = 0.08, Position = UDim2.new(0.5, 0, 0, 0) }
-            ):Play()
-            TweenService:Create(stroke,
-                TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-                { Transparency = 0, Thickness = 2.2 }
-            ):Play()
-            TweenService:Create(nameLbl,
-                TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-                { TextColor3 = Color3.fromRGB(230, 230, 230) }
-            ):Play()
-        end)
-    end)
-    btn.MouseLeave:Connect(function()
-        pcall(function()
-            TweenService:Create(cardScale,
-                TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
-                { Scale = 1 }
-            ):Play()
-            TweenService:Create(btn,
-                TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
-                { BackgroundTransparency = 0.25, Position = UDim2.new(0.5, 0, 0, 4) }
-            ):Play()
-            TweenService:Create(stroke,
-                TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
-                { Transparency = 0.35, Thickness = 1.5 }
-            ):Play()
-
-            if nameLbl.Text ~= "✓ Copied!" then
-                TweenService:Create(nameLbl,
-                    TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
-                    { TextColor3 = Color3.fromRGB(175, 175, 175) }
-                ):Play()
-            end
-        end)
-    end)
+    local btnScale: UIScale = Instance.new("UIScale", btn)
+    btnScale.Scale = 1
 
     btn.MouseButton1Click:Connect(function()
         pcall(setclipboard, link)
-
-        task.spawn(function()
-            pcall(function()
-                TweenService:Create(cardScale,
-                    TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
-                    { Scale = 0.80 }):Play()
-                task.wait(0.09)
-                TweenService:Create(cardScale,
-                    TweenInfo.new(0.52, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
-                    { Scale = 1 }):Play()
-            end)
-        end)
-
-        task.spawn(function()
-            pcall(function()
-                local iconObj = btn:FindFirstChildOfClass("ImageLabel")
-                             or btn:FindFirstChildOfClass("TextLabel")
-                if iconObj then
-                    TweenService:Create(iconObj,
-                        TweenInfo.new(0.10, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-                        { Rotation = -22 }):Play()
-                    task.wait(0.11)
-                    TweenService:Create(iconObj,
-                        TweenInfo.new(0.13, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out),
-                        { Rotation = 15 }):Play()
-                    task.wait(0.14)
-                    TweenService:Create(iconObj,
-                        TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-                        { Rotation = 0 }):Play()
-                end
-            end)
-        end)
-
         pcall(function()
-            TweenService:Create(stroke, TweenInfo.new(0.06),
-                { Transparency = 0, Thickness = 2.8 }):Play()
-            task.delay(0.28, function()
-                pcall(function()
-                    TweenService:Create(stroke, TweenInfo.new(0.28),
-                        { Transparency = 0.35, Thickness = 1.5 }):Play()
-                end)
-            end)
+            TweenService:Create(btnScale, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Scale = 0.88 }):Play()
+            task.wait(0.09)
+            TweenService:Create(btnScale, TweenInfo.new(0.45, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), { Scale = 1 }):Play()
         end)
-
-        task.spawn(function()
-            pcall(function()
-                local floatCheck: TextLabel = Instance.new("TextLabel", card)
-                floatCheck.AnchorPoint            = Vector2.new(0.5, 1)
-                floatCheck.Position               = UDim2.new(0.5, 0, 0.02, 0)
-                floatCheck.Size                   = UDim2.new(0.9, 0, 0, 20)
-                floatCheck.BackgroundTransparency = 1
-                floatCheck.Font                   = Enum.Font.GothamBold
-                floatCheck.Text                   = "✓"
-                floatCheck.TextSize               = 14
-                floatCheck.TextColor3             = Color3.fromRGB(0, 255, 150)
-                floatCheck.TextStrokeTransparency = 0.35
-                floatCheck.TextStrokeColor3       = Color3.fromRGB(0, 0, 0)
-                floatCheck.ZIndex                 = 12
-                TweenService:Create(floatCheck,
-                    TweenInfo.new(0.72, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-                    { Position    = UDim2.new(0.5, 0, -0.4, 0),
-                      TextTransparency = 1 }):Play()
-                task.wait(0.74)
-                pcall(function() floatCheck:Destroy() end)
-            end)
-        end)
-
-        nameLbl.Text       = "✓ Copied!"
-        nameLbl.TextColor3 = Color3.fromRGB(0, 255, 150)
-        task.delay(2, function()
-            pcall(function()
-                nameLbl.Text       = label
-                nameLbl.TextColor3 = Color3.fromRGB(175, 175, 175)
-            end)
-        end)
+        local prev = lbl.Text
+        lbl.Text = "✓ Copied"
+        task.delay(2, function() pcall(function() lbl.Text = prev end) end)
     end)
 end
 
-makeSocialBtn(
-    "94937742565147",
-    nil,
-    "Discord",
-    "https://discord.com/users/1136652082091409468",
-    Color3.fromRGB(88,  101, 242),
-    Color3.fromRGB(58,  30,  180)
-)
+-- Alwi's social links
+makeSocialBtn("94937742565147",   nil, "Discord", "https://discord.com/users/1136652082091409468", Color3.fromRGB(88,  101, 242), Color3.fromRGB(58,  30,  180))
+makeSocialBtn("140193697070787",  nil, "YouTube", "https://youtube.com/@IkuraJust",                Color3.fromRGB(255, 30,  30),  Color3.fromRGB(180, 0,   60))
+makeSocialBtn("99316223126384",   nil, "Roblox",  "https://www.roblox.com/users/1291925/profile",  Color3.fromRGB(226, 35,  26),  Color3.fromRGB(180, 60,  20))
+makeSocialBtn("117782741969829",  nil, "GitHub",  "https://github.com/mainery-foxxie",             Color3.fromRGB(30,  30,  30),  Color3.fromRGB(80,  80,  80))
 
-makeSocialBtn(
-    "140193697070787",
-    nil,
-    "YouTube",
-    "https://youtube.com/@IkuraJust",
-    Color3.fromRGB(255, 30,  30),
-    Color3.fromRGB(180, 0,   60)
-)
+-- ── Helper card: sinque ───────────────────────────────────────────────────
+local SINQUE_USER_ID: number = 1930806367
 
-makeSocialBtn(
-    "99316223126384",
-    nil, 
-    "Roblox",
-    "https://www.roblox.com/users/1291925/profile",
-    Color3.fromRGB(226, 35,  26),
-    Color3.fromRGB(180, 60,  20)
-)
+local HelperAvatarImg: ImageLabel
+local HelperLoadingLbl: TextLabel
+local HelperRobloxBtnScale: UIScale
 
-makeSocialBtn(
-    "117782741969829",
-    nil,
-    "GitHub",
-    "https://github.com/mainery-foxxie",
-    Color3.fromRGB(30,  30,  30),
-    Color3.fromRGB(80,  80,  80)
-)
+do -- HelperCard construction
+local HelperCard: Frame = Instance.new("Frame", CreditContent)
+HelperCard.LayoutOrder        = 2
+HelperCard.Size               = UDim2.new(1, 0, 0, 248)
+HelperCard.BackgroundColor3   = Color3.fromRGB(8, 10, 22)
+HelperCard.BackgroundTransparency = 0.2
+HelperCard.BorderSizePixel    = 0
+HelperCard.ZIndex             = 4
+HelperCard.ClipsDescendants   = false
+Instance.new("UICorner", HelperCard).CornerRadius = UDim.new(0, 8)
+
+do
+    local HelperCardStroke: UIStroke = Instance.new("UIStroke", HelperCard)
+    HelperCardStroke.Color        = Color3.fromRGB(100, 120, 255)
+    HelperCardStroke.Thickness    = 1.5
+    HelperCardStroke.Transparency = 0.35
+    task.spawn(function()
+        while HelperCard and HelperCard.Parent do
+            pcall(function()
+                TweenService:Create(HelperCardStroke, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                    Color = Color3.fromRGB(180, 100, 255), Transparency = 0.6
+                }):Play()
+            end)
+            task.wait(2)
+            pcall(function()
+                TweenService:Create(HelperCardStroke, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                    Color = Color3.fromRGB(100, 120, 255), Transparency = 0.35
+                }):Play()
+            end)
+            task.wait(2)
+        end
+    end)
+end
+
+-- ── Avatar (same position/size as Alwi) ──────────────────────────────────
+HelperAvatarImg = Instance.new("ImageLabel", HelperCard)
+HelperAvatarImg.AnchorPoint       = Vector2.new(0, 0)
+HelperAvatarImg.Position          = UDim2.new(0, 6, 0, 6)
+HelperAvatarImg.Size              = UDim2.new(0, 50, 0, 50)
+HelperAvatarImg.BackgroundColor3  = Color3.fromRGB(15, 15, 30)
+HelperAvatarImg.BorderSizePixel   = 0
+HelperAvatarImg.Image             = ""
+HelperAvatarImg.ImageTransparency = 1
+HelperAvatarImg.ZIndex            = 5
+Instance.new("UICorner", HelperAvatarImg).CornerRadius = UDim.new(1, 0)
+do
+    local HelperAvatarStroke: UIStroke = Instance.new("UIStroke", HelperAvatarImg)
+    HelperAvatarStroke.Color        = Color3.fromRGB(130, 100, 255)
+    HelperAvatarStroke.Thickness    = 1.5
+    HelperAvatarStroke.Transparency = 0.2
+end
+
+HelperLoadingLbl = Instance.new("TextLabel", HelperAvatarImg)
+HelperLoadingLbl.Size                  = UDim2.new(1, 0, 1, 0)
+HelperLoadingLbl.BackgroundTransparency = 1
+HelperLoadingLbl.Font                  = Enum.Font.GothamBold
+HelperLoadingLbl.Text                  = "..."
+HelperLoadingLbl.TextSize              = 10
+HelperLoadingLbl.TextColor3            = Color3.fromRGB(130, 100, 255)
+HelperLoadingLbl.ZIndex                = 6
+
+-- ── Name / Title / Status / Button (right of avatar, same x=62 as Alwi) ────
+do
+    local HelperName: TextLabel = Instance.new("TextLabel", HelperCard)
+    HelperName.Position           = UDim2.new(0, 62, 0, 6)
+    HelperName.Size               = UDim2.new(0, 36, 0, 14)
+    HelperName.BackgroundTransparency = 1
+    HelperName.Font               = Enum.Font.Arcade
+    HelperName.Text               = "sinque"
+    HelperName.TextScaled         = true
+    HelperName.TextXAlignment     = Enum.TextXAlignment.Left
+    HelperName.TextColor3         = Color3.fromRGB(130, 150, 255)
+    HelperName.TextStrokeTransparency = 0.3
+    HelperName.TextStrokeColor3   = Color3.fromRGB(0, 0, 0)
+    HelperName.ZIndex             = 5
+
+    -- "Helper" tag pill inline beside name
+    local HelperTagPill: Frame = Instance.new("Frame", HelperCard)
+    HelperTagPill.Position        = UDim2.new(0, 102, 0, 7)
+    HelperTagPill.Size            = UDim2.new(0, 40, 0, 12)
+    HelperTagPill.BorderSizePixel = 0
+    HelperTagPill.ZIndex          = 7
+    Instance.new("UICorner", HelperTagPill).CornerRadius = UDim.new(1, 0)
+    do
+        local HPGrad: UIGradient = Instance.new("UIGradient", HelperTagPill)
+        HPGrad.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(100, 120, 255)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(180, 80,  255)),
+        }
+        HPGrad.Rotation = 90
+    end
+    local HelperTagLbl: TextLabel = Instance.new("TextLabel", HelperTagPill)
+    HelperTagLbl.Size = UDim2.new(1, 0, 1, 0)
+    HelperTagLbl.BackgroundTransparency = 1
+    HelperTagLbl.Font = Enum.Font.Arcade
+    HelperTagLbl.Text = "Helper"
+    HelperTagLbl.TextScaled = true
+    HelperTagLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    HelperTagLbl.ZIndex = 8
+
+    local HelperTitle: TextLabel = Instance.new("TextLabel", HelperCard)
+    HelperTitle.Position          = UDim2.new(0, 62, 0, 22)
+    HelperTitle.Size              = UDim2.new(1, -68, 0, 11)
+    HelperTitle.BackgroundTransparency = 1
+    HelperTitle.Font              = Enum.Font.Arcade
+    HelperTitle.Text              = "Helper of Alwi Hub"
+    HelperTitle.TextSize          = 8
+    HelperTitle.TextXAlignment    = Enum.TextXAlignment.Left
+    HelperTitle.TextColor3        = Color3.fromRGB(180, 180, 255)
+    HelperTitle.ZIndex            = 5
+end
+
+-- sinque status ring on avatar
+local HelperStatusRing: Frame = Instance.new("Frame", HelperAvatarImg)
+HelperStatusRing.AnchorPoint      = Vector2.new(1, 1)
+HelperStatusRing.Position         = UDim2.new(1, 3, 1, 3)
+HelperStatusRing.Size             = UDim2.new(0, 18, 0, 18)
+HelperStatusRing.BackgroundColor3 = Color3.fromRGB(8, 10, 22)
+HelperStatusRing.BorderSizePixel  = 0
+HelperStatusRing.ZIndex           = 6
+Instance.new("UICorner", HelperStatusRing).CornerRadius = UDim.new(1, 0)
+
+local HelperStatusDot: Frame = Instance.new("Frame", HelperStatusRing)
+HelperStatusDot.AnchorPoint      = Vector2.new(0.5, 0.5)
+HelperStatusDot.Position         = UDim2.new(0.5, 0, 0.5, 0)
+HelperStatusDot.Size             = UDim2.new(0, 12, 0, 12)
+HelperStatusDot.BackgroundColor3 = STATUS_COLOR_OFFLINE
+HelperStatusDot.BorderSizePixel  = 0
+HelperStatusDot.ZIndex           = 7
+Instance.new("UICorner", HelperStatusDot).CornerRadius = UDim.new(1, 0)
+
+-- Status label (same y=34 as Alwi)
+local HelperStatusLabel: TextLabel = Instance.new("TextLabel", HelperCard)
+HelperStatusLabel.Position          = UDim2.new(0, 62, 0, 34)
+HelperStatusLabel.Size              = UDim2.new(1, -68, 0, 12)
+HelperStatusLabel.BackgroundTransparency = 1
+HelperStatusLabel.Font              = Enum.Font.Arcade
+HelperStatusLabel.Text              = "Offline"
+HelperStatusLabel.TextSize          = 8
+HelperStatusLabel.TextXAlignment    = Enum.TextXAlignment.Left
+HelperStatusLabel.TextColor3        = STATUS_COLOR_OFFLINE
+HelperStatusLabel.ZIndex            = 5
+
+-- Async fetch sinque's presence
+task.spawn(function()
+    local ok, presType = pcall(function()
+        local ps = game:GetService("Players")
+        local data = ps:GetFriendInfoAsync(SINQUE_USER_ID)
+        return data and data.IsOnline and 2 or 0
+    end)
+    local col = (ok and presType and presType > 0) and STATUS_COLOR_ONLINE or STATUS_COLOR_OFFLINE
+    local txt = (ok and presType and presType > 0) and "Online" or "Offline"
+    pcall(function()
+        HelperStatusDot.BackgroundColor3  = col
+        HelperStatusLabel.TextColor3      = col
+        HelperStatusLabel.Text            = txt
+    end)
+end)
+
+-- Roblox Profile button (same y=48 as Alwi)
+local HelperProfileBtn: TextButton = Instance.new("TextButton", HelperCard)
+HelperProfileBtn.Position          = UDim2.new(0, 62, 0, 48)
+HelperProfileBtn.Size              = UDim2.new(1, -68, 0, 16)
+HelperProfileBtn.BackgroundColor3  = Color3.fromRGB(100, 80, 220)
+HelperProfileBtn.BackgroundTransparency = 0.15
+HelperProfileBtn.BorderSizePixel   = 0
+HelperProfileBtn.Font              = Enum.Font.Arcade
+HelperProfileBtn.Text              = "Roblox Profile"
+HelperProfileBtn.TextSize          = 8
+HelperProfileBtn.TextColor3        = Color3.fromRGB(255, 255, 255)
+HelperProfileBtn.ZIndex            = 5
+Instance.new("UICorner", HelperProfileBtn).CornerRadius = UDim.new(0, 4)
+do
+    local HelperRobloxBtnStroke: UIStroke = Instance.new("UIStroke", HelperProfileBtn)
+    HelperRobloxBtnStroke.Color        = Color3.fromRGB(130, 100, 255)
+    HelperRobloxBtnStroke.Thickness    = 1
+    HelperRobloxBtnStroke.Transparency = 0.4
+end
+
+HelperRobloxBtnScale = Instance.new("UIScale", HelperProfileBtn)
+HelperRobloxBtnScale.Scale = 1
+
+HelperProfileBtn.MouseButton1Click:Connect(function()
+    pcall(setclipboard, "https://www.roblox.com/users/1930806367/profile")
+    task.spawn(function()
+        pcall(function()
+            TweenService:Create(HelperRobloxBtnScale,
+                TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+                { Scale = 0.88 }):Play()
+            task.wait(0.09)
+            TweenService:Create(HelperRobloxBtnScale,
+                TweenInfo.new(0.45, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
+                { Scale = 1 }):Play()
+        end)
+    end)
+    HelperProfileBtn.Text = "✓ Copied!"
+    task.delay(2, function() pcall(function() HelperProfileBtn.Text = "Roblox Profile" end) end)
+end)
+
+-- ── Divider 1 ─────────────────────────────────────────────────────────────
+do
+    local HDiv1: Frame = Instance.new("Frame", HelperCard)
+    HDiv1.Position = UDim2.new(0, 4, 0, 78)
+    HDiv1.Size     = UDim2.new(1, -8, 0, 1)
+    HDiv1.BackgroundColor3 = Color3.fromRGB(100, 100, 200)
+    HDiv1.BackgroundTransparency = 0.55
+    HDiv1.BorderSizePixel = 0
+    HDiv1.ZIndex = 5
+end
+
+-- ── About section ─────────────────────────────────────────────────────────
+do
+    local HAboutHdr: TextLabel = Instance.new("TextLabel", HelperCard)
+    HAboutHdr.Position = UDim2.new(0, 6, 0, 81)
+    HAboutHdr.Size     = UDim2.new(1, -8, 0, 11)
+    HAboutHdr.BackgroundTransparency = 1
+    HAboutHdr.Font     = Enum.Font.Arcade
+    HAboutHdr.Text     = "About me :"
+    HAboutHdr.TextSize = 8
+    HAboutHdr.TextXAlignment = Enum.TextXAlignment.Left
+    HAboutHdr.TextColor3 = Color3.fromRGB(130, 150, 255)
+    HAboutHdr.ZIndex   = 5
+
+    local HBioText: TextLabel = Instance.new("TextLabel", HelperCard)
+    HBioText.Position  = UDim2.new(0, 6, 0, 93)
+    HBioText.Size      = UDim2.new(1, -12, 0, 36)
+    HBioText.BackgroundTransparency = 1
+    HBioText.Font      = Enum.Font.Arcade
+    HBioText.Text      = "Hiya!! I am friend of school of alwi :3\nwe both are best friends!"
+    HBioText.TextSize  = 8
+    HBioText.TextXAlignment = Enum.TextXAlignment.Left
+    HBioText.TextYAlignment = Enum.TextYAlignment.Top
+    HBioText.TextWrapped = true
+    HBioText.TextColor3 = Color3.fromRGB(210, 210, 210)
+    HBioText.ZIndex    = 5
+end
+
+-- ── Divider 2 ─────────────────────────────────────────────────────────────
+do
+    local HDiv2: Frame = Instance.new("Frame", HelperCard)
+    HDiv2.Position = UDim2.new(0, 4, 0, 133)
+    HDiv2.Size     = UDim2.new(1, -8, 0, 1)
+    HDiv2.BackgroundColor3 = Color3.fromRGB(100, 100, 200)
+    HDiv2.BackgroundTransparency = 0.55
+    HDiv2.BorderSizePixel = 0
+    HDiv2.ZIndex = 5
+end
+
+-- ── Tags ──────────────────────────────────────────────────────────────────
+do
+    local HTagsHdr: TextLabel = Instance.new("TextLabel", HelperCard)
+    HTagsHdr.Position = UDim2.new(0, 6, 0, 136)
+    HTagsHdr.Size     = UDim2.new(1, -8, 0, 10)
+    HTagsHdr.BackgroundTransparency = 1
+    HTagsHdr.Font     = Enum.Font.Arcade
+    HTagsHdr.Text     = "Tags :"
+    HTagsHdr.TextSize = 7
+    HTagsHdr.TextXAlignment = Enum.TextXAlignment.Left
+    HTagsHdr.TextColor3 = Color3.fromRGB(130, 150, 255)
+    HTagsHdr.ZIndex   = 5
+
+    local TS_h = game:GetService("TextService")
+    local function makeHRow(yOff: number): Frame
+        local row: Frame = Instance.new("Frame", HelperCard)
+        row.Position = UDim2.new(0, 4, 0, yOff)
+        row.Size     = UDim2.new(1, -8, 0, 16)
+        row.BackgroundTransparency = 1
+        row.BorderSizePixel = 0
+        row.ZIndex   = 5
+        local ll: UIListLayout = Instance.new("UIListLayout", row)
+        ll.FillDirection       = Enum.FillDirection.Horizontal
+        ll.HorizontalAlignment = Enum.HorizontalAlignment.Left
+        ll.VerticalAlignment   = Enum.VerticalAlignment.Center
+        ll.Padding             = UDim.new(0, 4)
+        return row
+    end
+    local HTagRow1: Frame = makeHRow(148)
+    local HTagRow2: Frame = makeHRow(166)
+
+    local function addHTag(parent: Frame, txt: string, col: Color3)
+        local tag: TextLabel = Instance.new("TextLabel", parent)
+        tag.BackgroundColor3       = col
+        tag.BackgroundTransparency = 0.4
+        tag.BorderSizePixel        = 0
+        tag.Font                   = Enum.Font.Arcade
+        tag.Text                   = txt
+        tag.TextSize               = 7
+        tag.TextColor3             = Color3.fromRGB(255, 255, 255)
+        tag.ZIndex                 = 6
+        Instance.new("UICorner", tag).CornerRadius = UDim.new(1, 0)
+        local sz: Vector2 = TS_h:GetTextSize(txt, 7, Enum.Font.Arcade, Vector2.new(200, 20))
+        tag.Size = UDim2.new(0, sz.X + 12, 0, 14)
+    end
+
+    addHTag(HTagRow1, "Furry",             Color3.fromRGB(230, 90,  180))
+    addHTag(HTagRow1, "Friendly",          Color3.fromRGB(80,  200, 120))
+    addHTag(HTagRow1, "Like cat",          Color3.fromRGB(255, 170, 40))
+    addHTag(HTagRow2, "Introvert",         Color3.fromRGB(100, 130, 255))
+    addHTag(HTagRow2, "Naughty",           Color3.fromRGB(255, 90,  50))
+    addHTag(HTagRow2, "Not like retarded", Color3.fromRGB(50,  180, 220))
+end
+
+-- ── Divider 3 ─────────────────────────────────────────────────────────────
+do
+    local HDiv3: Frame = Instance.new("Frame", HelperCard)
+    HDiv3.Position = UDim2.new(0, 4, 0, 186)
+    HDiv3.Size     = UDim2.new(1, -8, 0, 1)
+    HDiv3.BackgroundColor3 = Color3.fromRGB(100, 100, 200)
+    HDiv3.BackgroundTransparency = 0.55
+    HDiv3.BorderSizePixel = 0
+    HDiv3.ZIndex = 5
+end
+
+-- ── Social (coming soon) ──────────────────────────────────────────────────
+do
+    local HSocialHdr: TextLabel = Instance.new("TextLabel", HelperCard)
+    HSocialHdr.Position = UDim2.new(0, 6, 0, 189)
+    HSocialHdr.Size     = UDim2.new(1, -8, 0, 11)
+    HSocialHdr.BackgroundTransparency = 1
+    HSocialHdr.Font     = Enum.Font.Arcade
+    HSocialHdr.Text     = "Social :"
+    HSocialHdr.TextSize = 8
+    HSocialHdr.TextXAlignment = Enum.TextXAlignment.Left
+    HSocialHdr.TextColor3 = Color3.fromRGB(130, 150, 255)
+    HSocialHdr.ZIndex   = 5
+
+    local HComingSoon: TextLabel = Instance.new("TextLabel", HelperCard)
+    HComingSoon.Position = UDim2.new(0, 6, 0, 203)
+    HComingSoon.Size     = UDim2.new(1, -12, 0, 40)
+    HComingSoon.BackgroundTransparency = 1
+    HComingSoon.Font     = Enum.Font.Arcade
+    HComingSoon.Text     = "— Social links coming soon —"
+    HComingSoon.TextSize = 7
+    HComingSoon.TextXAlignment = Enum.TextXAlignment.Center
+    HComingSoon.TextYAlignment = Enum.TextYAlignment.Center
+    HComingSoon.TextColor3 = Color3.fromRGB(90, 90, 130)
+    HComingSoon.ZIndex   = 5
+end
+
+end -- HelperCard construction
+
+-- Load sinque's avatar async
+task.spawn(function()
+    local ok, url = pcall(function()
+        return Players:GetUserThumbnailAsync(
+            SINQUE_USER_ID,
+            Enum.ThumbnailType.HeadShot,
+            Enum.ThumbnailSize.Size150x150
+        )
+    end)
+    if ok and url then
+        pcall(function()
+            HelperAvatarImg.Image = url
+            TweenService:Create(HelperAvatarImg,
+                TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                { ImageTransparency = 0 }):Play()
+            TweenService:Create(HelperLoadingLbl,
+                TweenInfo.new(0.2),
+                { TextTransparency = 1 }):Play()
+        end)
+    end
+end)
+
 
 local ACTIVE_COL:   Color3 = Color3.fromRGB(0, 255, 150)
 local INACTIVE_COL: Color3 = Color3.fromRGB(140, 140, 140)
@@ -3395,14 +3596,8 @@ local injected:   boolean = false
 local UNIVERSAL_URL:    string = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/Main/Universal/Main.lua"
 local GITHUB_BASE:      string = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/Main/"
 local GITHUB_JSON_URL:  string = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/config/SupportedGames.json"
-local PASTEBIN_JSON_URL: string = string.char(
-    104,116,116,112,115,58,47,47,114,97,119,46,114,97,119,46,
-    103,105,116,104,117,98,46,99,111,109,47,82,101,108,105,103,
-    105,117,115,45,83,116,97,114,47,77,97,105,110,47,114,101,102,
-    115,47,104,101,97,100,115,47,109,97,105,110,47,99,111,110,102,
-    105,103,47,71,97,109,101,37,50,48,115,117,112,112,111,114,116,
-    37,50,48,50,46,106,115,111,110
-)
+local PASTEBIN_JSON_URL: string = string.char(104,116,116,112,115,58,47,47,114,97,119,46,103,105,116,104,117,98,117,115,101,114,99,111,110,116,101,110,116,46,99,111,109,47,82,101,108,105,103,105,117,115,45,83,116,97,114,47,77,97,105,110,47,114,101,102,115,47,104,101,97,100,115,47,109,97,105,110,47,99,111,110,102,105,103,47,71,97,109,101,37,50,48,115,117,112,112,111,114,116,37,50,48,50,46,106,115,111,110)
+
 local function fetch(url: string): string?
     local success: boolean, result: any = pcall(function()
         return game:HttpGet(url)
@@ -3437,9 +3632,9 @@ do
     end
 
     local function tryPastebin()
-        local ok: boolean = pcall(function()
+        local ok: boolean, err: any = pcall(function()
             local data: string? = fetch(PASTEBIN_JSON_URL .. "?t=" .. cacheBust)
-            if not data or #(data :: string) == 0 then error("Empty") end
+            if not data or #(data :: string) == 0 then error("Empty response") end
             local rawJson: any = HttpService:JSONDecode(data :: string)
             local json: any    = decode_obfuscated(rawJson)
             if json and json[gameId] then
@@ -3451,7 +3646,7 @@ do
                 }
             end
         end)
-        if not ok then warn("[VelocityX] Pastefy game list failed") end
+        if not ok then warn("[VelocityX] Pastefy game list failed: " .. tostring(err)) end
         done2 = true
     end
 
@@ -3475,9 +3670,9 @@ end
 if not scriptUrl then
     scriptUrl = UNIVERSAL_URL
     gameName  = "Universal"
-    showNotification("Using Universal Script", "No game-specific script found.", Color3.fromRGB(0, 170, 255), 3)
+    showNotification("🌐 Universal Mode", "No script found for this game — using Universal.", Color3.fromRGB(0, 180, 255), 4)
 else
-    showNotification("Game Supported", "Loaded: " .. gameName, Color3.fromRGB(0, 255, 120), 3)
+    showNotification("✅ Game Detected!", gameName .. " script is ready.", Color3.fromRGB(0, 220, 100), 3)
 end
 
 InjectButton.Text = gameName .. ".lua"
@@ -3523,12 +3718,15 @@ ErrorPanel.Visible                = false
 Instance.new("UICorner", ErrorPanel).CornerRadius = UDim.new(0, 8)
 
 do
-    local ErrStroke: UIStroke = Instance.new("UIStroke", ErrorPanel)
+    do
+local ErrStroke: UIStroke = Instance.new("UIStroke", ErrorPanel)
     ErrStroke.Color       = Color3.fromRGB(255, 60, 60)
     ErrStroke.Thickness   = 1.5
     ErrStroke.Transparency = 0.3
+end
 
-    local ErrTopBar: Frame = Instance.new("Frame", ErrorPanel)
+    do
+local ErrTopBar: Frame = Instance.new("Frame", ErrorPanel)
     ErrTopBar.Size             = UDim2.new(1, 0, 0, 2)
     ErrTopBar.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
     ErrTopBar.BorderSizePixel  = 0
@@ -3538,6 +3736,7 @@ do
         ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 160, 60)),
         ColorSequenceKeypoint.new(1,   Color3.fromRGB(255, 80, 80)),
     }
+end
 
     local ErrIcon: TextLabel = Instance.new("TextLabel", ErrorPanel)
     ErrIcon.AnchorPoint            = Vector2.new(0, 0.5)
@@ -3557,7 +3756,7 @@ ErrTitle.Position               = UDim2.new(0, 30, 0, 6)
 ErrTitle.Size                   = UDim2.new(0.7, 0, 0, 16)
 ErrTitle.BackgroundTransparency = 1
 ErrTitle.Font                   = Enum.Font.Arcade
-ErrTitle.Text                   = "Network Error"
+ErrTitle.Text                   = "Failed to Load"
 ErrTitle.TextSize               = 12
 ErrTitle.TextXAlignment         = Enum.TextXAlignment.Left
 ErrTitle.TextColor3             = Color3.fromRGB(255, 100, 100)
@@ -3571,7 +3770,7 @@ ErrDesc.Position               = UDim2.new(0, 30, 0, 23)
 ErrDesc.Size                   = UDim2.new(0.68, 0, 0, 22)
 ErrDesc.BackgroundTransparency = 1
 ErrDesc.Font                   = Enum.Font.Arcade
-ErrDesc.Text                   = "Failed to fetch script."
+ErrDesc.Text                   = "Server unreachable or script was removed."
 ErrDesc.TextSize               = 9
 ErrDesc.TextWrapped            = true
 ErrDesc.TextXAlignment         = Enum.TextXAlignment.Left
@@ -3705,7 +3904,7 @@ local function injectScript()
 
     local phase1Ok: boolean = false
     for attempt: number = 1, MAX_RETRIES do
-        InjectButton.Text = string.format("Attempt %d/%d...", attempt, MAX_RETRIES)
+        InjectButton.Text = string.format("Loading... (%d/%d)", attempt, MAX_RETRIES)
         local ok: boolean, err: string = tryFetchAndRun(currentUrl)
         if ok then
             phase1Ok = true
@@ -3715,9 +3914,9 @@ local function injectScript()
         warn(string.format("[VelocityX] %s attempt %d/%d failed: %s", currentName, attempt, MAX_RETRIES, err))
         if attempt < MAX_RETRIES then
             showNotification(
-                string.format("⚠ Attempt %d/%d Failed", attempt, MAX_RETRIES),
-                "Retrying in " .. RETRY_DELAY .. "s...",
-                Color3.fromRGB(255, 150, 0), RETRY_DELAY
+                "⚠️ Connection Issue",
+                string.format("Couldn't reach server, retrying... (%d/%d)", attempt, MAX_RETRIES),
+                Color3.fromRGB(255, 160, 0), RETRY_DELAY
             )
             task.wait(RETRY_DELAY)
         end
@@ -3731,9 +3930,9 @@ local function injectScript()
 
     if currentUrl ~= UNIVERSAL_URL then
         showNotification(
-            "⚠ Game Script Failed",
-            "All 3 attempts failed — switching to Universal script...",
-            Color3.fromRGB(255, 150, 0), 3
+            "⚠️ Game Script Unavailable",
+            "Couldn't load " .. currentName .. " — falling back to Universal...",
+            Color3.fromRGB(255, 160, 0), 3
         )
         task.spawn(shakeError)
         scriptUrl = UNIVERSAL_URL
@@ -3741,7 +3940,7 @@ local function injectScript()
 
         local phase2Ok: boolean = false
         for attempt: number = 1, MAX_RETRIES do
-            InjectButton.Text = string.format("Universal %d/%d...", attempt, MAX_RETRIES)
+            InjectButton.Text = string.format("Fallback... (%d/%d)", attempt, MAX_RETRIES)
             local ok: boolean, err: string = tryFetchAndRun(UNIVERSAL_URL)
             if ok then
                 phase2Ok = true
@@ -3751,9 +3950,9 @@ local function injectScript()
             warn(string.format("[VelocityX] Universal attempt %d/%d failed: %s", attempt, MAX_RETRIES, err))
             if attempt < MAX_RETRIES then
                 showNotification(
-                    string.format("⚠ Universal %d/%d Failed", attempt, MAX_RETRIES),
-                    "Retrying in " .. RETRY_DELAY .. "s...",
-                    Color3.fromRGB(255, 150, 0), RETRY_DELAY
+                    "⚠️ Still Can't Connect",
+                    string.format("Retrying Universal script... (%d/%d)", attempt, MAX_RETRIES),
+                    Color3.fromRGB(255, 160, 0), RETRY_DELAY
                 )
                 task.wait(RETRY_DELAY)
             end
@@ -3773,17 +3972,17 @@ local function injectScript()
     task.spawn(function() pcall(setBtnState, "error") end)
 
     showErrorPanel(
-        "✘ All 3 Attempts Failed",
-        "Check your connection or the URL\nmay have been deleted.",
+        "❌ Failed to Load Script",
+        "Server unreachable or script was removed.\nCheck your connection and try again.",
         function()
             pcall(setBtnState, "normal")
             task.spawn(injectScript)
         end
     )
     showNotification(
-        "✘ All Attempts Failed (3/3)",
-        "Check your connection — the URL may have been deleted.",
-        Color3.fromRGB(255, 50, 50), 8
+        "❌ Script Failed to Load",
+        "Server is down or the script no longer exists.",
+        Color3.fromRGB(255, 60, 60), 8
     )
 end
 
@@ -3938,14 +4137,14 @@ openConsoleButton.TextSize           = 11
 openConsoleButton.ZIndex             = 2
 Instance.new("UICorner", openConsoleButton).CornerRadius = UDim.new(0, 5)
 do
-    local consoleBtnStroke: UIStroke = Instance.new("UIStroke", openConsoleButton)
+local consoleBtnStroke: UIStroke = Instance.new("UIStroke", openConsoleButton)
     consoleBtnStroke.Color       = Color3.fromRGB(0, 200, 255)
     consoleBtnStroke.Thickness   = 1.2
     consoleBtnStroke.Transparency = 0.45
 end
 openConsoleButton.Parent = ScrollingFrame
 do
-    local consoleIcon: ImageLabel = Instance.new("ImageLabel", openConsoleButton)
+local consoleIcon: ImageLabel = Instance.new("ImageLabel", openConsoleButton)
     consoleIcon.BackgroundTransparency = 1
     consoleIcon.AnchorPoint = Vector2.new(0, 0.5)
     consoleIcon.Position    = UDim2.new(0, 6, 0.5, 0)
@@ -3973,14 +4172,14 @@ deleteConfigButton.TextSize           = 11
 deleteConfigButton.ZIndex             = 2
 Instance.new("UICorner", deleteConfigButton).CornerRadius = UDim.new(0, 5)
 do
-    local delBtnStroke: UIStroke = Instance.new("UIStroke", deleteConfigButton)
+local delBtnStroke: UIStroke = Instance.new("UIStroke", deleteConfigButton)
     delBtnStroke.Color       = Color3.fromRGB(255, 80, 80)
     delBtnStroke.Thickness   = 1.2
     delBtnStroke.Transparency = 0.45
 end
 deleteConfigButton.Parent = ScrollingFrame
 do
-    local deleteIcon: ImageLabel = Instance.new("ImageLabel", deleteConfigButton)
+local deleteIcon: ImageLabel = Instance.new("ImageLabel", deleteConfigButton)
     deleteIcon.BackgroundTransparency = 1
     deleteIcon.AnchorPoint = Vector2.new(0, 0.5)
     deleteIcon.Position    = UDim2.new(0, 6, 0.5, 0)
