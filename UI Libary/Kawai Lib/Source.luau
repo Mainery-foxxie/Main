@@ -168,6 +168,18 @@ Env.Notify = function(info)
 	local customColor    = info.Color
 	local durationSlider = info.DurationSlider
 
+	-- Sanitize: collapse newlines into spaces, cap length so card stays compact
+	desc = desc:gsub("[
+]+", " "):gsub("%s+", " "):match("^%s*(.-)%s*$") or ""
+	if #desc > 80 then
+		desc = desc:sub(1, 77) .. "..."
+	end
+	title = title:gsub("[
+]+", " "):match("^%s*(.-)%s*$") or "Notification"
+	if #title > 40 then
+		title = title:sub(1, 37) .. "..."
+	end
+
 	local typeGrad = {
 		info    = {Color3.fromRGB(0, 170, 255),  Color3.fromRGB(85, 85, 255)},
 		success = {Color3.fromRGB(0, 220, 110),  Color3.fromRGB(0, 170, 255)},
@@ -192,9 +204,8 @@ Env.Notify = function(info)
 	local hasButtons = type(buttons) == "table" and #buttons > 0
 	local hasSlider  = durationSlider and not hasButtons
 
-	-- FIX: consistent base height whether or not there is a description
-	-- no-desc: 52px  |  with-desc: 76px
-	local baseH  = hasDesc and 76 or 52
+	-- Fixed heights: no-desc: 54px | with-desc: 72px  (card clips at these)
+	local baseH  = hasDesc and 72 or 54
 	local totalH = baseH + (hasButtons and 46 or 0) + (hasSlider and 28 or 0)
 
 	local NotifHolder = Screen:FindFirstChild("KawaiNotifHolder")
@@ -230,6 +241,7 @@ Env.Notify = function(info)
 	Wrapper.Name                   = "KawaiNotif"
 	Wrapper.BackgroundTransparency = 1
 	Wrapper.BorderSizePixel        = 0
+	Wrapper.ClipsDescendants       = true
 	Wrapper.Size                   = UDim2.new(1, 0, 0, totalH)
 	Wrapper.Parent                 = Stack
 
@@ -318,9 +330,9 @@ Env.Notify = function(info)
 	IconBg.BorderSizePixel         = 0
 	-- FIX: anchor at centre, position at (iconX + half-width, 50% of card)
 	-- Restrict centering to the content area above buttons/slider
-	local iconAreaH = baseH  -- only centre within the text region
+	local iconAreaH = baseH  -- centre icon within the text area height
 	IconBg.AnchorPoint             = Vector2.new(0.5, 0.5)
-	IconBg.Position                = UDim2.new(0, iconX + iconBgSz / 2, 0, iconAreaH / 2)
+	IconBg.Position                = UDim2.new(0, iconX + iconBgSz / 2, 0, math.min(iconAreaH / 2, 36))
 	IconBg.Size                    = UDim2.new(0, iconBgSz, 0, iconBgSz)
 	IconBg.ZIndex                  = 5
 	IconBg.Parent                  = Card
@@ -364,12 +376,10 @@ Env.Notify = function(info)
 	local TitleL                   = Instance.new("TextLabel")
 	TitleL.BackgroundTransparency  = 1
 	TitleL.BorderSizePixel         = 0
-	TitleL.AnchorPoint             = Vector2.new(0, 1)
-	-- with desc: bottom of title sits at Y=36 (leaves room for desc below)
-	-- no desc:   vertically centred in baseH
+	TitleL.AnchorPoint             = Vector2.new(0, 0)
 	TitleL.Position                = hasDesc
-		and UDim2.new(0, textX, 0, 38)
-		or  UDim2.new(0, textX, 0.5, 0)
+		and UDim2.new(0, textX, 0, 10)    -- top at Y=10
+		or  UDim2.new(0, textX, 0.5, -9)  -- centred
 	TitleL.Size                    = UDim2.new(1, textW, 0, 18)
 	TitleL.Font                    = Enum.Font.GothamBold
 	TitleL.Text                    = title
@@ -380,17 +390,18 @@ Env.Notify = function(info)
 	TitleL.ZIndex                  = 5
 	TitleL.Parent                  = Card
 
-	-- description label: top sits 4px below TitleL bottom (at Y=42)
+	-- description: sits 4px below TitleL (TitleL bottom = 10+18=28, so top=32)
 	local DescL                    = Instance.new("TextLabel")
 	DescL.BackgroundTransparency   = 1
 	DescL.BorderSizePixel          = 0
 	DescL.AnchorPoint              = Vector2.new(0, 0)
-	DescL.Position                 = UDim2.new(0, textX, 0, 42)
+	DescL.Position                 = UDim2.new(0, textX, 0, 32)
 	DescL.Size                     = UDim2.new(1, textW, 0, 16)
 	DescL.Font                     = Enum.Font.Gotham
 	DescL.Text                     = desc
 	DescL.TextColor3               = Color3.fromRGB(185, 185, 185)
 	DescL.TextSize                 = 12
+	DescL.TextWrapped              = false
 	DescL.TextXAlignment           = Enum.TextXAlignment.Left
 	DescL.TextTruncate             = Enum.TextTruncate.AtEnd
 	DescL.ZIndex                   = 5
