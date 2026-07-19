@@ -372,7 +372,7 @@ Env.Notify = function(info)
 	TitleL.Font                    = Enum.Font.GothamBold
 	TitleL.Text                    = title
 	TitleL.TextColor3              = Color3.fromRGB(255, 255, 255)
-	TitleL.TextSize                = 13
+	TitleL.TextSize                = 14
 	TitleL.TextXAlignment          = Enum.TextXAlignment.Left
 	TitleL.TextTruncate            = Enum.TextTruncate.AtEnd
 	TitleL.ZIndex                  = 5
@@ -387,8 +387,8 @@ Env.Notify = function(info)
 	DescL.Size                     = UDim2.new(1, textW, 0, 20)
 	DescL.Font                     = Enum.Font.Gotham
 	DescL.Text                     = desc
-	DescL.TextColor3               = Color3.fromRGB(160, 160, 160)
-	DescL.TextSize                 = 11
+	DescL.TextColor3               = Color3.fromRGB(185, 185, 185)
+	DescL.TextSize                 = 12
 	DescL.TextXAlignment           = Enum.TextXAlignment.Left
 	DescL.TextTruncate             = Enum.TextTruncate.AtEnd
 	DescL.ZIndex                   = 5
@@ -415,13 +415,16 @@ Env.Notify = function(info)
 	local function dismiss()
 		if dismissed then return end
 		dismissed = true
+		TweenService:Create(Wrapper, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
+			Position = UDim2.new(1, 30, 0, 0),
+		}):Play()
 		TweenService:Create(Wrapper, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-			Position = UDim2.new(1, 20, 0, 0),
+			GroupTransparency = 1,
 		}):Play()
 		TweenService:Create(Card, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
 			BackgroundTransparency = 1,
 		}):Play()
-		task.wait(0.27)
+		task.wait(0.37)
 		Wrapper:Destroy()
 	end
 
@@ -647,13 +650,17 @@ Env.Notify = function(info)
 	end
 
 	-- ── SLIDE-IN ANIMATION ──
-	Wrapper.Position        = UDim2.new(1, 20, 0, 0)
+	Wrapper.Position        = UDim2.new(1, 40, 0, 0)
+	Wrapper.GroupTransparency = 1
 	Card.BackgroundTransparency = 0.95
 
-	TweenService:Create(Wrapper, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+	TweenService:Create(Wrapper, TweenInfo.new(0.55, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
 		Position = UDim2.new(0, 0, 0, 0),
 	}):Play()
-	TweenService:Create(Card, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+	TweenService:Create(Wrapper, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		GroupTransparency = 0,
+	}):Play()
+	TweenService:Create(Card, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 		BackgroundTransparency = 0.35,
 	}):Play()
 
@@ -925,7 +932,8 @@ function Env:Window(meta)
 	Title_1.Font = Enum.Font.GothamBold
 	Title_1.Text = tostring(Title or "")
 	Title_1.TextColor3 = Color3.fromRGB(255,255,255)
-	Title_1.TextSize = 26
+	Title_1.TextSize = 28
+	Title_1.TextScaled = false
 	Title_1.TextWrapped = true
 	Title_1.TextXAlignment = Enum.TextXAlignment.Left
 
@@ -957,11 +965,11 @@ function Env:Window(meta)
 	Desc_1.Position = UDim2.new(0.0179999992, 0,0, 0)
 	Desc_1.Size = UDim2.new(1, -20, 0, 5)
 	Desc_1.AutomaticSize = Enum.AutomaticSize.Y
-	Desc_1.Font = Enum.Font.GothamBold
+	Desc_1.Font = Enum.Font.Gotham
 	Desc_1.Text = tostring(Desc or "")
-	Desc_1.TextColor3 = Color3.fromRGB(255,255,255)
-	Desc_1.TextSize = 15
-	Desc_1.TextTransparency = 0.5
+	Desc_1.TextColor3 = Color3.fromRGB(200,200,200)
+	Desc_1.TextSize = 13
+	Desc_1.TextTransparency = 0.35
 	Desc_1.TextWrapped = true
 	Desc_1.TextXAlignment = Enum.TextXAlignment.Left
 
@@ -1005,7 +1013,10 @@ function Env:Window(meta)
 	ImageLabel.Image = GetIcon(Logo)
 	ImageLabel.ImageTransparency = 0
 
+	local _uiOpen = true
+
 	local function closeopenui()
+		-- bounce the logo icon
 		task.spawn(function()
 			tw({
 				v = ImageLabel,
@@ -1023,7 +1034,37 @@ function Env:Window(meta)
 				g = {Size = UDim2.new(0, 45, 0, 45)}
 			}):Play()
 		end)
-		Background_1.Visible = not Background_1.Visible
+
+		if _uiOpen then
+			-- ── CLOSE: slide down + shrink + fade ──
+			_uiOpen = false
+			TweenService:Create(Background_1, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
+				Size     = UDim2.new(0, 574, 0, 0),
+				Position = UDim2.new(0.5, 0, 0.5, 20),
+			}):Play()
+			TweenService:Create(Background_1, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+				BackgroundTransparency = 1,
+			}):Play()
+			task.delay(0.36, function()
+				Background_1.Visible = false
+				-- reset so it can open again cleanly
+				Background_1.Size     = UDim2.new(0, 574, 0, 365)
+				Background_1.Position = UDim2.new(0.5, 0, 0.5, 0)
+				Background_1.BackgroundTransparency = 0.5
+			end)
+		else
+			-- ── OPEN: spring scale-up + fade in ──
+			_uiOpen = true
+			Background_1.Visible = true
+			Background_1.Size     = UDim2.new(0, 0, 0, 0)
+			Background_1.BackgroundTransparency = 1
+			TweenService:Create(Background_1, TweenInfo.new(0.55, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+				Size = UDim2.new(0, 574, 0, 365),
+			}):Play()
+			TweenService:Create(Background_1, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				BackgroundTransparency = 0.5,
+			}):Play()
+		end
 	end
 
 	CloseUI.MouseButton1Click:Connect(function()
