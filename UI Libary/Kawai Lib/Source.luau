@@ -400,9 +400,9 @@ Env.Notify = function(info)
 	ClickDismiss.Name              = "ClickDismiss"
 	ClickDismiss.BackgroundTransparency = 1
 	ClickDismiss.BorderSizePixel   = 0
-	ClickDismiss.Size              = UDim2.new(1, 0, 0, baseH)
+	ClickDismiss.Size              = UDim2.new(1, 0, 1, 0)   -- full card, not just baseH
 	ClickDismiss.Text              = ""
-	ClickDismiss.ZIndex            = 4
+	ClickDismiss.ZIndex            = 20                       -- above every card child
 	ClickDismiss.Parent            = Card
 
 	-- ── PROGRESS BAR / SLIDER ──
@@ -415,16 +415,19 @@ Env.Notify = function(info)
 	local function dismiss()
 		if dismissed then return end
 		dismissed = true
-		TweenService:Create(Wrapper, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
-			Position = UDim2.new(1, 30, 0, 0),
+		-- scale card down slightly
+		TweenService:Create(Card, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+			Size = UDim2.new(0.88, 0, 1, 0),
 		}):Play()
+		-- fade out wrapper
 		TweenService:Create(Wrapper, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
 			GroupTransparency = 1,
 		}):Play()
-		TweenService:Create(Card, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+		-- fade card bg
+		TweenService:Create(Card, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
 			BackgroundTransparency = 1,
 		}):Play()
-		task.wait(0.37)
+		task.wait(0.28)
 		Wrapper:Destroy()
 	end
 
@@ -649,33 +652,38 @@ Env.Notify = function(info)
 		end
 	end
 
-	-- ── SLIDE-IN ANIMATION ──
-	Wrapper.Position        = UDim2.new(1, 40, 0, 0)
+	-- ── FADE + SCALE IN ANIMATION ──
 	Wrapper.GroupTransparency = 1
 	Card.BackgroundTransparency = 0.95
+	Card.Size = UDim2.new(0.85, 0, 1, 0)
+	Card.AnchorPoint = Vector2.new(0.5, 0.5)
+	Card.Position = UDim2.new(0.5, 0, 0.5, 0)
 
-	TweenService:Create(Wrapper, TweenInfo.new(0.55, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
-		Position = UDim2.new(0, 0, 0, 0),
-	}):Play()
-	TweenService:Create(Wrapper, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+	-- fade in wrapper
+	TweenService:Create(Wrapper, TweenInfo.new(0.28, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 		GroupTransparency = 0,
 	}):Play()
-	TweenService:Create(Card, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+	-- scale card up with spring
+	TweenService:Create(Card, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		Size = UDim2.new(1, 0, 1, 0),
+	}):Play()
+	-- reveal background
+	TweenService:Create(Card, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 		BackgroundTransparency = 0.35,
 	}):Play()
 
 	-- ── AUTO DISMISS ──
 	if not hasSlider then
-		task.delay(0.45, function()
+		task.delay(0.32, function()
 			if dismissed then return end
 			TweenService:Create(ProgFill, TweenInfo.new(duration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {
 				Size = UDim2.new(0, 0, 1, 0),
 			}):Play()
 		end)
 		if not hasButtons then
-			task.delay(0.45 + duration, dismiss)
+			task.delay(0.32 + duration, dismiss)
 		elseif duration > 0 then
-			task.delay(0.45 + duration, dismiss)
+			task.delay(0.32 + duration, dismiss)
 		end
 	end
 
@@ -1036,31 +1044,38 @@ function Env:Window(meta)
 		end)
 
 		if _uiOpen then
-			-- ── CLOSE: slide down + shrink + fade ──
+			-- ── CLOSE: scale down + fade out ──
 			_uiOpen = false
-			TweenService:Create(Background_1, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
-				Size     = UDim2.new(0, 574, 0, 0),
-				Position = UDim2.new(0.5, 0, 0.5, 20),
+			-- shrink to 90% then disappear
+			TweenService:Create(Background_1, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+				Size = UDim2.new(0, 574 * 0.92, 0, 365 * 0.92),
 			}):Play()
-			TweenService:Create(Background_1, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+			TweenService:Create(Background_1, TweenInfo.new(0.28, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
 				BackgroundTransparency = 1,
 			}):Play()
-			task.delay(0.36, function()
+			task.delay(0.18, function()
+				TweenService:Create(Background_1, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+					Size = UDim2.new(0, 574 * 0.75, 0, 365 * 0.75),
+				}):Play()
+			end)
+			task.delay(0.32, function()
 				Background_1.Visible = false
-				-- reset so it can open again cleanly
-				Background_1.Size     = UDim2.new(0, 574, 0, 365)
-				Background_1.Position = UDim2.new(0.5, 0, 0.5, 0)
+				-- reset state for next open
+				Background_1.Size                = UDim2.new(0, 574, 0, 365)
+				Background_1.Position            = UDim2.new(0.5, 0, 0.5, 0)
 				Background_1.BackgroundTransparency = 0.5
 			end)
 		else
-			-- ── OPEN: spring scale-up + fade in ──
+			-- ── OPEN: scale up from 80% + fade in ──
 			_uiOpen = true
-			Background_1.Visible = true
-			Background_1.Size     = UDim2.new(0, 0, 0, 0)
+			Background_1.Visible             = true
+			Background_1.Size                = UDim2.new(0, 574 * 0.80, 0, 365 * 0.80)
 			Background_1.BackgroundTransparency = 1
-			TweenService:Create(Background_1, TweenInfo.new(0.55, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+			-- spring scale to full size
+			TweenService:Create(Background_1, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
 				Size = UDim2.new(0, 574, 0, 365),
 			}):Play()
+			-- fade in
 			TweenService:Create(Background_1, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 				BackgroundTransparency = 0.5,
 			}):Play()
