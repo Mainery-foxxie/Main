@@ -364,11 +364,13 @@ Env.Notify = function(info)
 	local TitleL                   = Instance.new("TextLabel")
 	TitleL.BackgroundTransparency  = 1
 	TitleL.BorderSizePixel         = 0
-	TitleL.AnchorPoint             = Vector2.new(0, 0.5)
+	TitleL.AnchorPoint             = Vector2.new(0, 1)
+	-- with desc: bottom of title sits at Y=36 (leaves room for desc below)
+	-- no desc:   vertically centred in baseH
 	TitleL.Position                = hasDesc
-		and UDim2.new(0, textX, 0, 22)         -- upper half when desc present
-		or  UDim2.new(0, textX, 0.5, 0)        -- true vertical centre otherwise
-	TitleL.Size                    = UDim2.new(1, textW, 0, 16)
+		and UDim2.new(0, textX, 0, 38)
+		or  UDim2.new(0, textX, 0.5, 0)
+	TitleL.Size                    = UDim2.new(1, textW, 0, 18)
 	TitleL.Font                    = Enum.Font.GothamBold
 	TitleL.Text                    = title
 	TitleL.TextColor3              = Color3.fromRGB(255, 255, 255)
@@ -378,13 +380,13 @@ Env.Notify = function(info)
 	TitleL.ZIndex                  = 5
 	TitleL.Parent                  = Card
 
-	-- FIX: description label always created; hidden when empty via Visible
+	-- description label: top sits 4px below TitleL bottom (at Y=42)
 	local DescL                    = Instance.new("TextLabel")
 	DescL.BackgroundTransparency   = 1
 	DescL.BorderSizePixel          = 0
-	DescL.AnchorPoint              = Vector2.new(0, 0.5)
-	DescL.Position                 = UDim2.new(0, textX, 0, 52)   -- lower half
-	DescL.Size                     = UDim2.new(1, textW, 0, 20)
+	DescL.AnchorPoint              = Vector2.new(0, 0)
+	DescL.Position                 = UDim2.new(0, textX, 0, 42)
+	DescL.Size                     = UDim2.new(1, textW, 0, 16)
 	DescL.Font                     = Enum.Font.Gotham
 	DescL.Text                     = desc
 	DescL.TextColor3               = Color3.fromRGB(185, 185, 185)
@@ -415,19 +417,25 @@ Env.Notify = function(info)
 	local function dismiss()
 		if dismissed then return end
 		dismissed = true
-		-- scale card down slightly
-		TweenService:Create(Card, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-			Size = UDim2.new(0.88, 0, 1, 0),
-		}):Play()
-		-- fade out wrapper
-		TweenService:Create(Wrapper, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-			GroupTransparency = 1,
-		}):Play()
-		-- fade card bg
-		TweenService:Create(Card, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-			BackgroundTransparency = 1,
-		}):Play()
-		task.wait(0.28)
+		local dInfo = TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+		local dInfoFast = TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+		-- scale card down
+		TweenService:Create(Card, dInfo, { Size = UDim2.new(0.88, 0, 1, 0) }):Play()
+		-- fade card background
+		TweenService:Create(Card, dInfo, { BackgroundTransparency = 1 }):Play()
+		-- fade shadow + accent
+		TweenService:Create(Shadow, dInfoFast, { ImageTransparency = 1 }):Play()
+		TweenService:Create(AccentBar, dInfoFast, { BackgroundTransparency = 1 }):Play()
+		-- fade text
+		TweenService:Create(TitleL, dInfoFast, { TextTransparency = 1 }):Play()
+		TweenService:Create(DescL, dInfoFast, { TextTransparency = 1 }):Play()
+		-- fade icon
+		TweenService:Create(IconImg, dInfoFast, { ImageTransparency = 1 }):Play()
+		TweenService:Create(IconBg, dInfoFast, { BackgroundTransparency = 1 }):Play()
+		-- fade noise + stroke
+		TweenService:Create(Noise, dInfoFast, { ImageTransparency = 1 }):Play()
+		TweenService:Create(Stroke, dInfoFast, { Transparency = 1 }):Play()
+		task.wait(0.26)
 		Wrapper:Destroy()
 	end
 
@@ -653,23 +661,56 @@ Env.Notify = function(info)
 	end
 
 	-- ── FADE + SCALE IN ANIMATION ──
-	Wrapper.GroupTransparency = 1
-	Card.BackgroundTransparency = 0.95
+	-- Card starts small and invisible; scale up + fade in
+	Card.BackgroundTransparency = 1
 	Card.Size = UDim2.new(0.85, 0, 1, 0)
 	Card.AnchorPoint = Vector2.new(0.5, 0.5)
 	Card.Position = UDim2.new(0.5, 0, 0.5, 0)
+	Shadow.ImageTransparency = 1
+	AccentBar.BackgroundTransparency = 1
+	TitleL.TextTransparency = 1
+	DescL.TextTransparency = 1
+	IconImg.ImageTransparency = 1
+	IconBg.BackgroundTransparency = 1
+	Noise.ImageTransparency = 1
+	Stroke.Transparency = 1
 
-	-- fade in wrapper
-	TweenService:Create(Wrapper, TweenInfo.new(0.28, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-		GroupTransparency = 0,
-	}):Play()
-	-- scale card up with spring
+	-- spring scale up
 	TweenService:Create(Card, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
 		Size = UDim2.new(1, 0, 1, 0),
 	}):Play()
-	-- reveal background
-	TweenService:Create(Card, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+	-- fade card background
+	TweenService:Create(Card, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 		BackgroundTransparency = 0.35,
+	}):Play()
+	-- fade shadow
+	TweenService:Create(Shadow, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		ImageTransparency = 0.5,
+	}):Play()
+	-- fade accent bar
+	TweenService:Create(AccentBar, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		BackgroundTransparency = 0,
+	}):Play()
+	-- fade text
+	TweenService:Create(TitleL, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		TextTransparency = 0,
+	}):Play()
+	TweenService:Create(DescL, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		TextTransparency = 0,
+	}):Play()
+	-- fade icon
+	TweenService:Create(IconImg, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		ImageTransparency = 0,
+	}):Play()
+	TweenService:Create(IconBg, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		BackgroundTransparency = 0.7,
+	}):Play()
+	-- fade noise + stroke
+	TweenService:Create(Noise, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		ImageTransparency = 0.9,
+	}):Play()
+	TweenService:Create(Stroke, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Transparency = 0.75,
 	}):Play()
 
 	-- ── AUTO DISMISS ──
@@ -926,7 +967,8 @@ function Env:Window(meta)
 	Header_1.BackgroundTransparency = 1
 	Header_1.BorderColor3 = Color3.fromRGB(0,0,0)
 	Header_1.BorderSizePixel = 0
-	Header_1.Size = UDim2.new(1, 0,0, 73)
+	Header_1.ClipsDescendants = false
+	Header_1.Size = UDim2.new(1, 0, 0, 80)
 
 	Title_1.Name = "Title"
 	Title_1.Parent = Header_1
@@ -934,25 +976,27 @@ function Env:Window(meta)
 	Title_1.BackgroundTransparency = 1
 	Title_1.BorderColor3 = Color3.fromRGB(0,0,0)
 	Title_1.BorderSizePixel = 0
-	Title_1.Position = UDim2.new(0, 0,0.116666667, 0)
-	Title_1.Size = UDim2.new(1, -30, 0, 30)
-	Title_1.AutomaticSize = Enum.AutomaticSize.Y
+	Title_1.Size = UDim2.new(1, -30, 0, 28)
+	Title_1.AutomaticSize = Enum.AutomaticSize.None
 	Title_1.Font = Enum.Font.GothamBold
 	Title_1.Text = tostring(Title or "")
 	Title_1.TextColor3 = Color3.fromRGB(255,255,255)
-	Title_1.TextSize = 28
+	Title_1.TextSize = 22
 	Title_1.TextScaled = false
-	Title_1.TextWrapped = true
+	Title_1.TextWrapped = false
+	Title_1.TextTruncate = Enum.TextTruncate.AtEnd
 	Title_1.TextXAlignment = Enum.TextXAlignment.Left
 
 	UIListLayout_1.Parent = Header_1
-	UIListLayout_1.Padding = UDim.new(0,7)
+	UIListLayout_1.Padding = UDim.new(0,5)
 	UIListLayout_1.SortOrder = Enum.SortOrder.LayoutOrder
 	UIListLayout_1.VerticalAlignment = Enum.VerticalAlignment.Center
 
 	UIPadding_1.Parent = Header_1
 	UIPadding_1.PaddingLeft = UDim.new(0,20)
-	UIPadding_1.PaddingTop = UDim.new(0,3)
+	UIPadding_1.PaddingTop = UDim.new(0,10)
+	UIPadding_1.PaddingBottom = UDim.new(0,10)
+	UIPadding_1.PaddingRight = UDim.new(0,10)
 
 	Line_1.Name = "Line"
 	Line_1.Parent = Header_1
@@ -970,15 +1014,15 @@ function Env:Window(meta)
 	Desc_1.BackgroundTransparency = 1
 	Desc_1.BorderColor3 = Color3.fromRGB(0,0,0)
 	Desc_1.BorderSizePixel = 0
-	Desc_1.Position = UDim2.new(0.0179999992, 0,0, 0)
-	Desc_1.Size = UDim2.new(1, -20, 0, 5)
-	Desc_1.AutomaticSize = Enum.AutomaticSize.Y
+	Desc_1.Size = UDim2.new(1, -20, 0, 16)
+	Desc_1.AutomaticSize = Enum.AutomaticSize.None
 	Desc_1.Font = Enum.Font.Gotham
 	Desc_1.Text = tostring(Desc or "")
 	Desc_1.TextColor3 = Color3.fromRGB(200,200,200)
-	Desc_1.TextSize = 13
+	Desc_1.TextSize = 12
 	Desc_1.TextTransparency = 0.35
-	Desc_1.TextWrapped = true
+	Desc_1.TextWrapped = false
+	Desc_1.TextTruncate = Enum.TextTruncate.AtEnd
 	Desc_1.TextXAlignment = Enum.TextXAlignment.Left
 
 	local CloseUI = Instance.new("TextButton")
