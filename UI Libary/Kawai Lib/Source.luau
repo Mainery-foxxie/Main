@@ -168,17 +168,20 @@ Env.Notify = function(info)
 	local customColor    = info.Color
 	local durationSlider = info.DurationSlider
 
-	-- Sanitize: collapse newlines into spaces, cap length so card stays compact
-	desc = desc:gsub("[
-]+", " "):gsub("%s+", " "):match("^%s*(.-)%s*$") or ""
-	if #desc > 80 then
-		desc = desc:sub(1, 77) .. "..."
-	end
-	title = title:gsub("[
-]+", " "):match("^%s*(.-)%s*$") or "Notification"
+	-- Sanitize title only (single line), desc keeps newlines for multi-line display
+	title = title:gsub("[\n\r]+", " "):match("^%s*(.-)%s*$") or "Notification"
 	if #title > 40 then
 		title = title:sub(1, 37) .. "..."
 	end
+	-- Trim leading/trailing whitespace from desc but preserve internal newlines
+	desc = desc:match("^%s*(.-)%s*$") or ""
+
+	-- Count lines in desc to compute dynamic height
+	local descLineCount = 1
+	for _ in desc:gmatch("\n") do
+		descLineCount = descLineCount + 1
+	end
+	local descLineH = 14  -- px per line (TextSize 12 + 2 leading)
 
 	local typeGrad = {
 		info    = {Color3.fromRGB(0, 170, 255),  Color3.fromRGB(85, 85, 255)},
@@ -204,8 +207,9 @@ Env.Notify = function(info)
 	local hasButtons = type(buttons) == "table" and #buttons > 0
 	local hasSlider  = durationSlider and not hasButtons
 
-	-- Fixed heights: no-desc: 54px | with-desc: 72px  (card clips at these)
-	local baseH  = hasDesc and 72 or 54
+	-- Dynamic height: no-desc: 54px | with-desc: 38 (header) + lines * lineH + 8 padding
+	local baseH  = hasDesc and (38 + descLineCount * descLineH + 8) or 54
+	baseH = math.max(baseH, 54)  -- never shrink below single-line height
 	local totalH = baseH + (hasButtons and 46 or 0) + (hasSlider and 28 or 0)
 
 	local NotifHolder = Screen:FindFirstChild("KawaiNotifHolder")
@@ -297,8 +301,8 @@ Env.Notify = function(info)
 	Shadow.SliceCenter             = Rect.new(99, 99, 99, 99)
 	Shadow.Parent                  = Wrapper
 
-	-- Accent bar  (shorter when buttons/slider present)
-	local accentBottomPad = hasButtons and 53 or (hasSlider and 46 or 14)
+	-- Accent bar — spans the text area, stops above buttons/slider
+	local accentBottomPad = hasButtons and (totalH - baseH + 14) or (hasSlider and (totalH - baseH + 14) or 14)
 	local AccentBar                = Instance.new("Frame")
 	AccentBar.BackgroundColor3     = colA
 	AccentBar.BorderSizePixel      = 0
@@ -395,15 +399,15 @@ Env.Notify = function(info)
 	DescL.BackgroundTransparency   = 1
 	DescL.BorderSizePixel          = 0
 	DescL.AnchorPoint              = Vector2.new(0, 0)
-	DescL.Position                 = UDim2.new(0, textX, 0, 32)
-	DescL.Size                     = UDim2.new(1, textW, 0, 16)
+	DescL.Position                 = UDim2.new(0, textX, 0, 30)
+	DescL.Size                     = UDim2.new(1, textW, 0, descLineCount * descLineH)
 	DescL.Font                     = Enum.Font.Gotham
 	DescL.Text                     = desc
 	DescL.TextColor3               = Color3.fromRGB(185, 185, 185)
 	DescL.TextSize                 = 12
-	DescL.TextWrapped              = false
+	DescL.TextWrapped              = true
 	DescL.TextXAlignment           = Enum.TextXAlignment.Left
-	DescL.TextTruncate             = Enum.TextTruncate.AtEnd
+	DescL.TextTruncate             = Enum.TextTruncate.None
 	DescL.ZIndex                   = 5
 	DescL.Visible                  = hasDesc
 	DescL.Parent                   = Card
