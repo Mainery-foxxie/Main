@@ -181,7 +181,7 @@ Env.Notify = function(info)
 	for _ in desc:gmatch("\n") do
 		descLineCount = descLineCount + 1
 	end
-	local descLineH = 14  -- px per line (TextSize 12 + 2 leading)
+	local descLineH = 16  -- px per line (TextSize 12 + 4 leading)
 
 	local typeGrad = {
 		info    = {Color3.fromRGB(0, 170, 255),  Color3.fromRGB(85, 85, 255)},
@@ -207,8 +207,8 @@ Env.Notify = function(info)
 	local hasButtons = type(buttons) == "table" and #buttons > 0
 	local hasSlider  = durationSlider and not hasButtons
 
-	-- Dynamic height: no-desc: 54px | with-desc: 38 (header) + lines * lineH + 8 padding
-	local baseH  = hasDesc and (38 + descLineCount * descLineH + 8) or 54
+	-- Dynamic height: no-desc: 54px | with-desc: 38 (header) + lines * lineH + 12 padding
+	local baseH  = hasDesc and (38 + descLineCount * descLineH + 12) or 54
 	baseH = math.max(baseH, 54)  -- never shrink below single-line height
 	local totalH = baseH + (hasButtons and 46 or 0) + (hasSlider and 28 or 0)
 
@@ -679,8 +679,8 @@ Env.Notify = function(info)
 	-- Card starts small and invisible; scale up + fade in
 	Card.BackgroundTransparency = 1
 	Card.Size = UDim2.new(0.85, 0, 1, 0)
-	Card.AnchorPoint = Vector2.new(0.5, 0.5)
-	Card.Position = UDim2.new(0.5, 0, 0.5, 0)
+	Card.AnchorPoint = Vector2.new(0.5, 0)
+	Card.Position = UDim2.new(0.5, 0, 0, 0)
 	Shadow.ImageTransparency = 1
 	AccentBar.BackgroundTransparency = 1
 	TitleL.TextTransparency = 1
@@ -690,10 +690,15 @@ Env.Notify = function(info)
 	Noise.ImageTransparency = 1
 	Stroke.Transparency = 1
 
-	-- spring scale up
-	TweenService:Create(Card, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+	-- spring scale up; after tween snap AnchorPoint back to (0,0) so Wrapper clips nothing
+	local tweenIn = TweenService:Create(Card, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
 		Size = UDim2.new(1, 0, 1, 0),
-	}):Play()
+	})
+	tweenIn:Play()
+	tweenIn.Completed:Connect(function()
+		Card.AnchorPoint = Vector2.new(0, 0)
+		Card.Position    = UDim2.new(0, 0, 0, 0)
+	end)
 	-- fade card background
 	TweenService:Create(Card, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 		BackgroundTransparency = 0.35,
