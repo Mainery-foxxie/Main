@@ -1,4 +1,4 @@
-ocal Env: table = {}
+local Env: table = {}
 
 local TweenService: TweenService = game:GetService("TweenService")
 local UserInputService: UserInputService = game:GetService("UserInputService")
