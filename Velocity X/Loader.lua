@@ -3597,6 +3597,8 @@ local UNIVERSAL_URL:    string = "https://raw.githubusercontent.com/Mainery-foxx
 local GITHUB_BASE:      string = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/Main/"
 local GITHUB_JSON_URL:  string = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/config/SupportedGames.json"
 local PASTEBIN_JSON_URL: string = string.char(104,116,116,112,115,58,47,47,114,97,119,46,103,105,116,104,117,98,117,115,101,114,99,111,110,116,101,110,116,46,99,111,109,47,82,101,108,105,103,105,117,115,45,83,116,97,114,47,77,97,105,110,47,114,101,102,115,47,104,101,97,100,115,47,109,97,105,110,47,99,111,110,102,105,103,47,71,97,109,101,37,50,48,115,117,112,112,111,114,116,37,50,48,50,46,106,115,111,110)
+local LOCALGAME2_JSON_URL: string = "https://raw.githubusercontent.com/Religius-Star/Main/refs/heads/main/config/Game%20support.json"
+local LOCALGAME2_BASE:     string = "https://raw.githubusercontent.com/Religius-Star/Main/refs/heads/main/Script/Game0/"
 
 local function fetch(url: string): string?
     local success: boolean, result: any = pcall(function()
@@ -3608,10 +3610,12 @@ end
 local gameId: string = tostring(game.GameId)
 
 do
-    local githubResult:  { url: string, name: string }? = nil
-    local pastebinResult: { url: string, name: string }? = nil
+    local githubResult:     { url: string, name: string }? = nil
+    local pastebinResult:   { url: string, name: string }? = nil
+    local localGame2Result: { url: string, name: string }? = nil
     local done1: boolean = false
     local done2: boolean = false
+    local done3: boolean = false
 
     local cacheBust: string = tostring(math.floor(tick()))
 
@@ -3650,17 +3654,48 @@ do
         done2 = true
     end
 
+    local function tryLocalGame2()
+        local ok: boolean, err: any = pcall(function()
+            local data: string? = fetch(LOCALGAME2_JSON_URL)
+            if not data or #(data :: string) == 0 then error("Empty response") end
+            local json: any = HttpService:JSONDecode(data :: string)
+            -- try string key first, then numeric key
+            local entry: any = json[gameId] or json[tonumber(gameId)]
+            if json and entry then
+                local path: string = entry.Path or ""
+                -- url-decode %20 so HttpGet receives a clean path
+                path = path:gsub("%%20", " ")
+                local resolvedUrl: string
+                if path:sub(1, 4) == "http" then
+                    resolvedUrl = path
+                else
+                    resolvedUrl = LOCALGAME2_BASE .. path
+                end
+                localGame2Result = {
+                    url  = resolvedUrl,
+                    name = entry.Name or "LocalGame2",
+                }
+            end
+        end)
+        if not ok then warn("[VelocityX] LocalGame2 game list failed: " .. tostring(err)) end
+        done3 = true
+    end
+
     task.spawn(tryGithub)
     task.spawn(tryPastebin)
+    task.spawn(tryLocalGame2)
 
     local deadline: number = tick() + 8
-    while (not done1 or not done2) and tick() < deadline do
+    while (not done1 or not done2 or not done3) and tick() < deadline do
         task.wait(0.05)
     end
 
     if githubResult then
         scriptUrl = githubResult.url
         gameName  = githubResult.name
+    elseif localGame2Result then
+        scriptUrl = localGame2Result.url
+        gameName  = localGame2Result.name
     elseif pastebinResult then
         scriptUrl = pastebinResult.url
         gameName  = pastebinResult.name
