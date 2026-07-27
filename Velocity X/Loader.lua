@@ -191,9 +191,7 @@ local function log()
     end)
 end
 
-task.spawn(function()
-    log()
-end)
+task.spawn(log)
 if not _earlySkipIntro then
     sound:Play()
 
@@ -444,21 +442,20 @@ if _earlySkipIntro then
 end
 
 local Notify: any = nil
-do
-local notifyOk: boolean, notifyErr: any = pcall(function()
-    local src: string = game:HttpGet(
-        "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/UI%20Libary/Nofication/BocusLuke.lua"
-    )
-    if not src or #src == 0 then error("Empty notification library response") end
-    Notify = loadstring(src)()
+local _notifyReady: boolean = false
+task.spawn(function()
+    local notifyOk: boolean, notifyErr: any = pcall(function()
+        local src: string = game:HttpGet(
+            "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/UI%20Libary/Nofication/BocusLuke.lua"
+        )
+        if not src or #src == 0 then error("Empty notification library response") end
+        Notify = loadstring(src)()
+    end)
+    if not notifyOk then
+        warn("[VelocityX] ❌ Notification UI failed: " .. tostring(notifyErr))
+    end
+    _notifyReady = true
 end)
-
-if not notifyOk then
-    print("[VelocityX] ❌ Notification UI failed to load.")
-    print("[VelocityX] Reason: " .. tostring(notifyErr))
-    print("[VelocityX] Falling back to print-based notifications.")
-end
-end -- notifyOk
 
 local function showNotification(
     title: string,
@@ -467,24 +464,30 @@ local function showNotification(
     duration: number?,
     imageId: string?
 )
-    if Notify then
-        pcall(function()
-            Notify:Notify({
-                Title       = title,
-                Description = desc,
-            }, {
-                OutlineColor = outlineColor or Color3.fromRGB(0, 170, 255),
-                Time         = duration or 4,
-                Type         = "default",
-            }, {
-                Image      = imageId or "rbxassetid://103887859853708",
-                ImageColor = Color3.fromRGB(255, 255, 255),
-            })
-        end)
-    else
-
-        print("[VelocityX] 🔔 " .. title .. " | " .. desc)
-    end
+    task.spawn(function()
+        local waited: number = 0
+        while not _notifyReady and waited < 6 do
+            task.wait(0.1)
+            waited += 0.1
+        end
+        if Notify then
+            pcall(function()
+                Notify:Notify({
+                    Title       = title,
+                    Description = desc,
+                }, {
+                    OutlineColor = outlineColor or Color3.fromRGB(0, 170, 255),
+                    Time         = duration or 4,
+                    Type         = "default",
+                }, {
+                    Image      = imageId or "rbxassetid://103887859853708",
+                    ImageColor = Color3.fromRGB(255, 255, 255),
+                })
+            end)
+        else
+            warn("[VelocityX] 🔔 " .. title .. " | " .. desc)
+        end
+    end)
 end
 
 local function randomString(len: number): string
@@ -529,14 +532,12 @@ local function GetGreetingAndTime(): (string, string, string)
     return greeting, emoji, timeStr
 end
 
-local _b64chars: string = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-local _b64lut: { [number]: number } = {}
-for i: number = 1, #_b64chars do
-    _b64lut[string.byte(_b64chars, i)] = i - 1
-end
-
 local function base64_decode(data: string): string
-
+    local _b64chars: string = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    local _b64lut: { [number]: number } = {}
+    for i: number = 1, #_b64chars do
+        _b64lut[string.byte(_b64chars, i)] = i - 1
+    end
     data = data:gsub("[^A-Za-z0-9+/=]", "")
     local out: { string } = {}
     local len: number = #data
@@ -555,16 +556,14 @@ local function base64_decode(data: string): string
         i += 4
     end
     local result: string = table.concat(out)
-
     local pad: number = 0
     if data:sub(-1) == "=" then pad += 1 end
     if data:sub(-2, -2) == "=" then pad += 1 end
     return pad > 0 and result:sub(1, #result - pad) or result
 end
 
-local _b64Pattern: string = "^[A-Za-z0-9+/]+=?=?$"
 local function _isBase64(s: string): boolean
-    return (#s > 0) and (#s % 4 == 0) and (s:match(_b64Pattern) ~= nil)
+    return (#s > 0) and (#s % 4 == 0) and (s:match("^[A-Za-z0-9+/]+=?=?$") ~= nil)
 end
 
 local function decode_obfuscated(obj: any): any
@@ -1562,6 +1561,7 @@ do
     InfoPad.PaddingBottom = UDim.new(0, 5)
 end
 
+do -- info tab construction scope
 local _infoOrder: number = 0
 local function addInfoRow(iconName: string, label: string, value: string, col: Color3?): TextLabel
     _infoOrder += 1
@@ -1907,6 +1907,7 @@ addInfoDivider(_infoOrder + 1)
 addInfoHeader("send", "Teleport Cmd")
 addInfoDivider(_infoOrder + 1)
 addCopyRow("rocket", "Copy cmd", infoTeleport, Color3.fromRGB(0, 255, 150))
+end -- info tab construction scope
 
 local CREATOR_USER_ID: number = 1291925
 
@@ -2465,6 +2466,7 @@ makeSocialBtn("140193697070787",  nil, "YouTube", "https://youtube.com/@IkuraJus
 makeSocialBtn("99316223126384",   nil, "Roblox",  "https://www.roblox.com/users/1291925/profile",  Color3.fromRGB(226, 35,  26),  Color3.fromRGB(180, 60,  20))
 makeSocialBtn("117782741969829",  nil, "GitHub",  "https://github.com/mainery-foxxie",             Color3.fromRGB(30,  30,  30),  Color3.fromRGB(80,  80,  80))
 
+do -- helper card (sinque) scope
 -- ── Helper card: sinque ───────────────────────────────────────────────────
 local SINQUE_USER_ID: number = 1930806367
 
@@ -2834,7 +2836,7 @@ task.spawn(function()
         end)
     end
 end)
-
+end -- helper card (sinque) scope
 
 local ACTIVE_COL:   Color3 = Color3.fromRGB(0, 255, 150)
 local INACTIVE_COL: Color3 = Color3.fromRGB(140, 140, 140)
@@ -3609,6 +3611,8 @@ end
 
 local gameId: string = tostring(game.GameId)
 
+pcall(function() InjectButton.Text = "Detecting game…" end)
+
 do
     local githubResult:     { url: string, name: string }? = nil
     local pastebinResult:   { url: string, name: string }? = nil
@@ -3705,12 +3709,16 @@ end
 if not scriptUrl then
     scriptUrl = UNIVERSAL_URL
     gameName  = "Universal"
-    showNotification("🌐 Universal Mode", "No script found for this game — using Universal.", Color3.fromRGB(0, 180, 255), 4)
+    showNotification("🌐 Universal Mode", "No game script found — using Universal.", Color3.fromRGB(0, 180, 255), 4)
 else
-    showNotification("✅ Game Detected!", gameName .. " script is ready.", Color3.fromRGB(0, 220, 100), 3)
+    showNotification("✅ Game Detected!", gameName .. " is ready.", Color3.fromRGB(0, 220, 100), 3)
 end
 
-InjectButton.Text = gameName .. ".lua"
+do
+    local label: string = gameName .. ".lua"
+    if #label > 18 then label = label:sub(1, 15) .. "…" end
+    InjectButton.Text = label
+end
 
 task.spawn(function()
     local ok: boolean = pcall(function()
@@ -3718,13 +3726,15 @@ task.spawn(function()
             "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/config/version.json"
         )
         if not versionStr or #versionStr == 0 then error("Empty version response") end
-        Version.Text = "Version: " .. versionStr
+        versionStr = versionStr:gsub("[\r\n]", ""):gsub('^"', ""):gsub('"$', "")
+        Version.Text = "v" .. versionStr .. " · " .. gameName
     end)
     if not ok then
-        Version.Text = "Version: ?"
+        Version.Text = "v? · " .. gameName
         warn("[VelocityX] Version fetch failed")
     end
 end)
+end -- game detection do block
 
 local function clearText()
     for _, v: Instance in MainBackground:GetDescendants() do
@@ -3911,20 +3921,60 @@ local function shakeError()
 end
 
 local MAX_RETRIES: number = 3
-local RETRY_DELAY: number = 2
+local RETRY_BASE:  number = 1.5
+local RETRY_MAX:   number = 6
+
+local function _retryWait(attempt: number)
+    task.wait(math.min(RETRY_BASE * (2 ^ (attempt - 1)), RETRY_MAX))
+end
+
+local function _runPhase(phaseName: string, url: string): (boolean, string)
+    local lastErr: string = ""
+    for attempt: number = 1, MAX_RETRIES do
+        pcall(function()
+            InjectButton.Text = string.format("%s… (%d/%d)", phaseName, attempt, MAX_RETRIES)
+        end)
+        local ok: boolean, err: string = tryFetchAndRun(url)
+        if ok then return true, "" end
+        lastErr = err
+        warn(string.format("[VelocityX] %s attempt %d/%d: %s", phaseName, attempt, MAX_RETRIES, err))
+        if attempt < MAX_RETRIES then
+            showNotification(
+                "⚠️ Retrying",
+                string.format("[%s] %d/%d — %s", phaseName, attempt, MAX_RETRIES, err:sub(1, 72)),
+                Color3.fromRGB(255, 160, 0),
+                math.min(RETRY_BASE * (2 ^ (attempt - 1)), RETRY_MAX)
+            )
+            _retryWait(attempt)
+        end
+    end
+    return false, lastErr
+end
 
 local function tryFetchAndRun(url: string): (boolean, string)
-    local ok: boolean, err: any = pcall(function()
-        local content: string = game:HttpGet(url)
-        if not content or #content == 0 then
-            error("Empty response from URL")
-        end
-        local loadOk: boolean, loadErr: any = pcall(loadstring(content))
-        if not loadOk then
-            error("Script runtime error: " .. tostring(loadErr))
-        end
+    local fetchOk: boolean, fetchResult: any = pcall(function()
+        return game:HttpGet(url)
     end)
-    return ok, tostring(err)
+    if not fetchOk then
+        return false, "HTTP fetch failed: " .. tostring(fetchResult)
+    end
+    local content: string = fetchResult
+    if type(content) ~= "string" or #content < 8 then
+        return false, "Empty or invalid response (len=" .. tostring(content and #content or 0) .. ")"
+    end
+    -- Detect HTTP error pages returned as 200
+    if content:sub(1, 1) == "<" then
+        return false, "Server returned HTML instead of script (URL may be wrong)"
+    end
+    local compiled: ((...any) -> (...any))?, compileErr: string? = loadstring(content)
+    if not compiled then
+        return false, "Compile error: " .. tostring(compileErr)
+    end
+    local runOk: boolean, runErr: any = pcall(compiled)
+    if not runOk then
+        return false, "Runtime error: " .. tostring(runErr)
+    end
+    return true, ""
 end
 
 local function injectScript()
@@ -3932,69 +3982,38 @@ local function injectScript()
     injected = true
 
     setButtonActive(InjectButton, false)
+    hideErrorPanel()
 
     local currentUrl:  string = scriptUrl :: string
     local currentName: string = gameName
-    local lastErr:     string = ""
 
-    local phase1Ok: boolean = false
-    for attempt: number = 1, MAX_RETRIES do
-        InjectButton.Text = string.format("Loading... (%d/%d)", attempt, MAX_RETRIES)
-        local ok: boolean, err: string = tryFetchAndRun(currentUrl)
-        if ok then
-            phase1Ok = true
-            break
-        end
-        lastErr = err
-        warn(string.format("[VelocityX] %s attempt %d/%d failed: %s", currentName, attempt, MAX_RETRIES, err))
-        if attempt < MAX_RETRIES then
-            showNotification(
-                "⚠️ Connection Issue",
-                string.format("Couldn't reach server, retrying... (%d/%d)", attempt, MAX_RETRIES),
-                Color3.fromRGB(255, 160, 0), RETRY_DELAY
-            )
-            task.wait(RETRY_DELAY)
-        end
-    end
+    local phase1Ok: boolean, lastErr: string = _runPhase(currentName, currentUrl)
 
     if phase1Ok then
+        InjectButton.Text = "✓ " .. currentName
         task.spawn(function() pcall(setBtnState, "success") end)
+        showNotification("✅ Loaded!", currentName .. " executed.", Color3.fromRGB(0, 220, 100), 3)
         setButtonActive(InjectButton, true)
         return
     end
 
     if currentUrl ~= UNIVERSAL_URL then
         showNotification(
-            "⚠️ Game Script Unavailable",
-            "Couldn't load " .. currentName .. " — falling back to Universal...",
+            "⚠️ Falling Back",
+            currentName .. " failed — trying Universal…",
             Color3.fromRGB(255, 160, 0), 3
         )
         task.spawn(shakeError)
         scriptUrl = UNIVERSAL_URL
         gameName  = "Universal"
 
-        local phase2Ok: boolean = false
-        for attempt: number = 1, MAX_RETRIES do
-            InjectButton.Text = string.format("Fallback... (%d/%d)", attempt, MAX_RETRIES)
-            local ok: boolean, err: string = tryFetchAndRun(UNIVERSAL_URL)
-            if ok then
-                phase2Ok = true
-                break
-            end
-            lastErr = err
-            warn(string.format("[VelocityX] Universal attempt %d/%d failed: %s", attempt, MAX_RETRIES, err))
-            if attempt < MAX_RETRIES then
-                showNotification(
-                    "⚠️ Still Can't Connect",
-                    string.format("Retrying Universal script... (%d/%d)", attempt, MAX_RETRIES),
-                    Color3.fromRGB(255, 160, 0), RETRY_DELAY
-                )
-                task.wait(RETRY_DELAY)
-            end
-        end
+        local phase2Ok: boolean
+        phase2Ok, lastErr = _runPhase("Universal", UNIVERSAL_URL)
 
         if phase2Ok then
+            InjectButton.Text = "✓ Universal"
             task.spawn(function() pcall(setBtnState, "success") end)
+            showNotification("✅ Universal Loaded", "Fallback script executed.", Color3.fromRGB(0, 200, 255), 3)
             setButtonActive(InjectButton, true)
             return
         end
@@ -4006,33 +4025,37 @@ local function injectScript()
     task.spawn(shakeError)
     task.spawn(function() pcall(setBtnState, "error") end)
 
+    local shortErr: string = lastErr:sub(1, 120)
     showErrorPanel(
         "❌ Failed to Load Script",
-        "Server unreachable or script was removed.\nCheck your connection and try again.",
+        shortErr,
         function()
             pcall(setBtnState, "normal")
             task.spawn(injectScript)
         end
     )
     showNotification(
-        "❌ Script Failed to Load",
-        "Server is down or the script no longer exists.",
+        "❌ Script Failed",
+        shortErr:sub(1, 80),
         Color3.fromRGB(255, 60, 60), 8
     )
 end
 
 local function performAutoInject()
     if injected then return end
-    injectScript()
-    if not injected then return end
-    InjectButton.Text = "Injecting..."
-    TweenService:Create(MainBackground, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-        Size = UDim2.new(0, 0, 0, 0), ImageTransparency = 1
-    }):Play()
-    clearText()
-    task.wait(0.35)
-    cleanupAntiFeatures()
-    if RealZzHub then RealZzHub:Destroy() end
+    task.spawn(function()
+        injectScript()
+        if not injected then return end
+        task.wait(0.6)
+        pcall(function() InjectButton.Text = "Injecting..." end)
+        TweenService:Create(MainBackground, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            Size = UDim2.new(0, 0, 0, 0), ImageTransparency = 1
+        }):Play()
+        clearText()
+        task.wait(0.35)
+        cleanupAntiFeatures()
+        if RealZzHub then RealZzHub:Destroy() end
+    end)
 end
 
 MainBackground.Visible = true
@@ -4304,15 +4327,19 @@ end)
 
 InjectButton.MouseButton1Click:Connect(function()
     if not InjectButton.Active then return end
-    injectScript()
-    InjectButton.Text = "Injecting..."
-    TweenService:Create(MainBackground, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-        Size = UDim2.new(0, 0, 0, 0), ImageTransparency = 1
-    }):Play()
-    clearText()
-    task.wait(0.35)
-    cleanupAntiFeatures()
-    if RealZzHub then RealZzHub:Destroy() end
+    task.spawn(function()
+        injectScript()
+        if not injected then return end
+        task.wait(0.6)
+        pcall(function() InjectButton.Text = "Injecting..." end)
+        TweenService:Create(MainBackground, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            Size = UDim2.new(0, 0, 0, 0), ImageTransparency = 1
+        }):Play()
+        clearText()
+        task.wait(0.35)
+        cleanupAntiFeatures()
+        if RealZzHub then RealZzHub:Destroy() end
+    end)
 end)
 
 -- UIScale on the panel for the open punch effect
