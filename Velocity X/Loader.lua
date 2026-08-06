@@ -3616,7 +3616,7 @@ local scriptUrl:  string? = nil
 local gameName:   string  = "Universal"
 local injected:   boolean = false
 
-local UNIVERSAL_URL: string = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/Main/Universal/Main.lua"
+local UNIVERSAL_URL: string = "https://raw.githubusercontent.com/Mainery-foxxie/Main/ac587f929f922ff7fc1f682101631ad491e19f8d/Velocity%20X/Main/Universal/Main.lua"
 
 local function _detectGame()
     local GITHUB_BASE:       string = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/Main/"
