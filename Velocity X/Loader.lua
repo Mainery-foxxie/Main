@@ -69,11 +69,15 @@ end
 
 getgenv().Velocity_X_Loader = true
 
+local _syn:    any = rawget(_G, "syn")
+local _fluxus: any = rawget(_G, "fluxus")
+local _http:   any = rawget(_G, "http")
+
 local http_request_fn: ((req: {[string]:any}) -> {[string]:any})?
-    = http_request or request
-    or (syn  and syn.request)
-    or (fluxus and fluxus.request)
-    or (http  and http.request)
+    = (rawget(_G, "http_request") or rawget(_G, "request"))
+    or (_syn    and _syn.request)
+    or (_fluxus and _fluxus.request)
+    or (_http   and _http.request)
     or nil
 
 local function getThumbnail(userId: number): string
@@ -588,15 +592,20 @@ RealZzHub.Name            = "Velocity_" .. randomString(10)
 RealZzHub.ZIndexBehavior  = Enum.ZIndexBehavior.Sibling
 
 pcall(function()
-    if syn and syn.protect_gui then
-        syn.protect_gui(RealZzHub)
+    if _syn and _syn.protect_gui then
+        _syn.protect_gui(RealZzHub)
         RealZzHub.Parent = CoreGui
-    elseif gethui then
-        RealZzHub.Parent = gethui()
     else
-        RealZzHub.Parent = CoreGui
+        local _gethui: any = rawget(_G, "gethui")
+        if _gethui then
+            RealZzHub.Parent = _gethui()
+        end
     end
 end)
+
+if not RealZzHub.Parent then
+    RealZzHub.Parent = CoreGui
+end
 
 local MainBackground: ImageLabel = Instance.new("ImageLabel", RealZzHub)
 MainBackground.AnchorPoint        = Vector2.new(0.5, 0.5)
@@ -877,30 +886,34 @@ local function _discordFetch(url: string): {success: boolean, statusCode: number
     })
     if ok and res then return { success = true, statusCode = res.StatusCode, body = res.Body } end
 
-    if _discordIsSupported(syn and syn.request or nil) then
-        local ok2, r2 = pcall(syn.request, { Url = url, Method = "GET", Headers = _DISCORD_HEADERS })
+    if _discordIsSupported(_syn and _syn.request or nil) then
+        local ok2, r2 = pcall(_syn.request, { Url = url, Method = "GET", Headers = _DISCORD_HEADERS })
         if ok2 and r2 then return { success = true, statusCode = r2.StatusCode, body = r2.Body } end
     end
-    if _discordIsSupported(http and http.request or nil) then
-        local ok3, r3 = pcall(http.request, { Url = url, Method = "GET", Headers = _DISCORD_HEADERS })
+    if _discordIsSupported(_http and _http.request or nil) then
+        local ok3, r3 = pcall(_http.request, { Url = url, Method = "GET", Headers = _DISCORD_HEADERS })
         if ok3 and r3 then return { success = true, statusCode = r3.StatusCode, body = r3.Body } end
     end
-    if _discordIsSupported(request) then
-        local ok4, r4 = pcall(request, { Url = url, Method = "GET", Headers = _DISCORD_HEADERS })
+    local _req = rawget(_G, "request")
+    if _discordIsSupported(_req) then
+        local ok4, r4 = pcall(_req, { Url = url, Method = "GET", Headers = _DISCORD_HEADERS })
         if ok4 and r4 then return { success = true, statusCode = r4.StatusCode, body = r4.Body } end
     end
     return { success = false, statusCode = nil, body = nil }
 end
 
 local function _discordCopyToClipboard(text: string): boolean
-    if _discordIsSupported(setclipboard) then
-        local ok = pcall(setclipboard, text); if ok then return true end
+    local _sc = rawget(_G, "setclipboard")
+    if _discordIsSupported(_sc) then
+        local ok = pcall(_sc, text); if ok then return true end
     end
-    if _discordIsSupported(toclipboard) then
-        local ok = pcall(toclipboard, text); if ok then return true end
+    local _tc = rawget(_G, "toclipboard")
+    if _discordIsSupported(_tc) then
+        local ok = pcall(_tc, text); if ok then return true end
     end
-    if _discordIsSupported(Clipboard) and _discordIsSupported(Clipboard and Clipboard.set or nil) then
-        local ok = pcall(Clipboard.set, text); if ok then return true end
+    local _Clipboard: any = rawget(_G, "Clipboard")
+    if _discordIsSupported(_Clipboard) and _discordIsSupported(_Clipboard and _Clipboard.set or nil) then
+        local ok = pcall(_Clipboard.set, text); if ok then return true end
     end
     return false
 end
@@ -1809,7 +1822,8 @@ local function checkPremium(): string
 end
 
 local infoDeviceType = safeStr(function()
-    local plat = game:GetService("UserInputService"):GetPlatform()
+    local uis: any = game:GetService("UserInputService")
+    local plat = uis:GetPlatform()
     return plat == Enum.Platform.Windows  and "PC"
         or plat == Enum.Platform.OSX      and "Mac"
         or plat == Enum.Platform.Android  and "Android"
@@ -1830,7 +1844,8 @@ local infoPlrName  = safeStr(function() return Players.LocalPlayer.Name end, "?"
 local infoPlrId    = safeStr(function() return tostring(Players.LocalPlayer.UserId) end, "?")
 local infoPremium  = checkPremium()
 local infoHwid     = safeStr(function()
-    return game:GetService("RbxAnalyticsService"):GetClientId()
+    local ras: any = game:GetService("RbxAnalyticsService")
+    return ras:GetClientId()
 end, "N/A")
 
 local infoTeleport = "game:GetService('TeleportService'):TeleportToPlaceInstance("
@@ -2191,7 +2206,7 @@ local RobloxBadgeScale: UIScale = Instance.new("UIScale", RobloxBadge)
 RobloxBadgeScale.Scale = 1
 
 EffectClick2 = function(c, p)
-    local Mouse = game.Players.LocalPlayer:GetMouse()
+    local Mouse = Players.LocalPlayer:GetMouse()
     local relativeX = Mouse.X - c.AbsolutePosition.X
     local relativeY = Mouse.Y - c.AbsolutePosition.Y
     if relativeX < 0 or relativeY < 0 or relativeX > c.AbsoluteSize.X or relativeY > c.AbsoluteSize.Y then return end
@@ -2884,8 +2899,12 @@ end
 local function tweenTabColor(btn: TextButton, col: Color3, t: number)
     local lbl  = btn:FindFirstChild("TabLabel", true)
     local iimg = btn:FindFirstChild("TabIcon",  true)
-    if lbl  then pcall(function() TweenService:Create(lbl,  TweenInfo.new(t, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { TextColor3  = col }):Play() end) end
-    if iimg then pcall(function() TweenService:Create(iimg, TweenInfo.new(t, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { ImageColor3 = col }):Play() end) end
+    if lbl then
+        pcall(function() TweenService:Create(lbl,  TweenInfo.new(t, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { TextColor3  = col }):Play() end)
+    end
+    if iimg then
+        pcall(function() TweenService:Create(iimg, TweenInfo.new(t, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { ImageColor3 = col }):Play() end)
+    end
 end
 
 local function switchTab(tabName: string)
@@ -2895,7 +2914,10 @@ local function switchTab(tabName: string)
     local fromName: string  = currentTab
     local fromContent: GuiObject? = getContent(fromName)
     local toContent:   GuiObject? = getContent(tabName)
-    if not toContent then _tabAnimating = false return end
+    if not toContent then
+        _tabAnimating = false
+        return
+    end
 
     -- Detect direction: sliding right or left
     local fromIdx: number = tabIndex(fromName)
@@ -3554,7 +3576,7 @@ local function saveSkipIntro()
 end
 
 local function setupAutoExecutorLoader()
-    local queueteleport: any = queue_on_teleport or (fluxus and fluxus.queue_on_teleport)
+    local queueteleport: any = rawget(_G, "queue_on_teleport") or (_fluxus and _fluxus.queue_on_teleport)
     if queueteleport then
         task.spawn(function()
             pcall(function()
@@ -3569,16 +3591,17 @@ local function setupAutoExecutorLoader()
 end
 
 local function clearTeleportQueue()
-    if clearteleportqueue      then pcall(clearteleportqueue) end
-    if clear_teleport_queue    then pcall(clear_teleport_queue) end
-    if clearqueueonteleport    then pcall(clearqueueonteleport) end
-    if queue_on_teleport       then pcall(queue_on_teleport, nil) end
-    if fluxus and fluxus.queue_on_teleport then pcall(fluxus.queue_on_teleport, nil) end
-    if syn and syn.queue_on_teleport       then pcall(syn.queue_on_teleport, nil) end
-    if setclipboard then pcall(function() setclipboard("") end) end
+    local _ctq  = rawget(_G, "clearteleportqueue");    if _ctq  then pcall(_ctq) end
+    local _ctq2 = rawget(_G, "clear_teleport_queue");  if _ctq2 then pcall(_ctq2) end
+    local _ctq3 = rawget(_G, "clearqueueonteleport");  if _ctq3 then pcall(_ctq3) end
+    local _qot  = rawget(_G, "queue_on_teleport");     if _qot  then pcall(_qot, nil) end
+    if _fluxus and _fluxus.queue_on_teleport then pcall(_fluxus.queue_on_teleport, nil) end
+    if _syn    and _syn.queue_on_teleport    then pcall(_syn.queue_on_teleport, nil) end
+    local _sc = rawget(_G, "setclipboard"); if _sc then pcall(function() _sc("") end) end
     showNotification("Alwi Hub", "Auto Executor cleared", Color3.fromRGB(255, 200, 0), 2)
 end
 
+local function _buildUI()
 local function setButtonActive(button: GuiButton?, active: boolean)
     if not button or not button.Parent then return end
     button.Active = active
@@ -3593,97 +3616,75 @@ local scriptUrl:  string? = nil
 local gameName:   string  = "Universal"
 local injected:   boolean = false
 
-local UNIVERSAL_URL:    string = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/Main/Universal/Main.lua"
-local GITHUB_BASE:      string = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/Main/"
-local GITHUB_JSON_URL:  string = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/config/SupportedGames.json"
-local PASTEBIN_JSON_URL: string = string.char(104,116,116,112,115,58,47,47,114,97,119,46,103,105,116,104,117,98,117,115,101,114,99,111,110,116,101,110,116,46,99,111,109,47,82,101,108,105,103,105,117,115,45,83,116,97,114,47,77,97,105,110,47,114,101,102,115,47,104,101,97,100,115,47,109,97,105,110,47,99,111,110,102,105,103,47,71,97,109,101,37,50,48,115,117,112,112,111,114,116,37,50,48,50,46,106,115,111,110)
-local LOCALGAME2_JSON_URL: string = "https://raw.githubusercontent.com/Religius-Star/Main/refs/heads/main/config/Game%20support.json"
-local LOCALGAME2_BASE:     string = "https://raw.githubusercontent.com/Religius-Star/Main/refs/heads/main/Script/Game0/"
+local UNIVERSAL_URL: string = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/Main/Universal/Main.lua"
 
-local function fetch(url: string): string?
-    local success: boolean, result: any = pcall(function()
-        return game:HttpGet(url)
-    end)
-    return (success and result) :: string? or nil
-end
+local function _detectGame()
+    local GITHUB_BASE:       string = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/Main/"
+    local GITHUB_JSON_URL:   string = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/config/SupportedGames.json"
+    local PASTEBIN_JSON_URL: string = string.char(104,116,116,112,115,58,47,47,114,97,119,46,103,105,116,104,117,98,117,115,101,114,99,111,110,116,101,110,116,46,99,111,109,47,82,101,108,105,103,105,117,115,45,83,116,97,114,47,77,97,105,110,47,114,101,102,115,47,104,101,97,100,115,47,109,97,105,110,47,99,111,110,102,105,103,47,71,97,109,101,37,50,48,115,117,112,112,111,114,116,37,50,48,50,46,106,115,111,110)
+    local LOCALGAME2_JSON_URL: string = "https://raw.githubusercontent.com/Religius-Star/Main/refs/heads/main/config/Game%20support.json"
+    local LOCALGAME2_BASE:     string = "https://raw.githubusercontent.com/Religius-Star/Main/refs/heads/main/Script/Game0/"
 
-local gameId: string = tostring(game.GameId)
+    local function fetch(url: string): string?
+        local success: boolean, result: any = pcall(function()
+            return game:HttpGet(url)
+        end)
+        return (success and result) :: string? or nil
+    end
 
-do
+    local gameId: string = tostring(game.GameId)
+
     local githubResult:     { url: string, name: string }? = nil
     local pastebinResult:   { url: string, name: string }? = nil
     local localGame2Result: { url: string, name: string }? = nil
     local done1: boolean = false
     local done2: boolean = false
     local done3: boolean = false
-
     local cacheBust: string = tostring(math.floor(tick()))
 
-    local function tryGithub()
+    task.spawn(function()
         local ok: boolean = pcall(function()
             local data: string? = fetch(GITHUB_JSON_URL .. "?t=" .. cacheBust)
             if not data or #(data :: string) == 0 then error("Empty") end
             local json: any = HttpService:JSONDecode(data :: string)
             if json and json[gameId] then
-                githubResult = {
-                    url  = GITHUB_BASE .. json[gameId].Path,
-                    name = json[gameId].Name,
-                }
+                githubResult = { url = GITHUB_BASE .. json[gameId].Path, name = json[gameId].Name }
             end
         end)
         if not ok then warn("[VelocityX] GitHub game list failed") end
         done1 = true
-    end
+    end)
 
-    local function tryPastebin()
+    task.spawn(function()
         local ok: boolean, err: any = pcall(function()
             local data: string? = fetch(PASTEBIN_JSON_URL .. "?t=" .. cacheBust)
             if not data or #(data :: string) == 0 then error("Empty response") end
-            local rawJson: any = HttpService:JSONDecode(data :: string)
-            local json: any    = decode_obfuscated(rawJson)
+            local json: any = decode_obfuscated(HttpService:JSONDecode(data :: string))
             if json and json[gameId] then
-                local path:         string = json[gameId].Path
-                local randomstring: string = json[gameId].randomstring or ""
-                pastebinResult = {
-                    url  = path .. randomstring,
-                    name = json[gameId].Name,
-                }
+                local path: string = json[gameId].Path
+                local rs:   string = json[gameId].randomstring or ""
+                pastebinResult = { url = path .. rs, name = json[gameId].Name }
             end
         end)
         if not ok then warn("[VelocityX] Pastefy game list failed: " .. tostring(err)) end
         done2 = true
-    end
+    end)
 
-    local function tryLocalGame2()
+    task.spawn(function()
         local ok: boolean, err: any = pcall(function()
             local data: string? = fetch(LOCALGAME2_JSON_URL)
             if not data or #(data :: string) == 0 then error("Empty response") end
-            local json: any = HttpService:JSONDecode(data :: string)
-            -- try string key first, then numeric key
+            local json: any  = HttpService:JSONDecode(data :: string)
             local entry: any = json[gameId] or json[tonumber(gameId)]
             if json and entry then
-                local path: string = entry.Path or ""
-                -- url-decode %20 so HttpGet receives a clean path
-                path = path:gsub("%%20", " ")
-                local resolvedUrl: string
-                if path:sub(1, 4) == "http" then
-                    resolvedUrl = path
-                else
-                    resolvedUrl = LOCALGAME2_BASE .. path
-                end
-                localGame2Result = {
-                    url  = resolvedUrl,
-                    name = entry.Name or "LocalGame2",
-                }
+                local path: string = (entry.Path or ""):gsub("%%20", " ")
+                local resolvedUrl: string = (path:sub(1, 4) == "http") and path or (LOCALGAME2_BASE .. path)
+                localGame2Result = { url = resolvedUrl, name = entry.Name or "LocalGame2" }
             end
         end)
         if not ok then warn("[VelocityX] LocalGame2 game list failed: " .. tostring(err)) end
         done3 = true
-    end
-
-    task.spawn(tryGithub)
-    task.spawn(tryPastebin)
-    task.spawn(tryLocalGame2)
+    end)
 
     local deadline: number = tick() + 8
     while (not done1 or not done2 or not done3) and tick() < deadline do
@@ -3700,15 +3701,16 @@ do
         scriptUrl = pastebinResult.url
         gameName  = pastebinResult.name
     end
-end
 
-if not scriptUrl then
-    scriptUrl = UNIVERSAL_URL
-    gameName  = "Universal"
-    showNotification("🌐 Universal Mode", "No script found for this game — using Universal.", Color3.fromRGB(0, 180, 255), 4)
-else
-    showNotification("✅ Game Detected!", gameName .. " script is ready.", Color3.fromRGB(0, 220, 100), 3)
+    if not scriptUrl then
+        scriptUrl = UNIVERSAL_URL
+        gameName  = "Universal"
+        showNotification("🌐 Universal Mode", "No script found for this game — using Universal.", Color3.fromRGB(0, 180, 255), 4)
+    else
+        showNotification("✅ Game Detected!", gameName .. " script is ready.", Color3.fromRGB(0, 220, 100), 3)
+    end
 end
+_detectGame()
 
 InjectButton.Text = gameName .. ".lua"
 
@@ -3785,72 +3787,73 @@ end
     ErrIcon.ZIndex                 = 6
 end
 
-local ErrTitle: TextLabel = Instance.new("TextLabel", ErrorPanel)
-ErrTitle.AnchorPoint            = Vector2.new(0, 0)
-ErrTitle.Position               = UDim2.new(0, 30, 0, 6)
-ErrTitle.Size                   = UDim2.new(0.7, 0, 0, 16)
-ErrTitle.BackgroundTransparency = 1
-ErrTitle.Font                   = Enum.Font.Arcade
-ErrTitle.Text                   = "Failed to Load"
-ErrTitle.TextSize               = 12
-ErrTitle.TextXAlignment         = Enum.TextXAlignment.Left
-ErrTitle.TextColor3             = Color3.fromRGB(255, 100, 100)
-ErrTitle.TextStrokeTransparency = 0.4
-ErrTitle.TextStrokeColor3       = Color3.fromRGB(0, 0, 0)
-ErrTitle.ZIndex                 = 6
-
-local ErrDesc: TextLabel = Instance.new("TextLabel", ErrorPanel)
-ErrDesc.AnchorPoint            = Vector2.new(0, 0)
-ErrDesc.Position               = UDim2.new(0, 30, 0, 23)
-ErrDesc.Size                   = UDim2.new(0.68, 0, 0, 22)
-ErrDesc.BackgroundTransparency = 1
-ErrDesc.Font                   = Enum.Font.Arcade
-ErrDesc.Text                   = "Server unreachable or script was removed."
-ErrDesc.TextSize               = 9
-ErrDesc.TextWrapped            = true
-ErrDesc.TextXAlignment         = Enum.TextXAlignment.Left
-ErrDesc.TextYAlignment         = Enum.TextYAlignment.Top
-ErrDesc.TextColor3             = Color3.fromRGB(220, 180, 180)
-ErrDesc.ZIndex                 = 6
-
-local ErrRetryBtn: TextButton = Instance.new("TextButton", ErrorPanel)
-ErrRetryBtn.AnchorPoint            = Vector2.new(1, 0.5)
-ErrRetryBtn.Position               = UDim2.new(0.98, 0, 0.55, 0)
-ErrRetryBtn.Size                   = UDim2.new(0, 54, 0, 22)
-ErrRetryBtn.BackgroundColor3       = Color3.fromRGB(255, 255, 255)
-ErrRetryBtn.BackgroundTransparency = 1
-ErrRetryBtn.BorderSizePixel        = 0
-ErrRetryBtn.Font                   = Enum.Font.Arcade
-ErrRetryBtn.Text                   = "Retry"
-ErrRetryBtn.TextSize               = 11
-ErrRetryBtn.TextColor3             = Color3.fromRGB(255, 255, 255)
-ErrRetryBtn.ZIndex                 = 7
-Instance.new("UICorner", ErrRetryBtn).CornerRadius = UDim.new(0, 4)
-do
-    local ErrRetryGrad: UIGradient = Instance.new("UIGradient", ErrRetryBtn)
-    ErrRetryGrad.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 80, 80)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 40, 40)),
-    }
-    ErrRetryGrad.Rotation = 90
-end
-do
-local ErrRetryStroke: UIStroke = Instance.new("UIStroke", ErrRetryBtn)
-ErrRetryStroke.Color     = Color3.fromRGB(255, 80, 80)
-ErrRetryStroke.Thickness = 1
-end
-
+local ErrTitle:      TextLabel  = Instance.new("TextLabel",  ErrorPanel)
+local ErrDesc:       TextLabel  = Instance.new("TextLabel",  ErrorPanel)
+local ErrRetryBtn:   TextButton = Instance.new("TextButton", ErrorPanel)
 local ErrDismissBtn: TextButton = Instance.new("TextButton", ErrorPanel)
-ErrDismissBtn.AnchorPoint            = Vector2.new(1, 0)
-ErrDismissBtn.Position               = UDim2.new(1, -2, 0, 2)
-ErrDismissBtn.Size                   = UDim2.new(0, 14, 0, 14)
-ErrDismissBtn.BackgroundTransparency = 1
-ErrDismissBtn.BorderSizePixel        = 0
-ErrDismissBtn.Font                   = Enum.Font.GothamBold
-ErrDismissBtn.Text                   = "×"
-ErrDismissBtn.TextSize               = 13
-ErrDismissBtn.TextColor3             = Color3.fromRGB(180, 100, 100)
-ErrDismissBtn.ZIndex                 = 8
+
+do
+    ErrTitle.AnchorPoint            = Vector2.new(0, 0)
+    ErrTitle.Position               = UDim2.new(0, 30, 0, 6)
+    ErrTitle.Size                   = UDim2.new(0.7, 0, 0, 16)
+    ErrTitle.BackgroundTransparency = 1
+    ErrTitle.Font                   = Enum.Font.Arcade
+    ErrTitle.Text                   = "Failed to Load"
+    ErrTitle.TextSize               = 12
+    ErrTitle.TextXAlignment         = Enum.TextXAlignment.Left
+    ErrTitle.TextColor3             = Color3.fromRGB(255, 100, 100)
+    ErrTitle.TextStrokeTransparency = 0.4
+    ErrTitle.TextStrokeColor3       = Color3.fromRGB(0, 0, 0)
+    ErrTitle.ZIndex                 = 6
+
+    ErrDesc.AnchorPoint            = Vector2.new(0, 0)
+    ErrDesc.Position               = UDim2.new(0, 30, 0, 23)
+    ErrDesc.Size                   = UDim2.new(0.68, 0, 0, 22)
+    ErrDesc.BackgroundTransparency = 1
+    ErrDesc.Font                   = Enum.Font.Arcade
+    ErrDesc.Text                   = "Server unreachable or script was removed."
+    ErrDesc.TextSize               = 9
+    ErrDesc.TextWrapped            = true
+    ErrDesc.TextXAlignment         = Enum.TextXAlignment.Left
+    ErrDesc.TextYAlignment         = Enum.TextYAlignment.Top
+    ErrDesc.TextColor3             = Color3.fromRGB(220, 180, 180)
+    ErrDesc.ZIndex                 = 6
+
+    ErrRetryBtn.AnchorPoint            = Vector2.new(1, 0.5)
+    ErrRetryBtn.Position               = UDim2.new(0.98, 0, 0.55, 0)
+    ErrRetryBtn.Size                   = UDim2.new(0, 54, 0, 22)
+    ErrRetryBtn.BackgroundColor3       = Color3.fromRGB(255, 255, 255)
+    ErrRetryBtn.BackgroundTransparency = 1
+    ErrRetryBtn.BorderSizePixel        = 0
+    ErrRetryBtn.Font                   = Enum.Font.Arcade
+    ErrRetryBtn.Text                   = "Retry"
+    ErrRetryBtn.TextSize               = 11
+    ErrRetryBtn.TextColor3             = Color3.fromRGB(255, 255, 255)
+    ErrRetryBtn.ZIndex                 = 7
+    Instance.new("UICorner", ErrRetryBtn).CornerRadius = UDim.new(0, 4)
+    do
+        local g: UIGradient = Instance.new("UIGradient", ErrRetryBtn)
+        g.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 80, 80)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 40, 40)),
+        }
+        g.Rotation = 90
+        local s: UIStroke = Instance.new("UIStroke", ErrRetryBtn)
+        s.Color     = Color3.fromRGB(255, 80, 80)
+        s.Thickness = 1
+    end
+
+    ErrDismissBtn.AnchorPoint            = Vector2.new(1, 0)
+    ErrDismissBtn.Position               = UDim2.new(1, -2, 0, 2)
+    ErrDismissBtn.Size                   = UDim2.new(0, 14, 0, 14)
+    ErrDismissBtn.BackgroundTransparency = 1
+    ErrDismissBtn.BorderSizePixel        = 0
+    ErrDismissBtn.Font                   = Enum.Font.GothamBold
+    ErrDismissBtn.Text                   = "×"
+    ErrDismissBtn.TextSize               = 13
+    ErrDismissBtn.TextColor3             = Color3.fromRGB(180, 100, 100)
+    ErrDismissBtn.ZIndex                 = 8
+end
 
 local _errPanelOpen: boolean = false
 local function showErrorPanel(title: string, desc: string, onRetry: (() -> ())?)
@@ -4052,13 +4055,13 @@ GreetingCard.Visible  = true
 
 loadConfig()
 
-local autoSaveCtrl = addToggle(ScrollingFrame, "Auto Save Config", config.autoSave, function(val: boolean)
+local autoSaveCtrl:   {Set: (any, boolean) -> ()} = addToggle(ScrollingFrame, "Auto Save Config", config.autoSave, function(val: boolean)
     config.autoSave = val
     if config.autoSave then saveConfig() end
     showNotification("Auto Save Config", val and "Enabled" or "Disabled", Color3.fromRGB(0, 255, 120), 2)
 end)
 
-local autoInjectCtrl = addToggle(ScrollingFrame, "Auto Inject", config.autoInject, function(val: boolean)
+local autoInjectCtrl: {Set: (any, boolean) -> ()} = addToggle(ScrollingFrame, "Auto Inject", config.autoInject, function(val: boolean)
     config.autoInject = val
     if config.autoSave then saveConfig() end
     showNotification("Auto Inject", val and "Enabled" or "Disabled", Color3.fromRGB(0, 255, 120), 2)
@@ -4067,7 +4070,7 @@ local autoInjectCtrl = addToggle(ScrollingFrame, "Auto Inject", config.autoInjec
     end
 end)
 
-local autoLoaderCtrl = addToggle(ScrollingFrame, "Auto Executor Loader", config.autoExecutorLoader, function(val: boolean)
+local autoLoaderCtrl: {Set: (any, boolean) -> ()} = addToggle(ScrollingFrame, "Auto Executor Loader", config.autoExecutorLoader, function(val: boolean)
     config.autoExecutorLoader = val
     if config.autoSave then saveConfig() end
     if val then
@@ -4078,7 +4081,12 @@ local autoLoaderCtrl = addToggle(ScrollingFrame, "Auto Executor Loader", config.
     end
 end)
 
-local antiAfkCtrl = addToggle(ScrollingFrame, "Anti AFK", config.antiAfk, function(val: boolean)
+local antiAfkConnection:          RBXScriptConnection? = nil
+local antiFlingConnection:        RBXScriptConnection? = nil
+local antiGameplayPauseRunning:   boolean              = false
+local antiGameplayPauseThread:    thread?              = nil
+
+local antiAfkCtrl: {Set: (any, boolean) -> ()} = addToggle(ScrollingFrame, "Anti AFK", config.antiAfk, function(val: boolean)
     config.antiAfk = val
     if config.autoSave then saveConfig() end
     if val then
@@ -4100,7 +4108,7 @@ local antiAfkCtrl = addToggle(ScrollingFrame, "Anti AFK", config.antiAfk, functi
     showNotification("Anti AFK", val and "Enabled" or "Disabled", Color3.fromRGB(0, 255, 120), 2)
 end)
 
-local antiFlingCtrl = addToggle(ScrollingFrame, "Anti Fling", config.antiFling, function(val: boolean)
+local antiFlingCtrl: {Set: (any, boolean) -> ()} = addToggle(ScrollingFrame, "Anti Fling", config.antiFling, function(val: boolean)
     config.antiFling = val
     if config.autoSave then saveConfig() end
     if val then
@@ -4125,7 +4133,7 @@ local antiFlingCtrl = addToggle(ScrollingFrame, "Anti Fling", config.antiFling, 
     showNotification("Anti Fling", val and "Enabled" or "Disabled", Color3.fromRGB(0, 255, 120), 2)
 end)
 
-local antiGameplayPauseCtrl = addToggle(ScrollingFrame, "Anti Gameplay Pause", config.antiGameplayPause, function(val: boolean)
+local antiGameplayPauseCtrl: {Set: (any, boolean) -> ()} = addToggle(ScrollingFrame, "Anti Gameplay Pause", config.antiGameplayPause, function(val: boolean)
     config.antiGameplayPause = val
     if config.autoSave then saveConfig() end
     if val then
@@ -4152,47 +4160,49 @@ local antiGameplayPauseCtrl = addToggle(ScrollingFrame, "Anti Gameplay Pause", c
     showNotification("Anti Gameplay Pause", val and "Enabled" or "Disabled", Color3.fromRGB(0, 255, 120), 2)
 end)
 
-local skipIntroCtrl = addToggle(ScrollingFrame, "Skip Intro UI", config.skipIntroUI, function(val: boolean)
+local skipIntroCtrl: {Set: (any, boolean) -> ()} = addToggle(ScrollingFrame, "Skip Intro UI", config.skipIntroUI, function(val: boolean)
     config.skipIntroUI = val
-    saveSkipIntro() -- always persist, needed before GUI loads next session
+    saveSkipIntro()
     if config.autoSave then saveConfig() end
     showNotification("Skip Intro UI", val and "Will skip next session" or "Intro restored", Color3.fromRGB(0, 255, 120), 2)
 end)
 
-local openConsoleButton: TextButton = Instance.new("TextButton")
-openConsoleButton.Name               = "OpenConsoleButton"
-openConsoleButton.Size               = UDim2.new(1, -8, 0, 28)
-openConsoleButton.BackgroundColor3   = Color3.fromRGB(0, 30, 50)
-openConsoleButton.BackgroundTransparency = 0.65
-openConsoleButton.BorderSizePixel    = 0
-openConsoleButton.Font               = Enum.Font.Arcade
-openConsoleButton.Text               = "  Open Console"
-openConsoleButton.TextColor3         = Color3.fromRGB(0, 200, 255)
-openConsoleButton.TextSize           = 11
-openConsoleButton.ZIndex             = 2
-Instance.new("UICorner", openConsoleButton).CornerRadius = UDim.new(0, 5)
 do
-local consoleBtnStroke: UIStroke = Instance.new("UIStroke", openConsoleButton)
-    consoleBtnStroke.Color       = Color3.fromRGB(0, 200, 255)
-    consoleBtnStroke.Thickness   = 1.2
-    consoleBtnStroke.Transparency = 0.45
-end
-openConsoleButton.Parent = ScrollingFrame
-do
-local consoleIcon: ImageLabel = Instance.new("ImageLabel", openConsoleButton)
-    consoleIcon.BackgroundTransparency = 1
-    consoleIcon.AnchorPoint = Vector2.new(0, 0.5)
-    consoleIcon.Position    = UDim2.new(0, 6, 0.5, 0)
-    consoleIcon.Size        = UDim2.new(0, 13, 0, 13)
-    consoleIcon.Image       = icon("terminal")
-    consoleIcon.ImageColor3 = Color3.fromRGB(0, 200, 255)
-    consoleIcon.ZIndex      = 3
-end
-openConsoleButton.MouseButton1Click:Connect(function()
-    pcall(function()
-        game:GetService("StarterGui"):SetCore("DevConsoleVisible", true)
+    local openConsoleButton: TextButton = Instance.new("TextButton")
+    openConsoleButton.Name               = "OpenConsoleButton"
+    openConsoleButton.Size               = UDim2.new(1, -8, 0, 28)
+    openConsoleButton.BackgroundColor3   = Color3.fromRGB(0, 30, 50)
+    openConsoleButton.BackgroundTransparency = 0.65
+    openConsoleButton.BorderSizePixel    = 0
+    openConsoleButton.Font               = Enum.Font.Arcade
+    openConsoleButton.Text               = "  Open Console"
+    openConsoleButton.TextColor3         = Color3.fromRGB(0, 200, 255)
+    openConsoleButton.TextSize           = 11
+    openConsoleButton.ZIndex             = 2
+    Instance.new("UICorner", openConsoleButton).CornerRadius = UDim.new(0, 5)
+    do
+        local consoleBtnStroke: UIStroke = Instance.new("UIStroke", openConsoleButton)
+        consoleBtnStroke.Color       = Color3.fromRGB(0, 200, 255)
+        consoleBtnStroke.Thickness   = 1.2
+        consoleBtnStroke.Transparency = 0.45
+    end
+    openConsoleButton.Parent = ScrollingFrame
+    do
+        local consoleIcon: ImageLabel = Instance.new("ImageLabel", openConsoleButton)
+        consoleIcon.BackgroundTransparency = 1
+        consoleIcon.AnchorPoint = Vector2.new(0, 0.5)
+        consoleIcon.Position    = UDim2.new(0, 6, 0.5, 0)
+        consoleIcon.Size        = UDim2.new(0, 13, 0, 13)
+        consoleIcon.Image       = icon("terminal")
+        consoleIcon.ImageColor3 = Color3.fromRGB(0, 200, 255)
+        consoleIcon.ZIndex      = 3
+    end
+    openConsoleButton.MouseButton1Click:Connect(function()
+        pcall(function()
+            game:GetService("StarterGui"):SetCore("DevConsoleVisible", true)
+        end)
     end)
-end)
+end
 
 local deleteConfigButton: TextButton = Instance.new("TextButton")
 deleteConfigButton.Name               = "DeleteConfigButton"
@@ -4559,13 +4569,15 @@ end
 
 deleteConfigButton.MouseButton1Click:Connect(function()
     if (DeleteConfirmFrame and DeleteConfirmFrame.Visible) or (ConfirmFrame and ConfirmFrame.Visible) then return end
+    if not DeleteConfirmFrame then return end
     setButtonActive(InjectButton, false)
     setButtonActive(CloseButton,  false)
     setButtonActive(SettingsIcon, false)
-    DeleteConfirmFrame.Visible           = true
-    DeleteConfirmFrame.Size              = UDim2.new(0, 0, 0, 0)
-    DeleteConfirmFrame.ImageTransparency = 1
-    TweenService:Create(DeleteConfirmFrame, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    local _dcf: ImageLabel = DeleteConfirmFrame :: ImageLabel
+    _dcf.Visible           = true
+    _dcf.Size              = UDim2.new(0, 0, 0, 0)
+    _dcf.ImageTransparency = 1
+    TweenService:Create(_dcf, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
         Size = UDim2.new(0, 200, 0, 100), ImageTransparency = 0
     }):Play()
 end)
@@ -4719,3 +4731,5 @@ if not _dragOk then
         end)
     end)
 end
+end -- _buildUI
+_buildUI()
