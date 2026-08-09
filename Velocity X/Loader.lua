@@ -3576,11 +3576,17 @@ local function saveSkipIntro()
 end
 
 local function setupAutoExecutorLoader()
-    local queueteleport: any = rawget(_G, "queue_on_teleport") or (_fluxus and _fluxus.queue_on_teleport)
-    if queueteleport then
+    -- Check all known aliases per VoltBZ docs: queueonteleport / queue_on_teleport / queueteleport
+    local queueFn: any =
+        rawget(_G, "queueonteleport")
+        or rawget(_G, "queue_on_teleport")
+        or rawget(_G, "queueteleport")
+        or (_fluxus and (_fluxus.queue_on_teleport or _fluxus.queueonteleport))
+        or (_syn    and (_syn.queue_on_teleport    or _syn.queueonteleport))
+    if queueFn then
         task.spawn(function()
             pcall(function()
-                queueteleport(
+                queueFn(
                     "loadstring(game:HttpGet('https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/Loader.lua'))()"
                 )
             end)
@@ -3591,13 +3597,12 @@ local function setupAutoExecutorLoader()
 end
 
 local function clearTeleportQueue()
-    local _ctq  = rawget(_G, "clearteleportqueue");    if _ctq  then pcall(_ctq) end
+    -- Per VoltBZ docs the dedicated clear function is clearqueueonteleport
+    -- Aliases: clearteleportqueue, clear_teleport_queue
+    -- Never pass nil to queue_on_teleport — that doesn't clear the queue, it errors
+    local _cqot = rawget(_G, "clearqueueonteleport");  if _cqot then pcall(_cqot) end
+    local _ctq  = rawget(_G, "clearteleportqueue");    if _ctq  then pcall(_ctq)  end
     local _ctq2 = rawget(_G, "clear_teleport_queue");  if _ctq2 then pcall(_ctq2) end
-    local _ctq3 = rawget(_G, "clearqueueonteleport");  if _ctq3 then pcall(_ctq3) end
-    local _qot  = rawget(_G, "queue_on_teleport");     if _qot  then pcall(_qot, nil) end
-    if _fluxus and _fluxus.queue_on_teleport then pcall(_fluxus.queue_on_teleport, nil) end
-    if _syn    and _syn.queue_on_teleport    then pcall(_syn.queue_on_teleport, nil) end
-    local _sc = rawget(_G, "setclipboard"); if _sc then pcall(function() _sc("") end) end
     showNotification("Alwi Hub", "Auto Executor cleared", Color3.fromRGB(255, 200, 0), 2)
 end
 
