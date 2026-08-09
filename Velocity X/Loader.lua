@@ -3575,34 +3575,58 @@ local function saveSkipIntro()
     end)
 end
 
-local function setupAutoExecutorLoader()
-    -- Check all known aliases per VoltBZ docs: queueonteleport / queue_on_teleport / queueteleport
+-- Returns true if queue_on_teleport was found and queued, false if unsupported
+local function setupAutoExecutorLoader(): boolean
+    -- getfenv() returns the script's own environment, which includes globals injected
+    -- by executors like Real that don't put them in _G
+    local _env: {[string]: any} = getfenv()
     local queueFn: any =
-        rawget(_G, "queueonteleport")
+        _env["queue_on_teleport"]
+        or _env["queueonteleport"]
+        or _env["queueteleport"]
+        or _env["QueueOnTeleport"]
         or rawget(_G, "queue_on_teleport")
+        or rawget(_G, "queueonteleport")
         or rawget(_G, "queueteleport")
         or (_fluxus and (_fluxus.queue_on_teleport or _fluxus.queueonteleport))
         or (_syn    and (_syn.queue_on_teleport    or _syn.queueonteleport))
-    if queueFn then
-        task.spawn(function()
-            pcall(function()
-                queueFn(
-                    "loadstring(game:HttpGet('https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/Loader.lua'))()"
-                )
-            end)
+    -- Last resort: scan getrenv()
+    if not queueFn then
+        pcall(function()
+            local renv = getrenv()
+            if type(renv) == "table" then
+                for k, v in renv do
+                    if type(k) == "string" and type(v) == "function" then
+                        local lower = k:lower()
+                        if lower:find("queue") and lower:find("teleport") then
+                            queueFn = v; break
+                        end
+                    end
+                end
+            end
         end)
-    else
-        showNotification("Executor Not Supported", "queue_on_teleport is not available.", Color3.fromRGB(255, 50, 50), 5)
     end
+
+    if not queueFn then return false end
+
+    task.spawn(function()
+        pcall(function()
+            queueFn(
+                "loadstring(game:HttpGet('https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/Loader.lua'))()"
+            )
+        end)
+    end)
+    return true
 end
 
 local function clearTeleportQueue()
-    -- Per VoltBZ docs the dedicated clear function is clearqueueonteleport
-    -- Aliases: clearteleportqueue, clear_teleport_queue
-    -- Never pass nil to queue_on_teleport — that doesn't clear the queue, it errors
-    local _cqot = rawget(_G, "clearqueueonteleport");  if _cqot then pcall(_cqot) end
-    local _ctq  = rawget(_G, "clearteleportqueue");    if _ctq  then pcall(_ctq)  end
-    local _ctq2 = rawget(_G, "clear_teleport_queue");  if _ctq2 then pcall(_ctq2) end
+    local _env: {[string]: any} = getfenv()
+    local _cqot = _env["clearqueueonteleport"] or rawget(_G, "clearqueueonteleport")
+    local _ctq  = _env["clearteleportqueue"]   or rawget(_G, "clearteleportqueue")
+    local _ctq2 = _env["clear_teleport_queue"] or rawget(_G, "clear_teleport_queue")
+    if _cqot then pcall(_cqot) end
+    if _ctq  then pcall(_ctq)  end
+    if _ctq2 then pcall(_ctq2) end
     showNotification("Alwi Hub", "Auto Executor cleared", Color3.fromRGB(255, 200, 0), 2)
 end
 
@@ -4075,16 +4099,95 @@ local autoInjectCtrl: {Set: (any, boolean) -> ()} = addToggle(ScrollingFrame, "A
     end
 end)
 
-local autoLoaderCtrl: {Set: (any, boolean) -> ()} = addToggle(ScrollingFrame, "Auto Executor Loader", config.autoExecutorLoader, function(val: boolean)
-    config.autoExecutorLoader = val
-    if config.autoSave then saveConfig() end
-    if val then
-        setupAutoExecutorLoader()
-        showNotification("Auto Executor Loader", "Enabled – will reload on teleport", Color3.fromRGB(0, 255, 120), 2)
-    else
-        clearTeleportQueue()
+-- Check if this executor supports queue_on_teleport before showing the toggle
+local _queueSupported: boolean = false
+pcall(function()
+    local _env: {[string]: any} = getfenv()
+    local fn: any =
+        _env["queue_on_teleport"]
+        or _env["queueonteleport"]
+        or _env["queueteleport"]
+        or _env["QueueOnTeleport"]
+        or rawget(_G, "queue_on_teleport")
+        or rawget(_G, "queueonteleport")
+        or rawget(_G, "queueteleport")
+        or (_fluxus and (_fluxus.queue_on_teleport or _fluxus.queueonteleport))
+        or (_syn    and (_syn.queue_on_teleport    or _syn.queueonteleport))
+    if not fn then
+        pcall(function()
+            local renv = getrenv()
+            if type(renv) == "table" then
+                for k, v in renv do
+                    if type(k) == "string" and type(v) == "function" then
+                        local lower = k:lower()
+                        if lower:find("queue") and lower:find("teleport") then
+                            fn = v; break
+                        end
+                    end
+                end
+            end
+        end)
     end
+    _queueSupported = fn ~= nil
 end)
+
+local autoLoaderCtrl: {Set: (any, boolean) -> ()}
+
+if _queueSupported then
+    autoLoaderCtrl = addToggle(ScrollingFrame, "Auto Executor Loader", config.autoExecutorLoader, function(val: boolean)
+        config.autoExecutorLoader = val
+        if config.autoSave then saveConfig() end
+        if val then
+            setupAutoExecutorLoader()
+            showNotification("Auto Executor Loader", "Enabled – will reload on teleport", Color3.fromRGB(0, 255, 120), 3)
+        else
+            clearTeleportQueue()
+        end
+    end)
+else
+    -- Unsupported executor: show a greyed-out info row instead of a toggle
+    config.autoExecutorLoader = false
+    local unsupportedRow: Frame = Instance.new("Frame", ScrollingFrame)
+    unsupportedRow.Size                   = UDim2.new(1, -8, 0, 28)
+    unsupportedRow.BackgroundColor3       = Color3.fromRGB(20, 10, 10)
+    unsupportedRow.BackgroundTransparency = 0.75
+    unsupportedRow.BorderSizePixel        = 0
+    unsupportedRow.ZIndex                 = 2
+    Instance.new("UICorner", unsupportedRow).CornerRadius = UDim.new(0, 5)
+    do
+        local rowStroke: UIStroke = Instance.new("UIStroke", unsupportedRow)
+        rowStroke.Color       = Color3.fromRGB(180, 60, 60)
+        rowStroke.Thickness   = 1
+        rowStroke.Transparency = 0.6
+    end
+    -- Warning icon
+    local warnIcon: TextLabel = Instance.new("TextLabel", unsupportedRow)
+    warnIcon.BackgroundTransparency = 1
+    warnIcon.AnchorPoint            = Vector2.new(0, 0.5)
+    warnIcon.Position               = UDim2.new(0, 6, 0.5, 0)
+    warnIcon.Size                   = UDim2.new(0, 14, 0, 14)
+    warnIcon.Font                   = Enum.Font.GothamBold
+    warnIcon.Text                   = "⚠"
+    warnIcon.TextScaled             = true
+    warnIcon.TextColor3             = Color3.fromRGB(255, 120, 60)
+    warnIcon.ZIndex                 = 3
+    -- Message text
+    local unsupportedLbl: TextLabel = Instance.new("TextLabel", unsupportedRow)
+    unsupportedLbl.BackgroundTransparency = 1
+    unsupportedLbl.AnchorPoint            = Vector2.new(0, 0.5)
+    unsupportedLbl.Position               = UDim2.new(0, 24, 0.5, 0)
+    unsupportedLbl.Size                   = UDim2.new(1, -28, 1, 0)
+    unsupportedLbl.Font                   = Enum.Font.Arcade
+    unsupportedLbl.Text                   = "Ur executor does not support queue_on_teleport sorry!"
+    unsupportedLbl.TextSize               = 7
+    unsupportedLbl.TextScaled             = false
+    unsupportedLbl.TextXAlignment         = Enum.TextXAlignment.Left
+    unsupportedLbl.TextColor3             = Color3.fromRGB(180, 100, 100)
+    unsupportedLbl.TextWrapped            = true
+    unsupportedLbl.ZIndex                 = 3
+    -- dummy ctrl so references don't error
+    autoLoaderCtrl = { Set = function() end }
+end
 
 local antiAfkConnection:          RBXScriptConnection? = nil
 local antiFlingConnection:        RBXScriptConnection? = nil
@@ -4255,7 +4358,7 @@ local function onPanelOpen()
 end
 
 if config.autoInject         then performAutoInject()         end
-if config.autoExecutorLoader then setupAutoExecutorLoader()   end
+if config.autoExecutorLoader and _queueSupported then setupAutoExecutorLoader() end
 
 UpdateGreeting()
 pcall(function()
