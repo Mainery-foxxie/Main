@@ -3991,7 +3991,18 @@ local function injectScript()
 
     if phase1Ok then
         task.spawn(function() pcall(setBtnState, "success") end)
-        setButtonActive(InjectButton, true)
+        InjectButton.Text = "Loaded! Closing in 5s..."
+        setButtonActive(InjectButton, false)
+        task.wait(5)
+        clearText()
+        pcall(function()
+            TweenService:Create(MainBackground, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+                Size = UDim2.new(0, 0, 0, 0), ImageTransparency = 1
+            }):Play()
+        end)
+        task.wait(0.35)
+        cleanupAntiFeatures()
+        if RealZzHub then RealZzHub:Destroy() end
         return
     end
 
@@ -4027,7 +4038,18 @@ local function injectScript()
 
         if phase2Ok then
             task.spawn(function() pcall(setBtnState, "success") end)
-            setButtonActive(InjectButton, true)
+            InjectButton.Text = "Loaded! Closing in 5s..."
+            setButtonActive(InjectButton, false)
+            task.wait(5)
+            clearText()
+            pcall(function()
+                TweenService:Create(MainBackground, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+                    Size = UDim2.new(0, 0, 0, 0), ImageTransparency = 1
+                }):Play()
+            end)
+            task.wait(0.35)
+            cleanupAntiFeatures()
+            if RealZzHub then RealZzHub:Destroy() end
             return
         end
     end
