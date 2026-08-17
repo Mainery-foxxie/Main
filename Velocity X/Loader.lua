@@ -3945,18 +3945,36 @@ end
 local MAX_RETRIES: number = 3
 local RETRY_DELAY: number = 2
 
+local FETCH_TIMEOUT: number = 5 -- seconds before a hanging HttpGet is considered failed
+
 local function tryFetchAndRun(url: string): (boolean, string)
-    local ok: boolean, err: any = pcall(function()
-        local content: string = game:HttpGet(url)
-        if not content or #content == 0 then
-            error("Empty response from URL")
+    local result:  string?  = nil
+    local fetchOk: boolean  = false
+    local done:    boolean  = false
+
+    task.spawn(function()
+        local ok: boolean, content: any = pcall(game.HttpGet, game, url)
+        if ok and type(content) == "string" then
+            result  = content
+            fetchOk = true
         end
-        local loadOk: boolean, loadErr: any = pcall(loadstring(content))
-        if not loadOk then
-            error("Script runtime error: " .. tostring(loadErr))
-        end
+        done = true
     end)
-    return ok, tostring(err)
+
+    local deadline: number = tick() + FETCH_TIMEOUT
+    while not done and tick() < deadline do
+        task.wait(0.05)
+    end
+
+    if not done or not fetchOk or not result or #(result :: string) == 0 then
+        return false, "Timeout or empty response from URL"
+    end
+
+    local loadOk: boolean, loadErr: any = pcall(loadstring(result :: string))
+    if not loadOk then
+        return false, "Script runtime error: " .. tostring(loadErr)
+    end
+    return true, ""
 end
 
 local function injectScript()
@@ -3991,18 +4009,7 @@ local function injectScript()
 
     if phase1Ok then
         task.spawn(function() pcall(setBtnState, "success") end)
-        InjectButton.Text = "Loaded! Closing in 5s..."
-        setButtonActive(InjectButton, false)
-        task.wait(5)
-        clearText()
-        pcall(function()
-            TweenService:Create(MainBackground, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-                Size = UDim2.new(0, 0, 0, 0), ImageTransparency = 1
-            }):Play()
-        end)
-        task.wait(0.35)
-        cleanupAntiFeatures()
-        if RealZzHub then RealZzHub:Destroy() end
+        setButtonActive(InjectButton, true)
         return
     end
 
@@ -4038,18 +4045,7 @@ local function injectScript()
 
         if phase2Ok then
             task.spawn(function() pcall(setBtnState, "success") end)
-            InjectButton.Text = "Loaded! Closing in 5s..."
-            setButtonActive(InjectButton, false)
-            task.wait(5)
-            clearText()
-            pcall(function()
-                TweenService:Create(MainBackground, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-                    Size = UDim2.new(0, 0, 0, 0), ImageTransparency = 1
-                }):Play()
-            end)
-            task.wait(0.35)
-            cleanupAntiFeatures()
-            if RealZzHub then RealZzHub:Destroy() end
+            setButtonActive(InjectButton, true)
             return
         end
     end
@@ -4445,7 +4441,23 @@ end)
 InjectButton.MouseButton1Click:Connect(function()
     if not InjectButton.Active then return end
     task.spawn(function()
+        local _injectDone = false
+        -- 5-second stuck watchdog: if still loading after 5s, destroy GUI
+        task.spawn(function()
+            task.wait(5)
+            if _injectDone then return end
+            clearText()
+            pcall(function()
+                TweenService:Create(MainBackground, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+                    Size = UDim2.new(0, 0, 0, 0), ImageTransparency = 1
+                }):Play()
+            end)
+            task.wait(0.35)
+            cleanupAntiFeatures()
+            if RealZzHub then RealZzHub:Destroy() end
+        end)
         injectScript()
+        _injectDone = true
         if not injected then return end
         InjectButton.Text = "Injecting..."
         TweenService:Create(MainBackground, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
