@@ -4440,33 +4440,36 @@ end)
 
 InjectButton.MouseButton1Click:Connect(function()
     if not InjectButton.Active then return end
-    task.spawn(function()
-        local _injectDone = false
-        -- 5-second stuck watchdog: if still loading after 5s, destroy GUI
-        task.spawn(function()
-            task.wait(5)
-            if _injectDone then return end
-            clearText()
-            pcall(function()
-                TweenService:Create(MainBackground, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-                    Size = UDim2.new(0, 0, 0, 0), ImageTransparency = 1
-                }):Play()
-            end)
-            task.wait(0.35)
-            cleanupAntiFeatures()
-            if RealZzHub then RealZzHub:Destroy() end
-        end)
-        injectScript()
-        _injectDone = true
-        if not injected then return end
-        InjectButton.Text = "Injecting..."
-        TweenService:Create(MainBackground, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-            Size = UDim2.new(0, 0, 0, 0), ImageTransparency = 1
-        }):Play()
+
+    local _guiDestroyed: boolean = false
+    local function _destroyGui()
+        if _guiDestroyed then return end
+        _guiDestroyed = true
         clearText()
+        pcall(function()
+            TweenService:Create(MainBackground, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+                Size = UDim2.new(0, 0, 0, 0), ImageTransparency = 1
+            }):Play()
+        end)
         task.wait(0.35)
         cleanupAntiFeatures()
         if RealZzHub then RealZzHub:Destroy() end
+    end
+
+    -- Hard 5-second watchdog: destroys GUI regardless of what HttpGet is doing
+    task.spawn(function()
+        task.wait(5)
+        if _guiDestroyed then return end
+        _destroyGui()
+    end)
+
+    -- Run inject in its own thread
+    task.spawn(function()
+        injectScript()
+        if _guiDestroyed then return end  -- watchdog already fired
+        if not injected then return end
+        InjectButton.Text = "Injecting..."
+        _destroyGui()
     end)
 end)
 
