@@ -4422,15 +4422,18 @@ end)
 
 InjectButton.MouseButton1Click:Connect(function()
     if not InjectButton.Active then return end
-    injectScript()
-    InjectButton.Text = "Injecting..."
-    TweenService:Create(MainBackground, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-        Size = UDim2.new(0, 0, 0, 0), ImageTransparency = 1
-    }):Play()
-    clearText()
-    task.wait(0.35)
-    cleanupAntiFeatures()
-    if RealZzHub then RealZzHub:Destroy() end
+    task.spawn(function()
+        injectScript()
+        if not injected then return end
+        InjectButton.Text = "Injecting..."
+        TweenService:Create(MainBackground, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            Size = UDim2.new(0, 0, 0, 0), ImageTransparency = 1
+        }):Play()
+        clearText()
+        task.wait(0.35)
+        cleanupAntiFeatures()
+        if RealZzHub then RealZzHub:Destroy() end
+    end)
 end)
 
 -- UIScale on the panel for the open punch effect
