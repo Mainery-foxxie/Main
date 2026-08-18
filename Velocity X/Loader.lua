@@ -4073,6 +4073,14 @@ end
 
 local function performAutoInject()
     if injected then return end
+    -- 5s watchdog via engine scheduler so HttpGet hang can't block it
+    delay(5, function()
+        if not RealZzHub or not RealZzHub.Parent then return end
+        local txt = InjectButton.Text or ""
+        if txt:find("Loading") or txt:find("Fallback") then
+            pcall(function() RealZzHub:Destroy() end)
+        end
+    end)
     injectScript()
     if not injected then return end
     InjectButton.Text = "Injecting..."
@@ -4441,22 +4449,12 @@ end)
 InjectButton.MouseButton1Click:Connect(function()
     if not InjectButton.Active then return end
 
-    -- Watchdog: every 0.1s check if still stuck on Loading text; if so for 5s straight, destroy
-    task.spawn(function()
-        local stuckTimer = 0
-        while true do
-            task.wait(0.1)
-            if not RealZzHub or not RealZzHub.Parent then break end
-            local txt = InjectButton.Text or ""
-            if txt:find("Loading") or txt:find("Fallback") then
-                stuckTimer = stuckTimer + 0.1
-                if stuckTimer >= 5 then
-                    pcall(function() RealZzHub:Destroy() end)
-                    break
-                end
-            else
-                stuckTimer = 0
-            end
+    -- Use delay() — runs on engine scheduler, not blocked by HttpGet hanging in other threads
+    delay(5, function()
+        if not RealZzHub or not RealZzHub.Parent then return end
+        local txt = InjectButton.Text or ""
+        if txt:find("Loading") or txt:find("Fallback") then
+            pcall(function() RealZzHub:Destroy() end)
         end
     end)
 
