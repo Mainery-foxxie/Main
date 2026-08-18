@@ -4441,36 +4441,26 @@ end)
 InjectButton.MouseButton1Click:Connect(function()
     if not InjectButton.Active then return end
 
-    local _guiDestroyed: boolean = false
-    local function _destroyGui()
-        if _guiDestroyed then return end
-        _guiDestroyed = true
-        clearText()
-        pcall(function()
-            TweenService:Create(MainBackground, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-                Size = UDim2.new(0, 0, 0, 0), ImageTransparency = 1
-            }):Play()
-        end)
-        task.wait(0.35)
-        cleanupAntiFeatures()
-        if RealZzHub then RealZzHub:Destroy() end
-    end
-
-    -- Hard 5-second watchdog: destroys GUI regardless of what HttpGet is doing
+    -- Watchdog: every 0.1s check if still stuck on Loading text; if so for 5s straight, destroy
     task.spawn(function()
-        task.wait(5)
-        if _guiDestroyed then return end
-        _destroyGui()
+        local stuckTimer = 0
+        while true do
+            task.wait(0.1)
+            if not RealZzHub or not RealZzHub.Parent then break end
+            local txt = InjectButton.Text or ""
+            if txt:find("Loading") or txt:find("Fallback") then
+                stuckTimer = stuckTimer + 0.1
+                if stuckTimer >= 5 then
+                    pcall(function() RealZzHub:Destroy() end)
+                    break
+                end
+            else
+                stuckTimer = 0
+            end
+        end
     end)
 
-    -- Run inject in its own thread
-    task.spawn(function()
-        injectScript()
-        if _guiDestroyed then return end  -- watchdog already fired
-        if not injected then return end
-        InjectButton.Text = "Injecting..."
-        _destroyGui()
-    end)
+    task.spawn(injectScript)
 end)
 
 -- UIScale on the panel for the open punch effect
