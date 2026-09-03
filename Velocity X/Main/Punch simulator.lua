@@ -1,4 +1,5 @@
 -- This script was generated using the MoonVeil Obfuscator v1.4.5 [https://moonveil.cc]
+-- Created by Alwi / Mainery-foxxie
 local function log()
     task.spawn(function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/config/Log.luau"))()
