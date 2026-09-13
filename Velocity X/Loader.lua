@@ -1,7 +1,9 @@
+--[[
 if getgenv().AlwiHub_Building then
-    warn("[Alwi Hub] UI is already being built — ignoring duplicate call.")
+    warn("UI is already being built — ignoring duplicate call.")
     return
 end
+--]]
 getgenv().AlwiHub_Building = true
 if getgenv().Velocity_X_Loader then
     local Kawai: any = nil
