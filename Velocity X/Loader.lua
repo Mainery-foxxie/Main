@@ -1,71 +1,93 @@
--- Created by Alwi / Mainery-foxxie
 if getgenv().Velocity_X_Loader then
-    local Notify: any = nil
+    local Kawai: any = nil
     pcall(function()
-        Notify = loadstring(game:HttpGet(
-            "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/UI%20Libary/Nofication/BocusLuke.lua"
-        ))()
+        local source = game:HttpGet("https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/UI%20Libary/Kawai%20Lib/Source.luau", true)
+        local func = loadstring(source)
+        if not func then error("Kawai Lib failed to compile") end
+        Kawai = func()
     end)
-    if Notify then
+    if Kawai then
+        local ALWI_RED: Color3 = Color3.fromRGB(255, 80, 80)
         pcall(function()
-            Notify:Notify({
+            Kawai.Notify({
                 Title = "Alwi Hub",
-                Description = "This session is already loaded. Do you want to delete the config file?",
-            }, {
-                OutlineColor = Color3.fromRGB(255, 80, 80),
-                Time = 10,
-                Type = "option",
-            }, {
-                Callback = function(choice: boolean)
-                    if choice then
-                        local CONFIG_FILE: string = "Alwi Hub/AlwiHub_Settings.json"
-                        local deleted: boolean = false
-                        if isfile and delfile then
+                Desc = "This session is already loaded. Do you want to delete the config file?",
+                Type = "warning",
+                Duration = 15,
+                Icon = "103887859853708",
+                Color = { ALWI_RED, ALWI_RED },
+                Buttons = {
+                    {
+                        Title = "Yes, delete",
+                        Primary = true,
+                        Callback = function()
+                            local CONFIG_FILE: string = "Alwi Hub/AlwiHub_Settings.json"
+                            local deleted: boolean = false
+                            if isfile and delfile then
+                                pcall(function()
+                                    if isfile(CONFIG_FILE) then
+                                        delfile(CONFIG_FILE)
+                                        deleted = true
+                                        getgenv().Velocity_X_Loader = false
+                                    end
+                                end)
+                            end
+                            if deleted then
+                                pcall(function()
+                                    Kawai.Notify({
+                                        Title = "Config Deleted",
+                                        Desc = "Settings file has been removed.",
+                                        Type = "success",
+                                        Duration = 3,
+                                        Icon = "103887859853708",
+                                        Color = { ALWI_RED, ALWI_RED },
+                                    })
+                                end)
+                            end
+                        end,
+                    },
+                    {
+                        Title = "No",
+                        Callback = function()
                             pcall(function()
-                                if isfile(CONFIG_FILE) then
-                                    delfile(CONFIG_FILE)
-                                    deleted = true
-                                    getgenv().Velocity_X_Loader = false
-                                end
-                            end)
-                        end
-                        if deleted then
-                            pcall(function()
-                                Notify:Notify({
-                                    Title = "Config Deleted",
-                                    Description = "Settings file has been removed.",
-                                }, {
-                                    OutlineColor = Color3.fromRGB(255, 100, 100),
-                                    Time = 3,
-                                    Type = "default",
-                                }, {
-                                    Image = "rbxassetid://103887859853708",
-                                    ImageColor = Color3.fromRGB(255, 255, 255),
+                                Kawai.Notify({
+                                    Title = "Loader Already Running",
+                                    Desc = "Alwi Hub is already active in this session.",
+                                    Type = "info",
+                                    Duration = 4,
+                                    Icon = "103887859853708",
+                                    Color = { ALWI_RED, ALWI_RED },
                                 })
                             end)
-                        end
-                    else
-                        pcall(function()
-                            Notify:Notify({
-                                Title = "Loader Already Running",
-                                Description = "Alwi Hub is already active in this session.",
-                            }, {
-                                OutlineColor = Color3.fromRGB(255, 50, 50),
-                                Time = 4,
-                                Type = "default",
-                            }, {
-                                Image = "rbxassetid://103887859853708",
-                                ImageColor = Color3.fromRGB(255, 255, 255),
-                            })
-                        end)
-                    end
-                end
+                        end,
+                    },
+                },
             })
         end)
     else
         warn("Alwi hub is already active.")
     end
-    return
+    pcall(function()
+        local containers: {Instance} = {}
+        local okCg: boolean, cg: any = pcall(game.GetService, game, "CoreGui")
+        if okCg and typeof(cg) == "Instance" then table.insert(containers, cg) end
+        local _gh: any = rawget(_G, "gethui")
+        if type(_gh) == "function" then
+            local okH: boolean, h: any = pcall(_gh)
+            if okH and typeof(h) == "Instance" then table.insert(containers, h) end
+        end
+        for _, c: Instance in containers do
+            for _, g: Instance in c:GetChildren() do
+                if g:IsA("ScreenGui") then
+                    local n: string = g.Name
+                    if n == "AlwiPerfHudGui" or n == "AlwiTourGui"
+                        or (type(n) == "string" and n:sub(1, 9) == "Velocity_") then
+                        pcall(function() (g :: ScreenGui):Destroy() end)
+                    end
+                end
+            end
+        end
+    end)
 end
 
 getgenv().Velocity_X_Loader = true
@@ -144,19 +166,16 @@ else
     CoreGui = cloneref(game:GetService("CoreGui"))
 end
 
--- ── neriumR icon pack ────────────────────────────────────────────────────────
 local icons: {[string]: string} = {}
 pcall(function()
     local loaded = loadstring(game:HttpGet(
         "https://raw.githubusercontent.com/Van1a/neriumR/refs/heads/main/components/icons.lua"
-    ))().assets  -- key is .assets (NOT .assest)
+    ))().assets
     if loaded and type(loaded) == "table" then icons = loaded end
 end)
--- Get icon asset ID, falls back to "" so callers never crash
 local function icon(name: string): string
     return icons["lucide-" .. name] or ""
 end
--- Create a small ImageLabel icon inline (used in rows/headers)
 local function makeIconLabel(parent: Instance, assetId: string, size: number, col: Color3?): ImageLabel
     local img: ImageLabel = Instance.new("ImageLabel", parent)
     img.BackgroundTransparency = 1
@@ -335,7 +354,6 @@ if not _earlySkipIntro then
         end
     end)
 
-    -- Scanline vignette overlay on intro
     local scanlineVig: Frame = Instance.new("Frame", gui)
     scanlineVig.Size               = UDim2.new(1, 0, 1, 0)
     scanlineVig.BackgroundColor3   = Color3.new(0, 0, 0)
@@ -448,22 +466,28 @@ if _earlySkipIntro then
     pcall(function() gui:Destroy() end)
 end
 
-local Notify: any = nil
+local Kawai: any = nil
 do
 local notifyOk: boolean, notifyErr: any = pcall(function()
-    local src: string = game:HttpGet(
-        "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/UI%20Libary/Nofication/BocusLuke.lua"
+    local source = game:HttpGet(
+        "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/UI%20Libary/Kawai%20Lib/Source.luau", true
     )
-    if not src or #src == 0 then error("Empty notification library response") end
-    Notify = loadstring(src)()
+    if not source or #source == 0 then error("Empty Kawai library response") end
+    local func = loadstring(source)
+    if not func then error("Kawai Lib failed to compile") end
+    Kawai = func()
 end)
 
 if not notifyOk then
     print("[VelocityX] ❌ Notification UI failed to load.")
     print("[VelocityX] Reason: " .. tostring(notifyErr))
-    print("[VelocityX] Falling back to print-based notifications.")
+    print("[VelocityX] Falling back to core notifications.")
 end
-end -- notifyOk
+end
+
+local ALWI_ICON: string = "103887859853708"
+local HUB_GREEN: Color3 = Color3.fromRGB(0, 255, 150)
+local HUB_BLUE:  Color3 = Color3.fromRGB(0, 170, 255)
 
 local function showNotification(
     title: string,
@@ -472,22 +496,26 @@ local function showNotification(
     duration: number?,
     imageId: string?
 )
-    if Notify then
+    local col: Color3 = outlineColor or HUB_BLUE
+    if Kawai and Kawai.Notify then
         pcall(function()
-            Notify:Notify({
-                Title       = title,
-                Description = desc,
-            }, {
-                OutlineColor = outlineColor or Color3.fromRGB(0, 170, 255),
-                Time         = duration or 4,
-                Type         = "default",
-            }, {
-                Image      = imageId or "rbxassetid://103887859853708",
-                ImageColor = Color3.fromRGB(255, 255, 255),
+            Kawai.Notify({
+                Title    = title,
+                Desc     = desc,
+                Type     = "info",
+                Duration = duration or 4,
+                Icon     = imageId or ALWI_ICON,
+                Color    = { col, col },
             })
         end)
     else
-
+        pcall(function()
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title    = title,
+                Text     = desc,
+                Duration = duration or 4,
+            })
+        end)
         print("[VelocityX] 🔔 " .. title .. " | " .. desc)
     end
 end
@@ -608,6 +636,19 @@ if not RealZzHub.Parent then
     RealZzHub.Parent = CoreGui
 end
 
+local LoaderScale: UIScale = Instance.new("UIScale", RealZzHub)
+LoaderScale.Scale = 1
+local function fitLoaderScale()
+    pcall(function()
+        local vp: Vector2 = workspace.CurrentCamera.ViewportSize
+        LoaderScale.Scale = math.clamp(math.min(vp.X / 1100, vp.Y / 650), 0.62, 1)
+    end)
+end
+fitLoaderScale()
+pcall(function()
+    workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(fitLoaderScale)
+end)
+
 local MainBackground: ImageLabel = Instance.new("ImageLabel", RealZzHub)
 MainBackground.AnchorPoint        = Vector2.new(0.5, 0.5)
 MainBackground.Position           = UDim2.new(0.5, 0, 0.5, 0)
@@ -645,7 +686,6 @@ do
     Corner.CornerRadius = UDim.new(0, 8)
 end
 
--- Top glass highlight strip
 local TopShimmer: Frame = Instance.new("Frame", MainBackground)
 TopShimmer.Size             = UDim2.new(0.7, 0, 0, 1)
 TopShimmer.Position         = UDim2.new(0.15, 0, 0, 2)
@@ -669,7 +709,6 @@ do
     }
 end
 
--- Accent bar on bottom of header
 local HeaderAccent: Frame = Instance.new("Frame", MainBackground)
 HeaderAccent.Size             = UDim2.new(1, 0, 0, 1)
 HeaderAccent.Position         = UDim2.new(0, 0, 0, 32)
@@ -731,7 +770,6 @@ InjectButton.AutoButtonColor      = false
 
 Instance.new("UICorner", InjectButton).CornerRadius = UDim.new(0, 8)
 
--- Pulse glow ring behind button
 local BtnGlowRing: Frame = Instance.new("Frame", MainBackground)
 BtnGlowRing.AnchorPoint        = Vector2.new(0.5, 0.5)
 BtnGlowRing.Position           = UDim2.new(0.5, 0, 0.48, 0)
@@ -792,12 +830,11 @@ local _btnSuccessGrad: ColorSequence = ColorSequence.new{
     ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 180, 80)),
 }
 
-local function setBtnState(state: string) -- "normal" | "error" | "success" | "loading"
+local function setBtnState(state: string)
     pcall(function()
         if state == "error" then
             BtnGradient.Color = _btnErrorGrad
             BtnStroke.Color   = Color3.fromRGB(255, 80, 80)
-            -- shake
             for _ = 1, 3 do
                 TweenService:Create(BtnScale, TweenInfo.new(0.055, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { Scale = 1.03 }):Play()
                 task.wait(0.06)
@@ -820,7 +857,7 @@ local function setBtnState(state: string) -- "normal" | "error" | "success" | "l
                     TweenService:Create(BtnScale, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Scale = 1 }):Play()
                 end)
             end)
-        else -- normal / loading
+        else
             BtnGradient.Color = _btnNormalGrad
             BtnStroke.Color   = Color3.fromRGB(0, 255, 150)
         end
@@ -866,11 +903,10 @@ Version.TextStrokeTransparency = 0.6
 Version.TextStrokeColor3   = Color3.fromRGB(0, 0, 0)
 Version.Visible            = false
 
--- ── Discord invite resolver (mirrors discord.luau) ───────────────────────────
 local _DISCORD_INVITE_CODE: string = "mJm4etTYjk"
 local _DISCORD_SERVER_ID:   string = "1525943679133552811"
 local _DISCORD_BASE_URL:    string = "https://discord.gg/" .. _DISCORD_INVITE_CODE
-local DISCORD_LINK: string         = _DISCORD_BASE_URL  -- updated async below
+local DISCORD_LINK: string         = _DISCORD_BASE_URL
 
 local _DISCORD_HEADERS: {[string]: string} = {
     ["Accept"]     = "application/json",
@@ -941,22 +977,20 @@ local function _discordResolveLink(): string
     return _DISCORD_BASE_URL
 end
 
--- Resolve link in background and show hello notification on first load
 task.spawn(function()
     local ok, resolved = pcall(_discordResolveLink)
     DISCORD_LINK = (ok and type(resolved) == "string") and resolved or _DISCORD_BASE_URL
 
-    -- Greet the user by name now that the link is ready
     local displayName: string = "Player"
     pcall(function() displayName = Players.LocalPlayer.DisplayName end)
 
-    task.wait(1.5) -- let the main UI finish its reveal animation first
+    task.wait(1.5)
     pcall(showNotification,
         "Welcome, " .. displayName .. "! 👋",
         "Alwi Hub is ready. Join our Discord for updates!",
         Color3.fromRGB(0, 200, 255),
         5,
-        "rbxassetid://7733960981"  -- Discord logo icon
+        "rbxassetid://7733960981"
     )
 end)
 
@@ -991,8 +1025,9 @@ GCardIcon.AnchorPoint           = Vector2.new(0, 0.5)
 GCardIcon.Position              = UDim2.new(0, 5, 0.5, 0)
 GCardIcon.Size                  = UDim2.new(0, 13, 0, 13)
 GCardIcon.BackgroundTransparency = 1
-GCardIcon.Image                 = "rbxassetid://94937742565147"
-GCardIcon.ImageTransparency     = 1
+GCardIcon.Image                 = icon("star")
+GCardIcon.ImageColor3           = Color3.fromRGB(0, 255, 150)
+GCardIcon.ImageTransparency     = 0
 GCardIcon.ScaleType             = Enum.ScaleType.Fit
 
 local GreetingLabel: TextLabel = Instance.new("TextLabel", GreetingCard)
@@ -1024,9 +1059,8 @@ GCardSub.TextXAlignment         = Enum.TextXAlignment.Left
 GCardSub.TextColor3             = Color3.fromRGB(160, 160, 255)
 GCardSub.TextTransparency       = 1
 GCardSub.Text = DISCORD_LINK
--- Update label once the async resolver finishes
 task.spawn(function()
-    task.wait(0.1) -- yield so the resolver task.spawn above can set DISCORD_LINK first
+    task.wait(0.1)
     repeat task.wait(0.2) until DISCORD_LINK ~= _DISCORD_BASE_URL or task.wait(3)
     pcall(function() GCardSub.Text = DISCORD_LINK end)
 end)
@@ -1079,6 +1113,8 @@ local function ApplyGreetingState()
         GCardBar.BackgroundColor3  = Color3.fromRGB(88, 101, 242)
         GCardStroke.Color          = Color3.fromRGB(88, 101, 242)
         GCardStroke.Transparency   = 0.4
+        GCardIcon.Image            = "rbxassetid://94937742565147"
+        GCardIcon.ImageColor3      = Color3.fromRGB(255, 255, 255)
     else
 
         GreetingCard.Size          = UDim2.new(0.60, 0, 0, 24)
@@ -1089,6 +1125,10 @@ local function ApplyGreetingState()
         GCardBar.BackgroundColor3  = Color3.fromRGB(0, 255, 150)
         GCardStroke.Color          = Color3.fromRGB(0, 200, 255)
         GCardStroke.Transparency   = 0.55
+        local _gi: string = icon("party-popper")
+        if _gi == "" then _gi = icon("star") end
+        GCardIcon.Image            = _gi
+        GCardIcon.ImageColor3      = Color3.fromRGB(0, 255, 150)
     end
 end
 
@@ -1100,7 +1140,6 @@ pcall(UpdateGreeting)
 
 GCardClick.MouseButton1Click:Connect(function()
     if not _greetingShowDiscord then return end
-    -- Optimistically copy cached link immediately, then refresh in background
     _discordCopyToClipboard(DISCORD_LINK)
     task.spawn(function()
         local ok, fresh = pcall(_discordResolveLink)
@@ -1194,6 +1233,140 @@ SettingsIcon.ImageTransparency = 0.2
 
 local SettingsIconScale: UIScale = Instance.new("UIScale", SettingsIcon)
 SettingsIconScale.Scale = 1
+
+local PerfHudGui: ScreenGui = Instance.new("ScreenGui")
+PerfHudGui.Name           = "AlwiPerfHudGui"
+PerfHudGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+PerfHudGui.ResetOnSpawn   = false
+PerfHudGui.DisplayOrder   = 999998
+pcall(function()
+    for _, gui: Instance in CoreGui:GetChildren() do
+        if gui.Name == "AlwiPerfHudGui" then gui:Destroy() end
+    end
+end)
+pcall(function()
+    if _syn and _syn.protect_gui then
+        _syn.protect_gui(PerfHudGui)
+        PerfHudGui.Parent = CoreGui
+    else
+        local _gethui: any = rawget(_G, "gethui")
+        if _gethui then PerfHudGui.Parent = _gethui() end
+    end
+end)
+if not PerfHudGui.Parent then
+    PerfHudGui.Parent = CoreGui
+end
+
+local HudScale: UIScale = Instance.new("UIScale", PerfHudGui)
+HudScale.Scale = 1
+local function fitHudScale()
+    pcall(function()
+        local vp: Vector2 = workspace.CurrentCamera.ViewportSize
+        HudScale.Scale = math.clamp(math.min(vp.X / 1100, vp.Y / 650), 0.7, 1)
+    end)
+end
+fitHudScale()
+pcall(function()
+    workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(fitHudScale)
+end)
+
+local PerfHud: Frame = Instance.new("Frame", PerfHudGui)
+PerfHud.Name                   = "AlwiPerfHud"
+PerfHud.AnchorPoint            = Vector2.new(1, 0)
+PerfHud.Position               = UDim2.new(1, 340, 0, 10)
+PerfHud.Size                   = UDim2.new(0, 320, 0, 30)
+PerfHud.BackgroundColor3       = Color3.fromRGB(255, 255, 255)
+PerfHud.BackgroundTransparency = 0.7
+PerfHud.BorderSizePixel        = 0
+PerfHud.ZIndex                 = 40
+PerfHud.Visible                = true
+PerfHud.ClipsDescendants       = false
+Instance.new("UICorner", PerfHud).CornerRadius = UDim.new(0, 10)
+do
+    local PerfStroke: UIStroke = Instance.new("UIStroke", PerfHud)
+    PerfStroke.Color        = Color3.fromRGB(255, 255, 255)
+    PerfStroke.Thickness    = 3
+    PerfStroke.Transparency = 0
+    local PerfStrokeGrad: UIGradient = Instance.new("UIGradient", PerfStroke)
+    PerfStrokeGrad.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 120)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 170, 255)),
+    }
+    PerfStrokeGrad.Rotation = 45
+end
+do
+    local PerfShadow: Frame = Instance.new("Frame", PerfHud)
+    PerfShadow.Name                      = "GlowShadow"
+    PerfShadow.AnchorPoint               = Vector2.new(0.5, 0.5)
+    PerfShadow.Position                  = UDim2.new(0.5, 0, 0.5, 2)
+    PerfShadow.Size                      = UDim2.new(1, 8, 1, 8)
+    PerfShadow.BackgroundColor3          = Color3.fromRGB(0, 0, 0)
+    PerfShadow.BackgroundTransparency    = 0.6
+    PerfShadow.BorderSizePixel           = 0
+    PerfShadow.ZIndex                    = 39
+    Instance.new("UICorner", PerfShadow).CornerRadius = UDim.new(0, 13)
+end
+
+local function _makePerfSeg(xOff: number, segW: number, iconName: string, iconCol: Color3, title: string, valueColor: Color3): TextLabel
+    local iconImg: ImageLabel = Instance.new("ImageLabel", PerfHud)
+    iconImg.BackgroundTransparency = 1
+    iconImg.AnchorPoint = Vector2.new(0, 0.5)
+    iconImg.Position    = UDim2.new(0, xOff + 6, 0.5, 0)
+    iconImg.Size        = UDim2.new(0, 14, 0, 14)
+    iconImg.Image       = icon(iconName)
+    iconImg.ImageColor3 = iconCol
+    iconImg.ZIndex      = 41
+    local titleLbl: TextLabel = Instance.new("TextLabel", PerfHud)
+    titleLbl.BackgroundTransparency = 1
+    titleLbl.Position  = UDim2.new(0, xOff + 23, 0.5, -9)
+    titleLbl.Size      = UDim2.new(0, 52, 0, 18)
+    titleLbl.Font      = Enum.Font.Arcade
+    titleLbl.TextSize  = 11
+    titleLbl.TextXAlignment = Enum.TextXAlignment.Left
+    titleLbl.TextColor3     = Color3.fromRGB(20, 20, 20)
+    titleLbl.TextStrokeTransparency = 1
+    titleLbl.ZIndex         = 41
+    titleLbl.Text           = title
+    local valLbl: TextLabel = Instance.new("TextLabel", PerfHud)
+    valLbl.BackgroundTransparency = 1
+    valLbl.AnchorPoint = Vector2.new(1, 0.5)
+    valLbl.Position    = UDim2.new(0, xOff + segW - 6, 0.5, 0)
+    valLbl.Size        = UDim2.new(0, segW - 70, 0, 18)
+    valLbl.Font        = Enum.Font.Arcade
+    valLbl.TextSize    = 12
+    valLbl.TextXAlignment = Enum.TextXAlignment.Right
+    valLbl.TextColor3     = valueColor
+    valLbl.TextStrokeTransparency = 1
+    valLbl.ZIndex         = 41
+    valLbl.Text           = "—"
+    return valLbl
+end
+
+local function _makePerfDivider(xOff: number)
+    local div: Frame = Instance.new("Frame", PerfHud)
+    div.AnchorPoint      = Vector2.new(0, 0.5)
+    div.Position         = UDim2.new(0, xOff, 0.5, 0)
+    div.Size             = UDim2.new(0, 1, 0, 16)
+    div.BackgroundColor3 = Color3.fromRGB(0, 220, 160)
+    div.BackgroundTransparency = 0.45
+    div.BorderSizePixel  = 0
+    div.ZIndex           = 41
+end
+
+local PerfPingVal:    TextLabel = _makePerfSeg(0,   130, "signal", Color3.fromRGB(30, 120, 230),   "Ping :",    Color3.fromRGB(30, 120, 230))
+_makePerfDivider(130)
+local PerfFpsVal:     TextLabel = _makePerfSeg(130, 80,  "gauge",  Color3.fromRGB(0, 170, 80),    "FPS :",     Color3.fromRGB(0, 170, 80))
+_makePerfDivider(210)
+local PerfPlayersVal: TextLabel = _makePerfSeg(210, 110, "users",  Color3.fromRGB(0, 170, 230),   "Players :", Color3.fromRGB(20, 20, 20))
+
+local PerfHudDrag: UIDragDetector? = nil
+pcall(function()
+    local probe: UIDragDetector = Instance.new("UIDragDetector")
+    probe:Destroy()
+    local hudDrag: UIDragDetector = Instance.new("UIDragDetector")
+    hudDrag.Parent = PerfHud
+    PerfHudDrag = hudDrag
+end)
 
 local ConfirmFrame: ImageLabel = Instance.new("ImageLabel", MainBackground)
 ConfirmFrame.AnchorPoint        = Vector2.new(0.5, 0.5)
@@ -1448,8 +1621,6 @@ do
 end
 Instance.new("UICorner", TabIndicator).CornerRadius = UDim.new(1, 0)
 
--- Tab buttons: 3 tabs spanning full PANEL_W (234px) with 4px margins
--- Settings: 4..80 (w=76), Info: 82..156 (w=74), Credit: 158..230 (w=72)
 local function makeTabButton(
     text: string,
     xPos: number,
@@ -1465,10 +1636,9 @@ local function makeTabButton(
     btn.TextColor3         = Color3.fromRGB(140, 140, 140)
     btn.TextXAlignment     = Enum.TextXAlignment.Center
     btn.ZIndex             = 6
-    btn.Text               = ""  -- text drawn via label below so icon fits cleanly
+    btn.Text               = ""
     btn.AutoButtonColor    = false
 
-    -- Inner icon + label row (centered together)
     local row: Frame = Instance.new("Frame", btn)
     row.BackgroundTransparency = 1
     row.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -1506,7 +1676,6 @@ local TabBtnSettings: TextButton = makeTabButton("Settings", 4,   76, "settings"
 local TabBtnInfo:     TextButton = makeTabButton("Info",     82,  74, "info")
 local TabBtnCredit:   TextButton = makeTabButton("Credit",   158, 72, "star")
 
--- Icon color updater (called by switchTab and resetToSettingsTab)
 local function updateTabIcons(activeTab: string)
     local map: {[TextButton]: {iconName: string, tab: string}} = {
         [TabBtnSettings] = { iconName = "settings", tab = "settings" },
@@ -1588,7 +1757,6 @@ local function addInfoRow(iconName: string, label: string, value: string, col: C
     row.LayoutOrder            = _infoOrder
     Instance.new("UICorner", row).CornerRadius = UDim.new(0, 3)
 
-    -- Icon image
     local iconImg: ImageLabel = Instance.new("ImageLabel", row)
     iconImg.BackgroundTransparency = 1
     iconImg.AnchorPoint = Vector2.new(0, 0.5)
@@ -1675,7 +1843,6 @@ local function addCopyRow(iconName: string, label: string, value: string, col: C
     row.ZIndex                 = 4
     row.LayoutOrder            = _infoOrder
 
-    -- Row icon
     local iconImg: ImageLabel = Instance.new("ImageLabel", row)
     iconImg.BackgroundTransparency = 1
     iconImg.AnchorPoint = Vector2.new(0, 0.5)
@@ -1696,7 +1863,6 @@ local function addCopyRow(iconName: string, label: string, value: string, col: C
     lbl.ZIndex         = 4
     lbl.Text           = label
 
-    -- Copy button with clipboard icon
     local copyBtn: TextButton = Instance.new("TextButton", row)
     copyBtn.BackgroundColor3       = Color3.fromRGB(0, 150, 200)
     copyBtn.BackgroundTransparency = 0.75
@@ -1711,7 +1877,6 @@ local function addCopyRow(iconName: string, label: string, value: string, col: C
     copyBtn.TextTruncate           = Enum.TextTruncate.AtEnd
     Instance.new("UICorner", copyBtn).CornerRadius = UDim.new(0, 3)
 
-    -- Clipboard icon inside copy button
     local copyIconImg: ImageLabel = Instance.new("ImageLabel", copyBtn)
     copyIconImg.BackgroundTransparency = 1
     copyIconImg.AnchorPoint = Vector2.new(0, 0.5)
@@ -1722,7 +1887,7 @@ local function addCopyRow(iconName: string, label: string, value: string, col: C
     copyIconImg.ZIndex      = 6
 
     local shortVal: string = #value > 14 and value:sub(1, 11) .. "…" or value
-    copyBtn.Text = "  " .. shortVal  -- leading space for icon room
+    copyBtn.Text = "  " .. shortVal
 
     copyBtn.MouseButton1Click:Connect(function()
         pcall(setclipboard, value)
@@ -2054,7 +2219,7 @@ AvatarCard.BorderSizePixel    = 0
 AvatarCard.ZIndex             = 4
 AvatarCard.ClipsDescendants   = false
 Instance.new("UICorner", AvatarCard).CornerRadius = UDim.new(0, 8)
-do -- AvatarCardStroke
+do
     local AvatarCardStroke: UIStroke = Instance.new("UIStroke", AvatarCard)
     AvatarCardStroke.Color        = Color3.fromRGB(0, 255, 150)
     AvatarCardStroke.Thickness    = 1.5
@@ -2077,7 +2242,6 @@ do -- AvatarCardStroke
     end)
 end
 
--- Avatar image
 local AvatarImg: ImageLabel = Instance.new("ImageLabel", AvatarCard)
 AvatarImg.AnchorPoint        = Vector2.new(0, 0)
 AvatarImg.Position           = UDim2.new(0, 6, 0, 6)
@@ -2122,7 +2286,6 @@ AvatarLoadingLbl.TextSize          = 10
 AvatarLoadingLbl.TextColor3        = Color3.fromRGB(0, 200, 255)
 AvatarLoadingLbl.ZIndex            = 6
 
--- Name / Title / Status / Button
 do
     local CreatorName: TextLabel = Instance.new("TextLabel", AvatarCard)
     CreatorName.Position           = UDim2.new(0, 62, 0, 6)
@@ -2137,7 +2300,6 @@ do
     CreatorName.TextStrokeColor3   = Color3.fromRGB(0, 0, 0)
     CreatorName.ZIndex             = 5
 
-    -- "Owner" tag pill right beside the name
     local OwnerTagPill: Frame = Instance.new("Frame", AvatarCard)
     OwnerTagPill.Position        = UDim2.new(0, 96, 0, 7)
     OwnerTagPill.Size            = UDim2.new(0, 40, 0, 12)
@@ -2248,7 +2410,6 @@ RobloxBadge.MouseButton1Click:Connect(function()
     task.delay(2, function() pcall(function() RobloxBadge.Text = "Roblox Profile" end) end)
 end)
 
--- ── Divider 1 ─────────────────────────────────────────────────────────────
 do
     local Div1: Frame = Instance.new("Frame", AvatarCard)
     Div1.Position = UDim2.new(0, 4, 0, 68)
@@ -2259,7 +2420,6 @@ do
     Div1.ZIndex = 5
 end
 
--- ── About section ─────────────────────────────────────────────────────────
 do
     local AboutHdr: TextLabel = Instance.new("TextLabel", AvatarCard)
     AboutHdr.Position = UDim2.new(0, 6, 0, 71)
@@ -2297,7 +2457,6 @@ do
     FoxPaw.ZIndex      = 5
 end
 
--- ── Divider 2 ─────────────────────────────────────────────────────────────
 do
     local Div2: Frame = Instance.new("Frame", AvatarCard)
     Div2.Position = UDim2.new(0, 4, 0, 128)
@@ -2308,7 +2467,6 @@ do
     Div2.ZIndex = 5
 end
 
--- ── Tags ──────────────────────────────────────────────────────────────────
 do
     local TagsHdr: TextLabel = Instance.new("TextLabel", AvatarCard)
     TagsHdr.Position = UDim2.new(0, 6, 0, 131)
@@ -2363,7 +2521,6 @@ do
     addATag(ARow2, "Ragebait",            Color3.fromRGB(200, 50,  50))
 end
 
--- ── Divider 3 ─────────────────────────────────────────────────────────────
 do
     local Div3: Frame = Instance.new("Frame", AvatarCard)
     Div3.Position = UDim2.new(0, 4, 0, 181)
@@ -2374,7 +2531,6 @@ do
     Div3.ZIndex = 5
 end
 
--- ── Social ────────────────────────────────────────────────────────────────
 do
     local SocialHdr: TextLabel = Instance.new("TextLabel", AvatarCard)
     SocialHdr.Position = UDim2.new(0, 6, 0, 184)
@@ -2412,7 +2568,6 @@ do
     SocialPad.PaddingBottom = UDim.new(0, 4)
 end
 
--- Social button builder
 local function makeSocialBtn(
     iconId: string,
     imgId: string?,
@@ -2437,7 +2592,6 @@ local function makeSocialBtn(
         btnStroke.Transparency = 0.5
     end
 
-    -- Icon image
     local img: ImageLabel = Instance.new("ImageLabel", btn)
     img.AnchorPoint            = Vector2.new(0.5, 0)
     img.Position               = UDim2.new(0.5, 0, 0, 4)
@@ -2447,7 +2601,6 @@ local function makeSocialBtn(
     img.ImageColor3            = Color3.fromRGB(255, 255, 255)
     img.ZIndex                 = 6
 
-    -- Label
     local lbl: TextLabel = Instance.new("TextLabel", btn)
     lbl.AnchorPoint            = Vector2.new(0.5, 1)
     lbl.Position               = UDim2.new(0.5, 0, 1, -4)
@@ -2475,20 +2628,18 @@ local function makeSocialBtn(
     end)
 end
 
--- Alwi's social links
 makeSocialBtn("94937742565147",   nil, "Discord", "https://discord.com/users/1136652082091409468", Color3.fromRGB(88,  101, 242), Color3.fromRGB(58,  30,  180))
 makeSocialBtn("140193697070787",  nil, "YouTube", "https://youtube.com/@IkuraJust",                Color3.fromRGB(255, 30,  30),  Color3.fromRGB(180, 0,   60))
 makeSocialBtn("99316223126384",   nil, "Roblox",  "https://www.roblox.com/users/1291925/profile",  Color3.fromRGB(226, 35,  26),  Color3.fromRGB(180, 60,  20))
 makeSocialBtn("117782741969829",  nil, "GitHub",  "https://github.com/mainery-foxxie",             Color3.fromRGB(30,  30,  30),  Color3.fromRGB(80,  80,  80))
 
--- ── Helper card: sinque ───────────────────────────────────────────────────
 local SINQUE_USER_ID: number = 1930806367
 
 local HelperAvatarImg: ImageLabel
 local HelperLoadingLbl: TextLabel
 local HelperRobloxBtnScale: UIScale
 
-do -- HelperCard construction
+do
 local HelperCard: Frame = Instance.new("Frame", CreditContent)
 HelperCard.LayoutOrder        = 2
 HelperCard.Size               = UDim2.new(1, 0, 0, 248)
@@ -2522,7 +2673,6 @@ do
     end)
 end
 
--- ── Avatar (same position/size as Alwi) ──────────────────────────────────
 HelperAvatarImg = Instance.new("ImageLabel", HelperCard)
 HelperAvatarImg.AnchorPoint       = Vector2.new(0, 0)
 HelperAvatarImg.Position          = UDim2.new(0, 6, 0, 6)
@@ -2549,7 +2699,6 @@ HelperLoadingLbl.TextSize              = 10
 HelperLoadingLbl.TextColor3            = Color3.fromRGB(130, 100, 255)
 HelperLoadingLbl.ZIndex                = 6
 
--- ── Name / Title / Status / Button (right of avatar, same x=62 as Alwi) ────
 do
     local HelperName: TextLabel = Instance.new("TextLabel", HelperCard)
     HelperName.Position           = UDim2.new(0, 62, 0, 6)
@@ -2564,7 +2713,6 @@ do
     HelperName.TextStrokeColor3   = Color3.fromRGB(0, 0, 0)
     HelperName.ZIndex             = 5
 
-    -- "Helper" tag pill inline beside name
     local HelperTagPill: Frame = Instance.new("Frame", HelperCard)
     HelperTagPill.Position        = UDim2.new(0, 102, 0, 7)
     HelperTagPill.Size            = UDim2.new(0, 40, 0, 12)
@@ -2600,7 +2748,6 @@ do
     HelperTitle.ZIndex            = 5
 end
 
--- sinque status ring on avatar
 local HelperStatusRing: Frame = Instance.new("Frame", HelperAvatarImg)
 HelperStatusRing.AnchorPoint      = Vector2.new(1, 1)
 HelperStatusRing.Position         = UDim2.new(1, 3, 1, 3)
@@ -2619,7 +2766,6 @@ HelperStatusDot.BorderSizePixel  = 0
 HelperStatusDot.ZIndex           = 7
 Instance.new("UICorner", HelperStatusDot).CornerRadius = UDim.new(1, 0)
 
--- Status label (same y=34 as Alwi)
 local HelperStatusLabel: TextLabel = Instance.new("TextLabel", HelperCard)
 HelperStatusLabel.Position          = UDim2.new(0, 62, 0, 34)
 HelperStatusLabel.Size              = UDim2.new(1, -68, 0, 12)
@@ -2631,7 +2777,6 @@ HelperStatusLabel.TextXAlignment    = Enum.TextXAlignment.Left
 HelperStatusLabel.TextColor3        = STATUS_COLOR_OFFLINE
 HelperStatusLabel.ZIndex            = 5
 
--- Async fetch sinque's presence
 task.spawn(function()
     local ok, presType = pcall(function()
         local ps = game:GetService("Players")
@@ -2647,7 +2792,6 @@ task.spawn(function()
     end)
 end)
 
--- Roblox Profile button (same y=48 as Alwi)
 local HelperProfileBtn: TextButton = Instance.new("TextButton", HelperCard)
 HelperProfileBtn.Position          = UDim2.new(0, 62, 0, 48)
 HelperProfileBtn.Size              = UDim2.new(1, -68, 0, 16)
@@ -2687,7 +2831,6 @@ HelperProfileBtn.MouseButton1Click:Connect(function()
     task.delay(2, function() pcall(function() HelperProfileBtn.Text = "Roblox Profile" end) end)
 end)
 
--- ── Divider 1 ─────────────────────────────────────────────────────────────
 do
     local HDiv1: Frame = Instance.new("Frame", HelperCard)
     HDiv1.Position = UDim2.new(0, 4, 0, 78)
@@ -2698,7 +2841,6 @@ do
     HDiv1.ZIndex = 5
 end
 
--- ── About section ─────────────────────────────────────────────────────────
 do
     local HAboutHdr: TextLabel = Instance.new("TextLabel", HelperCard)
     HAboutHdr.Position = UDim2.new(0, 6, 0, 81)
@@ -2725,7 +2867,6 @@ do
     HBioText.ZIndex    = 5
 end
 
--- ── Divider 2 ─────────────────────────────────────────────────────────────
 do
     local HDiv2: Frame = Instance.new("Frame", HelperCard)
     HDiv2.Position = UDim2.new(0, 4, 0, 133)
@@ -2736,7 +2877,6 @@ do
     HDiv2.ZIndex = 5
 end
 
--- ── Tags ──────────────────────────────────────────────────────────────────
 do
     local HTagsHdr: TextLabel = Instance.new("TextLabel", HelperCard)
     HTagsHdr.Position = UDim2.new(0, 6, 0, 136)
@@ -2790,7 +2930,6 @@ do
     addHTag(HTagRow2, "Not like retarded", Color3.fromRGB(50,  180, 220))
 end
 
--- ── Divider 3 ─────────────────────────────────────────────────────────────
 do
     local HDiv3: Frame = Instance.new("Frame", HelperCard)
     HDiv3.Position = UDim2.new(0, 4, 0, 186)
@@ -2801,7 +2940,6 @@ do
     HDiv3.ZIndex = 5
 end
 
--- ── Social (coming soon) ──────────────────────────────────────────────────
 do
     local HSocialHdr: TextLabel = Instance.new("TextLabel", HelperCard)
     HSocialHdr.Position = UDim2.new(0, 6, 0, 189)
@@ -2827,9 +2965,8 @@ do
     HComingSoon.ZIndex   = 5
 end
 
-end -- HelperCard construction
+end
 
--- Load sinque's avatar async
 task.spawn(function()
     local ok, url = pcall(function()
         return Players:GetUserThumbnailAsync(
@@ -2851,7 +2988,6 @@ task.spawn(function()
     end
 end)
 
-
 local ACTIVE_COL:   Color3 = Color3.fromRGB(0, 255, 150)
 local INACTIVE_COL: Color3 = Color3.fromRGB(140, 140, 140)
 
@@ -2863,14 +2999,12 @@ local TAB_POSITIONS: {[string]: {xPos: number, width: number, btn: TextButton}} 
 
 local currentTab: string = "settings"
 
--- Tab order for direction detection (left → right)
 local function tabIndex(name: string): number
     local _tab_order = { "settings", "info", "credit" }
     for i, v in _tab_order do if v == name then return i end end
     return 1
 end
 
--- Content frame lookup
 local function getContent(name: string): GuiObject?
     if name == "settings" then return ScrollingFrame
     elseif name == "info"  then return InfoContent
@@ -2879,7 +3013,6 @@ local function getContent(name: string): GuiObject?
     return nil
 end
 
--- Per-button UIScale instances for press bounce
 local _btnScales: {[TextButton]: UIScale} = {}
 for _, tbl in TAB_POSITIONS do
     local s: UIScale = Instance.new("UIScale", tbl.btn)
@@ -2889,7 +3022,6 @@ end
 
 local _tabAnimating: boolean = false
 
--- Helpers: set/tween tab button label + icon color (defined before switchTab and resetToSettingsTab)
 local function setTabColor(btn: TextButton, col: Color3)
     local lbl  = btn:FindFirstChild("TabLabel", true)
     local iimg = btn:FindFirstChild("TabIcon",  true)
@@ -2920,19 +3052,15 @@ local function switchTab(tabName: string)
         return
     end
 
-    -- Detect direction: sliding right or left
     local fromIdx: number = tabIndex(fromName)
     local toIdx:   number = tabIndex(tabName)
-    local goRight: boolean = toIdx > fromIdx  -- new tab is to the right
-    local slideOut: number = goRight and -PANEL_W or  PANEL_W  -- old slides out left
-    local slideIn:  number = goRight and  PANEL_W or -PANEL_W  -- new enters from right
+    local goRight: boolean = toIdx > fromIdx
+    local slideOut: number = goRight and -PANEL_W or  PANEL_W
+    local slideIn:  number = goRight and  PANEL_W or -PANEL_W
 
-    -- Update currentTab now
     currentTab = tabName
 
-    -- ── Indicator animation ──────────────────────────────────────────────────
     local tbl: any = TAB_POSITIONS[tabName]
-    -- First squash indicator to a dot (width → 4), then stretch to new position
     pcall(function()
         TweenService:Create(TabIndicator,
             TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
@@ -2941,7 +3069,6 @@ local function switchTab(tabName: string)
     end)
     task.delay(0.12, function()
         pcall(function()
-            -- Snap X to roughly midpoint of destination while still squashed
             TabIndicator.Position = UDim2.new(0, tbl.xPos + tbl.width * 0.5 - 2, 1, 0)
             TweenService:Create(TabIndicator,
                 TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
@@ -2953,14 +3080,12 @@ local function switchTab(tabName: string)
         end)
     end)
 
-    -- ── Tab button colors + press bounce ─────────────────────────────────────
     for name: string, t: any in TAB_POSITIONS do
         local btn: TextButton = t.btn
         local isActive: boolean = (name == tabName)
         local sc: UIScale? = _btnScales[btn]
 
         if isActive then
-            -- Press squish then spring back
             if sc then
                 pcall(function()
                     TweenService:Create(sc,
@@ -2981,14 +3106,12 @@ local function switchTab(tabName: string)
                 tweenTabColor(btn, ACTIVE_COL, 0.20)
             end)
         else
-            -- Inactive buttons fade to grey
             pcall(function()
                 tweenTabColor(btn, INACTIVE_COL, 0.18)
             end)
         end
     end
 
-    -- ── Content slide-out (old frame) ────────────────────────────────────────
     if fromContent then
         fromContent.ClipsDescendants = true
         pcall(function()
@@ -3005,13 +3128,11 @@ local function switchTab(tabName: string)
         end)
     end
 
-    -- ── Content slide-in (new frame) ─────────────────────────────────────────
-    -- Position new frame off-screen in the incoming direction, make visible, slide to 0
     toContent.Position = UDim2.new(0, slideIn, 0, CONTENT_Y)
     toContent.Visible  = true
     toContent.ClipsDescendants = true
 
-    task.delay(0.10, function()  -- slight overlap so transition feels snappy
+    task.delay(0.10, function()
         pcall(function()
             TweenService:Create(toContent,
                 TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
@@ -3040,15 +3161,12 @@ local function resetToSettingsTab()
     setTabColor(TabBtnInfo,     INACTIVE_COL)
     setTabColor(TabBtnCredit,   INACTIVE_COL)
 
-    -- Reset button scales instantly
     for _, sc in _btnScales do sc.Scale = 1 end
 
     TabIndicator.Position = UDim2.new(0, 4, 1, 0)
     TabIndicator.Size     = UDim2.new(0, 76, 0, 2)
 end
 
--- Helper: set tab button active/inactive color on both child label and icon
--- ── Tab button hover glow ─────────────────────────────────────────────────
 local function connectTabHover(btn: TextButton)
     btn.MouseEnter:Connect(function()
         local lbl = btn:FindFirstChild("TabLabel", true)
@@ -3086,7 +3204,6 @@ TabBtnSettings.MouseButton1Click:Connect(function() switchTab("settings") end)
 TabBtnInfo.MouseButton1Click:Connect(function()     switchTab("info")     end)
 TabBtnCredit.MouseButton1Click:Connect(function()   switchTab("credit")   end)
 
--- Set initial active state
 setTabColor(TabBtnSettings, ACTIVE_COL)
 setTabColor(TabBtnInfo,     INACTIVE_COL)
 setTabColor(TabBtnCredit,   INACTIVE_COL)
@@ -3164,12 +3281,19 @@ task.spawn(function()
     end)
 
     while task.wait(1) do
+        if not PerfHudGui or not PerfHudGui.Parent then break end
 
         pcall(function()
             local now = tick()
             local fps = math.floor(fpsCount / (now - fpsTimer))
             fpsCount  = 0
             fpsTimer  = now
+            if PerfFpsVal then
+                PerfFpsVal.Text = string.format("%d", fps)
+                PerfFpsVal.TextColor3 = (fps >= 50) and Color3.fromRGB(0, 170, 80)
+                    or (fps >= 30) and Color3.fromRGB(200, 150, 0)
+                    or Color3.fromRGB(230, 60, 60)
+            end
             fpsValLbl.Text = string.format("%d fps", fps)
         end)
 
@@ -3177,7 +3301,19 @@ task.spawn(function()
             local ping = math.floor(
                 Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
             )
+            if PerfPingVal then
+                PerfPingVal.Text = string.format("%d ms", ping)
+                PerfPingVal.TextColor3 = (ping <= 80) and Color3.fromRGB(0, 170, 80)
+                    or (ping <= 180) and Color3.fromRGB(200, 150, 0)
+                    or Color3.fromRGB(230, 60, 60)
+            end
             pingValLbl.Text = string.format("%d ms", ping)
+        end)
+
+        pcall(function()
+            if PerfPlayersVal then
+                PerfPlayersVal.Text = tostring(#Players:GetPlayers())
+            end
         end)
 
         pcall(function()
@@ -3212,12 +3348,11 @@ local function addToggle(
     defaultValue: boolean,
     callback: ((val: boolean) -> ())?
 ): ToggleControl
-    -- Pill dimensions
     local PILL_W:   number = 34
     local PILL_H:   number = 18
     local THUMB_SZ: number = 12
-    local THUMB_OFF_X_ON:  number = PILL_W - THUMB_SZ - 3   -- thumb x when ON
-    local THUMB_OFF_X_OFF: number = 3                         -- thumb x when OFF
+    local THUMB_OFF_X_ON:  number = PILL_W - THUMB_SZ - 3
+    local THUMB_OFF_X_OFF: number = 3
 
     local COL_ON_A:    Color3 = Color3.fromRGB(0, 255, 120)
     local COL_ON_B:    Color3 = Color3.fromRGB(0, 170, 255)
@@ -3234,7 +3369,6 @@ local function addToggle(
     toggleFrame.ZIndex               = 2
     Instance.new("UICorner", toggleFrame).CornerRadius = UDim.new(0, 5)
 
-    -- Label
     local label: TextLabel = Instance.new("TextLabel", toggleFrame)
     label.BackgroundTransparency = 1
     label.Position          = UDim2.new(0, 8, 0, 0)
@@ -3246,7 +3380,6 @@ local function addToggle(
     label.TextXAlignment    = Enum.TextXAlignment.Left
     label.ZIndex            = 2
 
-    -- Pill track
     local pill: Frame = Instance.new("Frame", toggleFrame)
     pill.Name             = "Pill"
     pill.AnchorPoint      = Vector2.new(1, 0.5)
@@ -3263,7 +3396,6 @@ local function addToggle(
     pillStroke.Thickness   = 1.2
     pillStroke.Transparency = 0.2
 
-    -- Gradient fill overlay (only visible when ON)
     local pillFill: Frame = Instance.new("Frame", pill)
     pillFill.Size             = UDim2.new(1, 0, 1, 0)
     pillFill.BackgroundColor3 = Color3.fromRGB(255,255,255)
@@ -3278,7 +3410,6 @@ local function addToggle(
     }
     fillGrad.Rotation = 90
 
-    -- Thumb
     local thumb: Frame = Instance.new("Frame", pill)
     thumb.AnchorPoint      = Vector2.new(0, 0.5)
     thumb.Position         = UDim2.new(0, THUMB_OFF_X_OFF, 0.5, 0)
@@ -3296,7 +3427,6 @@ local function addToggle(
     local thumbScale: UIScale = Instance.new("UIScale", thumb)
     thumbScale.Scale = 1
 
-    -- Hover ripple
     local ripple: Frame = Instance.new("Frame", pill)
     ripple.AnchorPoint            = Vector2.new(0.5, 0.5)
     ripple.Position               = UDim2.new(0.5, 0, 0.5, 0)
@@ -3309,15 +3439,12 @@ local function addToggle(
 
     local function flashError()
         pcall(function()
-            -- revert value shown (already flipped back by caller)
-            -- red pill flash
             TweenService:Create(pill, TweenInfo.new(0.08), {
                 BackgroundColor3 = COL_ERROR
             }):Play()
             TweenService:Create(pillStroke, TweenInfo.new(0.08), {
                 Color = COL_ERROR, Transparency = 0
             }):Play()
-            -- thumb shake
             for _ = 1, 2 do
                 TweenService:Create(thumbScale, TweenInfo.new(0.055, Enum.EasingStyle.Sine), { Scale = 1.25 }):Play()
                 task.wait(0.065)
@@ -3326,7 +3453,6 @@ local function addToggle(
             end
             TweenService:Create(thumbScale, TweenInfo.new(0.14, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
             task.wait(0.55)
-            -- restore pill colour based on CURRENT (reverted) value
             TweenService:Create(pill, TweenInfo.new(0.22, Enum.EasingStyle.Quad), {
                 BackgroundColor3 = COL_OFF
             }):Play()
@@ -3341,12 +3467,10 @@ local function addToggle(
             local dur: number = instant and 0 or 0.22
             local style: Enum.EasingStyle = Enum.EasingStyle.Back
 
-            -- Slide thumb
             TweenService:Create(thumb, TweenInfo.new(dur, style, Enum.EasingDirection.Out), {
                 Position = UDim2.new(0, value and THUMB_OFF_X_ON or THUMB_OFF_X_OFF, 0.5, 0)
             }):Play()
 
-            -- Squish thumb on slide
             if not instant then
                 TweenService:Create(thumb, TweenInfo.new(dur * 0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     Size = UDim2.new(0, THUMB_SZ + 4, 0, THUMB_SZ - 2)
@@ -3360,7 +3484,6 @@ local function addToggle(
                 end)
             end
 
-            -- Pill background
             TweenService:Create(pill, TweenInfo.new(dur, Enum.EasingStyle.Quad), {
                 BackgroundColor3 = value and Color3.fromRGB(15, 25, 20) or COL_OFF
             }):Play()
@@ -3372,7 +3495,6 @@ local function addToggle(
                 Transparency = value and 0 or 0.2
             }):Play()
 
-            -- Label brightness
             TweenService:Create(label, TweenInfo.new(dur, Enum.EasingStyle.Quad), {
                 TextColor3 = value
                     and Color3.fromRGB(255, 255, 255)
@@ -3381,7 +3503,6 @@ local function addToggle(
         end)
     end
 
-    -- Transparent click overlay
     local clickBtn: TextButton = Instance.new("TextButton", toggleFrame)
     clickBtn.Name               = "Click"
     clickBtn.BackgroundTransparency = 1
@@ -3390,7 +3511,6 @@ local function addToggle(
     clickBtn.ZIndex             = 5
     clickBtn.AutoButtonColor    = false
 
-    -- Hover
     clickBtn.MouseEnter:Connect(function()
         pcall(function()
             TweenService:Create(thumbScale, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1.18 }):Play()
@@ -3404,7 +3524,6 @@ local function addToggle(
         end)
     end)
 
-    -- Press squish
     clickBtn.MouseButton1Down:Connect(function()
         pcall(function()
             TweenService:Create(thumbScale, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Scale = 0.85 }):Play()
@@ -3423,7 +3542,6 @@ local function addToggle(
         currentValue = not currentValue
         updateUI(currentValue)
 
-        -- Ripple on click
         pcall(function()
             ripple.Size                   = UDim2.new(0, 0, 0, 0)
             ripple.BackgroundTransparency = 0.7
@@ -3436,7 +3554,6 @@ local function addToggle(
             local ok: boolean, err: any = pcall(callback, currentValue)
             if not ok then
                 warn("[VelocityX] Toggle '" .. labelText .. "' callback error: " .. tostring(err))
-                -- Revert state and show error
                 currentValue = not currentValue
                 updateUI(currentValue)
                 task.spawn(flashError)
@@ -3447,7 +3564,7 @@ local function addToggle(
     return {
         Frame = toggleFrame,
         Get   = function(): boolean return currentValue end,
-        Set   = function(value: boolean)
+        Set   = function(_self: any, value: boolean)
             if value ~= currentValue then
                 currentValue = value
                 updateUI(currentValue)
@@ -3467,7 +3584,7 @@ end
 
 local CONFIG_FOLDER: string = "Alwi Hub"
 local CONFIG_FILE:   string = CONFIG_FOLDER .. "/AlwiHub_Settings.json"
-local CONFIG_VER:    string = "v1.1"
+local CONFIG_VER:    string = "v1.3"
 
 if makefolder then
     local folderOk: boolean = pcall(function()
@@ -3488,6 +3605,9 @@ type Config = {
     antiFling:          boolean,
     antiGameplayPause:  boolean,
     skipIntroUI:        boolean,
+    showPerfHud:        boolean,
+    skipTutorial:       boolean,
+    hudPos:             {number}?,
 }
 
 local config: Config = {
@@ -3498,6 +3618,9 @@ local config: Config = {
     antiFling          = false,
     antiGameplayPause  = false,
     skipIntroUI        = false,
+    showPerfHud        = true,
+    skipTutorial       = false,
+    hudPos             = nil,
 }
 
 local function loadConfig()
@@ -3516,6 +3639,18 @@ local function loadConfig()
         config.antiFling          = data.antiFling          == true
         config.antiGameplayPause  = data.antiGameplayPause  == true
         config.skipIntroUI        = data.skipIntroUI        == true
+        config.showPerfHud        = data.showPerfHud        ~= false
+        config.skipTutorial       = data.skipTutorial       == true
+        do
+            local hp: any = data.hudPos
+            if type(hp) == "table" and #hp == 4
+                and type(hp[1]) == "number" and type(hp[2]) == "number"
+                and type(hp[3]) == "number" and type(hp[4]) == "number" then
+                config.hudPos = { hp[1], hp[2], hp[3], hp[4] }
+            else
+                config.hudPos = nil
+            end
+        end
     end)
     if not loadOk then
         warn("[VelocityX] Config corrupted (" .. tostring(loadErr) .. ") — resetting to defaults.")
@@ -3546,20 +3681,20 @@ local function saveConfig()
             antiFling          = config.antiFling,
             antiGameplayPause  = config.antiGameplayPause,
             skipIntroUI        = config.skipIntroUI,
+            showPerfHud        = config.showPerfHud,
+            skipTutorial       = config.skipTutorial,
+            hudPos             = config.hudPos,
         })
         writefile(CONFIG_FILE, data)
     end)
 end
 
--- skipIntroUI must always be persisted regardless of autoSave,
--- because it is read BEFORE the main GUI loads (_earlySkipIntro).
 local function saveSkipIntro()
     if not writefile then return end
     pcall(function()
         if makefolder and isfolder and not isfolder(CONFIG_FOLDER) then
             makefolder(CONFIG_FOLDER)
         end
-        -- Merge with existing config so we don't wipe other saved keys
         local existing: {[string]: any} = {}
         if readfile and isfile and isfile(CONFIG_FILE) then
             pcall(function()
@@ -3576,10 +3711,31 @@ local function saveSkipIntro()
     end)
 end
 
--- Returns true if queue_on_teleport was found and queued, false if unsupported
+local function saveUiPrefs()
+    if not writefile then return end
+    pcall(function()
+        if makefolder and isfolder and not isfolder(CONFIG_FOLDER) then
+            makefolder(CONFIG_FOLDER)
+        end
+        local existing: {[string]: any} = {}
+        if readfile and isfile and isfile(CONFIG_FILE) then
+            pcall(function()
+                local raw: string = readfile(CONFIG_FILE)
+                local parsed: any = HttpService:JSONDecode(raw)
+                if type(parsed) == "table" then
+                    existing = parsed
+                end
+            end)
+        end
+        existing.showPerfHud  = config.showPerfHud
+        existing.skipTutorial = config.skipTutorial
+        existing.hudPos       = config.hudPos
+        existing._version     = CONFIG_VER
+        writefile(CONFIG_FILE, HttpService:JSONEncode(existing))
+    end)
+end
+
 local function setupAutoExecutorLoader(): boolean
-    -- getfenv() returns the script's own environment, which includes globals injected
-    -- by executors like Real that don't put them in _G
     local _env: {[string]: any} = getfenv()
     local queueFn: any =
         _env["queue_on_teleport"]
@@ -3591,7 +3747,6 @@ local function setupAutoExecutorLoader(): boolean
         or rawget(_G, "queueteleport")
         or (_fluxus and (_fluxus.queue_on_teleport or _fluxus.queueonteleport))
         or (_syn    and (_syn.queue_on_teleport    or _syn.queueonteleport))
-    -- Last resort: scan getrenv()
     if not queueFn then
         pcall(function()
             local renv = getrenv()
@@ -3648,18 +3803,78 @@ local injected:   boolean = false
 
 local UNIVERSAL_URL: string = "https://raw.githubusercontent.com/Mainery-foxxie/Main/ac587f929f922ff7fc1f682101631ad491e19f8d/Velocity%20X/Main/Universal/Main.lua"
 
+local BACKUP_API_URL: string = "https://pastefy.app/dqXuWWb4/raw"
+
+local function is404or503(err: string?): boolean
+    if type(err) ~= "string" or #err == 0 then return false end
+    return err:find("404") ~= nil or err:find("503") ~= nil
+end
+
+local function httpBodyIsError(body: any): boolean
+    if type(body) ~= "string" then return true end
+    if #body == 0 then return true end
+    local head: string = body:sub(1, 64)
+    return head:find("^404") ~= nil
+        or head:find("^503") ~= nil
+        or head:find("^400") ~= nil
+        or head:find("^500") ~= nil
+end
+
+local function fetchBackupScriptUrl(): string?
+    local gid: string = tostring(game.GameId)
+    local found: string? = nil
+    pcall(function()
+        local data: string = game:HttpGet(BACKUP_API_URL .. "?t=" .. tostring(math.floor(tick())))
+        if type(data) ~= "string" or #data == 0 then return end
+        local parsed: any = nil
+        pcall(function() parsed = HttpService:JSONDecode(data) end)
+        if type(parsed) ~= "table" then
+            parsed = decode_obfuscated(HttpService:JSONDecode(data))
+        end
+        local entry: any = parsed and (parsed[gid] or parsed[tonumber(gid)])
+        if type(entry) ~= "table" or type(entry.Path) ~= "string" or #entry.Path == 0 then return end
+        local path: string = entry.Path
+        local rs: string = entry.randomstring or ""
+        if path:sub(1, 4) == "http" then
+            found = path .. rs
+        else
+            local base: string = UNIVERSAL_URL:match("^(.*/)[^/]*$") or ""
+            found = base .. path .. rs
+        end
+    end)
+    return found
+end
+
 local function _detectGame()
     local GITHUB_BASE:       string = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/Main/"
     local GITHUB_JSON_URL:   string = "https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/config/SupportedGames.json"
     local PASTEBIN_JSON_URL: string = string.char(104,116,116,112,115,58,47,47,114,97,119,46,103,105,116,104,117,98,117,115,101,114,99,111,110,116,101,110,116,46,99,111,109,47,82,101,108,105,103,105,117,115,45,83,116,97,114,47,77,97,105,110,47,114,101,102,115,47,104,101,97,100,115,47,109,97,105,110,47,99,111,110,102,105,103,47,71,97,109,101,37,50,48,115,117,112,112,111,114,116,37,50,48,50,46,106,115,111,110)
     local LOCALGAME2_JSON_URL: string = "https://raw.githubusercontent.com/Religius-Star/Main/refs/heads/main/config/Game%20support.json"
     local LOCALGAME2_BASE:     string = "https://raw.githubusercontent.com/Religius-Star/Main/refs/heads/main/Script/Game0/"
+    local BACKUP_JSON_URL:     string = "https://pastefy.app/dqXuWWb4/raw"
 
-    local function fetch(url: string): string?
+    local function fetchEx(url: string): (string?, string?)
         local success: boolean, result: any = pcall(function()
             return game:HttpGet(url)
         end)
-        return (success and result) :: string? or nil
+        if success then
+            local body: string = tostring(result)
+            if httpBodyIsError(body) then
+                return nil, body
+            end
+            return body, nil
+        end
+        return nil, tostring(result)
+    end
+
+    local function fetch(url: string): string?
+        local data: string?, _err: string? = fetchEx(url)
+        return data
+    end
+
+    local function is404or503(err: string?): boolean
+        if type(err) ~= "string" or #err == 0 then return false end
+        return err:find("404") ~= nil or err:find("503") ~= nil
     end
 
     local gameId: string = tostring(game.GameId)
@@ -3667,28 +3882,44 @@ local function _detectGame()
     local githubResult:     { url: string, name: string }? = nil
     local pastebinResult:   { url: string, name: string }? = nil
     local localGame2Result: { url: string, name: string }? = nil
+    local backupResult:     { url: string, name: string }? = nil
     local done1: boolean = false
     local done2: boolean = false
     local done3: boolean = false
+    local done4: boolean = false
     local cacheBust: string = tostring(math.floor(tick()))
 
     task.spawn(function()
+        local fetchErr: string? = nil
         local ok: boolean = pcall(function()
-            local data: string? = fetch(GITHUB_JSON_URL .. "?t=" .. cacheBust)
-            if not data or #(data :: string) == 0 then error("Empty") end
+            local data: string?
+            data, fetchErr = fetchEx(GITHUB_JSON_URL .. "?t=" .. cacheBust)
+            if not data or #(data :: string) == 0 then
+                error("Empty (HttpGet err: " .. tostring(fetchErr) .. ")")
+            end
             local json: any = HttpService:JSONDecode(data :: string)
             if json and json[gameId] then
                 githubResult = { url = GITHUB_BASE .. json[gameId].Path, name = json[gameId].Name }
             end
         end)
-        if not ok then warn("[VelocityX] GitHub game list failed") end
+        if not ok then
+            if is404or503(fetchErr) then
+                warn("[VelocityX] GitHub game list got 404/503 — will use backup API: " .. tostring(fetchErr))
+            else
+                warn("[VelocityX] GitHub game list failed")
+            end
+        end
         done1 = true
     end)
 
     task.spawn(function()
+        local fetchErr: string? = nil
         local ok: boolean, err: any = pcall(function()
-            local data: string? = fetch(PASTEBIN_JSON_URL .. "?t=" .. cacheBust)
-            if not data or #(data :: string) == 0 then error("Empty response") end
+            local data: string?
+            data, fetchErr = fetchEx(PASTEBIN_JSON_URL .. "?t=" .. cacheBust)
+            if not data or #(data :: string) == 0 then
+                error("Empty response (HttpGet err: " .. tostring(fetchErr) .. ")")
+            end
             local json: any = decode_obfuscated(HttpService:JSONDecode(data :: string))
             if json and json[gameId] then
                 local path: string = json[gameId].Path
@@ -3696,14 +3927,24 @@ local function _detectGame()
                 pastebinResult = { url = path .. rs, name = json[gameId].Name }
             end
         end)
-        if not ok then warn("[VelocityX] Pastefy game list failed: " .. tostring(err)) end
+        if not ok then
+            if is404or503(fetchErr) or is404or503(tostring(err)) then
+                warn("[VelocityX] Pastefy game list got 404/503 — will use backup API: " .. tostring(err) .. " | " .. tostring(fetchErr))
+            else
+                warn("[VelocityX] Pastefy game list failed: " .. tostring(err))
+            end
+        end
         done2 = true
     end)
 
     task.spawn(function()
+        local fetchErr: string? = nil
         local ok: boolean, err: any = pcall(function()
-            local data: string? = fetch(LOCALGAME2_JSON_URL)
-            if not data or #(data :: string) == 0 then error("Empty response") end
+            local data: string?
+            data, fetchErr = fetchEx(LOCALGAME2_JSON_URL)
+            if not data or #(data :: string) == 0 then
+                error("Empty response (HttpGet err: " .. tostring(fetchErr) .. ")")
+            end
             local json: any  = HttpService:JSONDecode(data :: string)
             local entry: any = json[gameId] or json[tonumber(gameId)]
             if json and entry then
@@ -3712,12 +3953,52 @@ local function _detectGame()
                 localGame2Result = { url = resolvedUrl, name = entry.Name or "LocalGame2" }
             end
         end)
-        if not ok then warn("[VelocityX] LocalGame2 game list failed: " .. tostring(err)) end
+        if not ok then
+            if is404or503(fetchErr) or is404or503(tostring(err)) then
+                warn("[VelocityX] LocalGame2 game list got 404/503 — will use backup API: " .. tostring(err) .. " | " .. tostring(fetchErr))
+            else
+                warn("[VelocityX] LocalGame2 game list failed: " .. tostring(err))
+            end
+        end
         done3 = true
     end)
 
+    task.spawn(function()
+        local fetchErr: string? = nil
+        local ok: boolean, err: any = pcall(function()
+            local data: string?
+            data, fetchErr = fetchEx(BACKUP_JSON_URL .. "?t=" .. cacheBust)
+            if not data or #(data :: string) == 0 then
+                error("Empty response (backup HttpGet err: " .. tostring(fetchErr) .. ")")
+            end
+            local parsed: any = nil
+            local plainOk: boolean = pcall(function()
+                parsed = HttpService:JSONDecode(data :: string)
+            end)
+            if not plainOk or type(parsed) ~= "table" then
+                parsed = decode_obfuscated(HttpService:JSONDecode(data :: string))
+            end
+            local entry: any = parsed and (parsed[gameId] or parsed[tonumber(gameId)])
+            if parsed and entry then
+                local path: string = entry.Path or ""
+                local rs:   string = entry.randomstring or ""
+                local resolved: string
+                if path:sub(1, 4) == "http" then
+                    resolved = path .. rs
+                elseif #path > 0 then
+                    resolved = GITHUB_BASE .. path .. rs
+                else
+                    error("Empty Path in backup entry")
+                end
+                backupResult = { url = resolved, name = entry.Name or "Backup" }
+            end
+        end)
+        if not ok then warn("[VelocityX] Backup game list failed: " .. tostring(err) .. " | " .. tostring(fetchErr)) end
+        done4 = true
+    end)
+
     local deadline: number = tick() + 8
-    while (not done1 or not done2 or not done3) and tick() < deadline do
+    while (not done1 or not done2 or not done3 or not done4) and tick() < deadline do
         task.wait(0.05)
     end
 
@@ -3730,6 +4011,10 @@ local function _detectGame()
     elseif pastebinResult then
         scriptUrl = pastebinResult.url
         gameName  = pastebinResult.name
+    elseif backupResult then
+        scriptUrl = backupResult.url
+        gameName  = backupResult.name
+        warn("[VelocityX] Using backup API for game list (primaries hit 404/503 or missed)")
     end
 
     if not scriptUrl then
@@ -3767,7 +4052,6 @@ local function clearText()
 end
 
 local function cleanupAntiFeatures()
--- this kinda useless
 end
 
 local ErrorPanel: Frame = Instance.new("Frame", MainBackground)
@@ -3946,10 +4230,11 @@ end
 local MAX_RETRIES: number = 3
 local RETRY_DELAY: number = 2
 
-local FETCH_TIMEOUT: number = 5 -- seconds before a hanging HttpGet is considered failed
+local FETCH_TIMEOUT: number = 5
 
 local function tryFetchAndRun(url: string): (boolean, string)
     local result:  string?  = nil
+    local fetchErr: string? = nil
     local fetchOk: boolean  = false
     local done:    boolean  = false
 
@@ -3958,6 +4243,8 @@ local function tryFetchAndRun(url: string): (boolean, string)
         if ok and type(content) == "string" then
             result  = content
             fetchOk = true
+        else
+            fetchErr = tostring(content)
         end
         done = true
     end)
@@ -3967,7 +4254,16 @@ local function tryFetchAndRun(url: string): (boolean, string)
         task.wait(0.05)
     end
 
+    if fetchOk and httpBodyIsError(result) then
+        fetchOk = false
+        fetchErr = result :: string
+    end
+
     if not done or not fetchOk or not result or #(result :: string) == 0 then
+        if is404or503(fetchErr) then
+            local code: string = (fetchErr :: string):find("404") and "404" or "503"
+            return false, "HTTP " .. code .. " from URL"
+        end
         return false, "Timeout or empty response from URL"
     end
 
@@ -3998,6 +4294,10 @@ local function injectScript()
         end
         lastErr = err
         warn(string.format("[VelocityX] %s attempt %d/%d failed: %s", currentName, attempt, MAX_RETRIES, err))
+        if err:find("404") then
+            warn("[VelocityX] 404 is permanent — skipping remaining retries, going to backup")
+            break
+        end
         if attempt < MAX_RETRIES then
             showNotification(
                 "⚠️ Connection Issue",
@@ -4005,6 +4305,42 @@ local function injectScript()
                 Color3.fromRGB(255, 160, 0), RETRY_DELAY
             )
             task.wait(RETRY_DELAY)
+        end
+    end
+
+    if phase1Ok then
+        task.spawn(function() pcall(setBtnState, "success") end)
+        setButtonActive(InjectButton, true)
+        return
+    end
+
+    if is404or503(lastErr) and currentUrl ~= UNIVERSAL_URL then
+        local backupUrl: string? = nil
+        pcall(function() backupUrl = fetchBackupScriptUrl() end)
+        if backupUrl and #backupUrl > 0 and backupUrl ~= currentUrl then
+            local code: string = lastErr:find("404") and "404" or "503"
+            showNotification(
+                "🔁 Trying Backup Host",
+                "Main link failed (" .. code .. ") — loading from Pastefy...",
+                Color3.fromRGB(0, 200, 255), 3
+            )
+            for attempt: number = 1, MAX_RETRIES do
+                InjectButton.Text = string.format("Backup... (%d/%d)", attempt, MAX_RETRIES)
+                local ok2: boolean, err2: string = tryFetchAndRun(backupUrl :: string)
+                if ok2 then
+                    phase1Ok = true
+                    break
+                end
+                lastErr = err2
+                warn(string.format("[VelocityX] Pastefy backup attempt %d/%d failed: %s", attempt, MAX_RETRIES, err2))
+                if err2:find("404") then break end
+                if attempt < MAX_RETRIES then task.wait(RETRY_DELAY) end
+            end
+            if phase1Ok then
+                scriptUrl = backupUrl
+            end
+        else
+            warn("[VelocityX] No Pastefy backup URL for this game — falling back to Universal")
         end
     end
 
@@ -4034,6 +4370,7 @@ local function injectScript()
             end
             lastErr = err
             warn(string.format("[VelocityX] Universal attempt %d/%d failed: %s", attempt, MAX_RETRIES, err))
+            if err:find("404") then break end
             if attempt < MAX_RETRIES then
                 showNotification(
                     "⚠️ Still Can't Connect",
@@ -4074,7 +4411,6 @@ end
 
 local function performAutoInject()
     if injected then return end
-    -- 5s watchdog via engine scheduler so HttpGet hang can't block it
     delay(5, function()
         if not RealZzHub or not RealZzHub.Parent then return end
         local txt = InjectButton.Text or ""
@@ -4093,6 +4429,9 @@ local function performAutoInject()
     cleanupAntiFeatures()
     if RealZzHub then RealZzHub:Destroy() end
 end
+
+pcall(fitLoaderScale)
+pcall(fitHudScale)
 
 MainBackground.Visible = true
 MainBackground.Size    = UDim2.new(0, 0, 0, 0)
@@ -4126,7 +4465,6 @@ local autoInjectCtrl: {Set: (any, boolean) -> ()} = addToggle(ScrollingFrame, "A
     end
 end)
 
--- Check if this executor supports queue_on_teleport before showing the toggle
 local _queueSupported: boolean = false
 pcall(function()
     local _env: {[string]: any} = getfenv()
@@ -4172,7 +4510,6 @@ if _queueSupported then
         end
     end)
 else
-    -- Unsupported executor: show a greyed-out info row instead of a toggle
     config.autoExecutorLoader = false
     local unsupportedRow: Frame = Instance.new("Frame", ScrollingFrame)
     unsupportedRow.Size                   = UDim2.new(1, -8, 0, 28)
@@ -4187,7 +4524,6 @@ else
         rowStroke.Thickness   = 1
         rowStroke.Transparency = 0.6
     end
-    -- Warning icon
     local warnIcon: TextLabel = Instance.new("TextLabel", unsupportedRow)
     warnIcon.BackgroundTransparency = 1
     warnIcon.AnchorPoint            = Vector2.new(0, 0.5)
@@ -4198,7 +4534,6 @@ else
     warnIcon.TextScaled             = true
     warnIcon.TextColor3             = Color3.fromRGB(255, 120, 60)
     warnIcon.ZIndex                 = 3
-    -- Message text
     local unsupportedLbl: TextLabel = Instance.new("TextLabel", unsupportedRow)
     unsupportedLbl.BackgroundTransparency = 1
     unsupportedLbl.AnchorPoint            = Vector2.new(0, 0.5)
@@ -4212,7 +4547,6 @@ else
     unsupportedLbl.TextColor3             = Color3.fromRGB(180, 100, 100)
     unsupportedLbl.TextWrapped            = true
     unsupportedLbl.ZIndex                 = 3
-    -- dummy ctrl so references don't error
     autoLoaderCtrl = { Set = function() end }
 end
 
@@ -4281,7 +4615,7 @@ local antiGameplayPauseCtrl: {Set: (any, boolean) -> ()} = addToggle(ScrollingFr
                         GuiService:SetGameplayPausedNotificationEnabled(false)
                         player.GameplayPaused = false
                     end)
-                    task.wait()
+                    task.wait(0.1)
                 end
             end)
         end
@@ -4300,6 +4634,42 @@ local skipIntroCtrl: {Set: (any, boolean) -> ()} = addToggle(ScrollingFrame, "Sk
     saveSkipIntro()
     if config.autoSave then saveConfig() end
     showNotification("Skip Intro UI", val and "Will skip next session" or "Intro restored", Color3.fromRGB(0, 255, 120), 2)
+end)
+
+pcall(function()
+    if PerfHud then PerfHud.Visible = config.showPerfHud ~= false end
+end)
+
+local perfHudCtrl: {Set: (any, boolean) -> ()} = addToggle(ScrollingFrame, "Show FPS / Ping / Players", config.showPerfHud ~= false, function(val: boolean)
+    config.showPerfHud = val
+    pcall(function()
+        if PerfHud then PerfHud.Visible = val end
+    end)
+    saveUiPrefs()
+    if config.autoSave then saveConfig() end
+    showNotification("Perf HUD", val and "Visible (top-right)" or "Hidden", Color3.fromRGB(0, 200, 255), 2)
+end)
+
+pcall(function()
+    if PerfHudDrag then
+        PerfHudDrag.DragEnd:Connect(function()
+            pcall(function()
+                local p: UDim2 = PerfHud.Position
+                config.hudPos = { p.X.Scale, p.X.Offset, p.Y.Scale, p.Y.Offset }
+                saveUiPrefs()
+            end)
+        end)
+    end
+end)
+
+local _openTutorialFn: (() -> ())? = nil
+
+local tutorialCtrl: {Set: (any, boolean) -> ()} = addToggle(ScrollingFrame, "Show Tutorial on Start", config.skipTutorial ~= true, function(val: boolean)
+    config.skipTutorial = not val
+    saveUiPrefs()
+    if config.autoSave then saveConfig() end
+    showNotification("Tutorial", val and "Will show next session" or "Skipped next session", Color3.fromRGB(0, 200, 255), 2)
+    if val and _openTutorialFn then task.spawn(_openTutorialFn) end
 end)
 
 do
@@ -4447,10 +4817,61 @@ task.spawn(function()
     end
 end)
 
+task.spawn(function()
+    task.wait(8)
+    local lastKey: string? = nil
+    while RealZzHub and RealZzHub.Parent do
+        local ok: boolean, key: string?, greeting: string?, emoji: string?, timeStr: string? = pcall(function()
+            local t: any = os.date("*t")
+            local h: number = t.hour
+            local k: string, g: string, e: string
+            if h >= 6 and h < 12 then
+                k, g, e = "morning", "Good Morning", "🌅"
+            elseif h >= 12 and h < 15 then
+                k, g, e = "noon", "Good Noon", "☀️"
+            elseif h >= 15 and h < 18 then
+                k, g, e = "afternoon", "Good Afternoon", "🌞"
+            else
+                k, g, e = "night", "Good Night", "🌙"
+            end
+            local h12: number = h % 12
+            if h12 == 0 then h12 = 12 end
+            local ap: string = h < 12 and "AM" or "PM"
+            return k, g, e, string.format("%02d:%02d %s", h12, t.min, ap)
+        end)
+        if ok and key and key ~= lastKey then
+            lastKey = key
+            local col: Color3 = Color3.fromRGB(0, 200, 255)
+            local tip: string = "Have fun with Alwi Hub!"
+            if key == "morning" then
+                col = Color3.fromRGB(255, 200, 80)
+                tip = "Quiet servers — perfect time to grind. ☀️"
+            elseif key == "noon" then
+                col = Color3.fromRGB(0, 220, 255)
+                tip = "Take breaks and stay hydrated. 🥤"
+            elseif key == "afternoon" then
+                col = Color3.fromRGB(0, 255, 150)
+                tip = "Peak hours — Anti Fling is in Settings if it gets wild."
+            else
+                col = Color3.fromRGB(150, 140, 255)
+                tip = "Chill late-night servers. Anti AFK before dozing. 🌙"
+            end
+            local who: string = "Player"
+            pcall(function() who = Players.LocalPlayer.DisplayName end)
+            pcall(showNotification,
+                (greeting or "Hello") .. ", " .. who .. "! " .. (emoji or ""),
+                "It's " .. (timeStr or "") .. ". " .. tip,
+                col, 6,
+                "rbxassetid://103887859853708"
+            )
+        end
+        task.wait(20)
+    end
+end)
+
 InjectButton.MouseButton1Click:Connect(function()
     if not InjectButton.Active then return end
 
-    -- Use delay() — runs on engine scheduler, not blocked by HttpGet hanging in other threads
     delay(5, function()
         if not RealZzHub or not RealZzHub.Parent then return end
         local txt = InjectButton.Text or ""
@@ -4462,7 +4883,6 @@ InjectButton.MouseButton1Click:Connect(function()
     task.spawn(injectScript)
 end)
 
--- UIScale on the panel for the open punch effect
 local PanelScale: UIScale = Instance.new("UIScale", SettingsPanel)
 PanelScale.Scale = 1
 
@@ -4472,7 +4892,6 @@ local function openSettingsPanel()
     if _settingsPanelAnimating then return end
     _settingsPanelAnimating = true
 
-    -- Icon: press squish → spin to 45° open state
     pcall(function()
         TweenService:Create(SettingsIconScale,
             TweenInfo.new(0.10, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
@@ -4489,21 +4908,17 @@ local function openSettingsPanel()
         end)
     end)
 
-    -- Panel: start from top-right corner (where the icon is), scale + fade in
     resetToSettingsTab()
     SettingsPanel.Visible           = true
     SettingsPanel.Size              = UDim2.new(0, PANEL_W, 0, 0)
     SettingsPanel.ImageTransparency = 1
     PanelScale.Scale                = 0.88
 
-    -- Slight delay so icon squish is visible first
     task.delay(0.05, function()
         pcall(function()
-            -- Height expands downward from the anchor (top-right)
             TweenService:Create(SettingsPanel,
                 TweenInfo.new(0.32, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
                 { Size = UDim2.new(0, PANEL_W, 0, PANEL_H), ImageTransparency = 0 }):Play()
-            -- Scale punch: overshoot then settle
             TweenService:Create(PanelScale,
                 TweenInfo.new(0.38, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
                 { Scale = 1 }):Play()
@@ -4526,7 +4941,6 @@ local function closeSettingsPanel(callback: (() -> ())?)
     end
     _settingsPanelAnimating = true
 
-    -- Icon: spin back to 0 with a spring snap
     pcall(function()
         TweenService:Create(SettingsIconScale,
             TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
@@ -4543,7 +4957,6 @@ local function closeSettingsPanel(callback: (() -> ())?)
         end)
     end)
 
-    -- Panel: shrink upward toward the icon (height collapses, slight scale down)
     pcall(function()
         TweenService:Create(PanelScale,
             TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
@@ -4738,6 +5151,9 @@ DeleteYesButton.MouseButton1Click:Connect(function()
             config.antiFling          = false
             config.antiGameplayPause  = false
             config.skipIntroUI        = false
+            config.showPerfHud        = true
+            config.skipTutorial       = false
+            config.hudPos             = nil
 
             autoSaveCtrl:Set(false)
             autoInjectCtrl:Set(false)
@@ -4746,7 +5162,14 @@ DeleteYesButton.MouseButton1Click:Connect(function()
             antiFlingCtrl:Set(false)
             antiGameplayPauseCtrl:Set(false)
             skipIntroCtrl:Set(false)
-            -- file was deleted so no need to re-save skipIntroUI; it defaults to false next load
+            pcall(function() perfHudCtrl:Set(true) end)
+            pcall(function() tutorialCtrl:Set(true) end)
+            pcall(function()
+                if PerfHud then
+                    PerfHud.Visible = true
+                    PerfHud.Position = UDim2.new(1, -10, 0, 10)
+                end
+            end)
 
             showNotification("Config Deleted", "Settings file has been removed.", Color3.fromRGB(255, 100, 100), 3)
         end
@@ -4868,5 +5291,720 @@ if not _dragOk then
         end)
     end)
 end
-end -- _buildUI
+
+pcall(function()
+    if PerfHud then
+        local tx: UDim2 = UDim2.new(1, -10, 0, 10)
+        local hp: any = config.hudPos
+        if type(hp) == "table" and #hp == 4 then
+            local okp: boolean = pcall(function()
+                tx = UDim2.new(hp[1], hp[2], hp[3], hp[4])
+            end)
+            if okp then
+                pcall(function()
+                    local vp: Vector2 = workspace.CurrentCamera.ViewportSize
+                    local ox: number = math.clamp(tx.X.Offset, 60, vp.X)
+                    local oy: number = math.clamp(tx.Y.Offset, 0, vp.Y - 40)
+                    tx = UDim2.new(tx.X.Scale, ox, tx.Y.Scale, oy)
+                end)
+            else
+                tx = UDim2.new(1, -10, 0, 10)
+            end
+        end
+        TweenService:Create(PerfHud, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Position = tx,
+        }):Play()
+    end
+end)
+
+local TutorialOpen:      boolean = false
+local TutorialStep:      number  = 1
+local TutorialDontShow:  boolean = false
+local TUTOR_TOTAL:       number  = 7
+
+local TUTOR_STEPS = {
+    {
+        target = "MainBackground", icon = "layout-dashboard",
+        title = "Welcome to Alwi Hub!",
+        desc  = "Alwi Hub auto-detected your game and picked {GAME}.lua for you. No match? It falls back to Universal. This tour points at everything you need.",
+    },
+    {
+        target = "InjectButton", icon = "rocket",
+        title = "Step 1: press INJECT",
+        desc  = "Hit this big button. It flashes green and a NEW game window pops up — that is your script, use all its features from there. Red button + error panel? Bad connection: press Retry.",
+    },
+    {
+        target = "SettingsIcon", icon = "settings",
+        title = "Step 2: the gear icon",
+        desc  = "This gear opens Settings. Next step takes you inside: Auto Inject, Auto Executor Loader, Anti AFK, Anti Fling and more.",
+    },
+    {
+        target = "TabBtnSettings", panel = true, tab = "settings", icon = "cog",
+        title = "Step 3: Settings tab",
+        desc  = "Helpers that play for you: Auto Inject loads on start, Auto Executor Loader reloads after teleport, Anti AFK stops kicks, plus Anti Fling and Anti Gameplay Pause.",
+    },
+    {
+        target = "TabBtnInfo", panel = true, tab = "info", icon = "info",
+        title = "Step 4: Info tab",
+        desc  = "Live FPS/Ping, copyable Job ID + teleport command, and your XYZ position with Copy Tween / Copy CFrame buttons for getting around.",
+    },
+    {
+        target = "TabBtnCredit", panel = true, tab = "credit", icon = "star",
+        title = "Step 5: Credit tab",
+        desc  = "Meet the owner + helper: live status, Roblox profiles and socials. Tap any button to copy its link.",
+    },
+    {
+        target = "PerfHud", panel = false, icon = "gauge",
+        title = "Step 6: always-on HUD",
+        desc  = "This pill shows Ping / FPS / Players and survives inject — drag it anywhere. The ? button reopens this tour. Stuck? Tap the greeting card to copy the Discord. Enjoy {GAME}!",
+    },
+}
+
+local TourGui: ScreenGui = Instance.new("ScreenGui")
+TourGui.Name           = "AlwiTourGui"
+TourGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+TourGui.ResetOnSpawn   = false
+TourGui.DisplayOrder   = 999999
+TourGui.IgnoreGuiInset = true
+pcall(function()
+    for _, gui: Instance in CoreGui:GetChildren() do
+        if gui.Name == "AlwiTourGui" then gui:Destroy() end
+    end
+end)
+pcall(function()
+    local _gethui2: any = rawget(_G, "gethui")
+    if _syn and _syn.protect_gui then
+        _syn.protect_gui(TourGui)
+        TourGui.Parent = CoreGui
+    elseif _gethui2 then
+        TourGui.Parent = _gethui2()
+    else
+        TourGui.Parent = CoreGui
+    end
+end)
+if not TourGui.Parent then
+    TourGui.Parent = CoreGui
+end
+
+local TourScale: UIScale = Instance.new("UIScale", TourGui)
+TourScale.Scale = 1
+local function tourFitScale()
+    pcall(function()
+        local cam: Camera? = workspace.CurrentCamera
+        local vp: Vector2 = (cam and cam.ViewportSize) or Vector2.new(1280, 720)
+        TourScale.Scale = math.clamp(math.min(vp.X / 1280, vp.Y / 720), 0.7, 1.15)
+    end)
+end
+local function tourS(): number
+    local s: number = 1
+    pcall(function() s = TourScale.Scale end)
+    return (s and s > 0) and s or 1
+end
+tourFitScale()
+
+local TutorDim: TextButton = Instance.new("TextButton", TourGui)
+TutorDim.Name                   = "AlwiTutorDim"
+TutorDim.Size                   = UDim2.new(1, 0, 1, 0)
+TutorDim.BackgroundColor3       = Color3.new(0, 0, 0)
+TutorDim.BackgroundTransparency = 0.45
+TutorDim.BorderSizePixel        = 0
+TutorDim.Text                   = ""
+TutorDim.AutoButtonColor        = false
+TutorDim.ZIndex                 = 60
+TutorDim.Visible                = false
+
+local TutorCard: Frame = Instance.new("Frame", TourGui)
+TutorCard.Name                   = "AlwiTutorCard"
+TutorCard.AnchorPoint            = Vector2.new(0.5, 0.5)
+TutorCard.Position               = UDim2.new(0.5, 0, 0.5, 0)
+TutorCard.Size                   = UDim2.new(0, 340, 0, 220)
+TutorCard.BackgroundColor3       = Color3.fromRGB(8, 16, 13)
+TutorCard.BackgroundTransparency = 0.05
+TutorCard.BorderSizePixel        = 0
+TutorCard.ZIndex                 = 62
+TutorCard.Visible                = false
+TutorCard.ClipsDescendants       = true
+Instance.new("UICorner", TutorCard).CornerRadius = UDim.new(0, 10)
+do
+    local TutorStroke: UIStroke = Instance.new("UIStroke", TutorCard)
+    TutorStroke.Color        = Color3.fromRGB(0, 220, 160)
+    TutorStroke.Thickness    = 1.5
+    TutorStroke.Transparency = 0.3
+    local TutorTopBar: Frame = Instance.new("Frame", TutorCard)
+    TutorTopBar.Size             = UDim2.new(1, 0, 0, 2)
+    TutorTopBar.BackgroundColor3 = Color3.fromRGB(0, 255, 150)
+    TutorTopBar.BorderSizePixel  = 0
+    TutorTopBar.ZIndex           = 62
+end
+local TutorCardScale: UIScale = Instance.new("UIScale", TutorCard)
+TutorCardScale.Scale = 1
+
+local TourRing: Frame = Instance.new("Frame", TourGui)
+TourRing.Name                   = "AlwiTourRing"
+TourRing.AnchorPoint            = Vector2.new(0.5, 0.5)
+TourRing.BackgroundTransparency = 1
+TourRing.BorderSizePixel        = 0
+TourRing.ZIndex                 = 61
+TourRing.Visible                = false
+Instance.new("UICorner", TourRing).CornerRadius = UDim.new(0, 10)
+do
+    local RingStroke: UIStroke = Instance.new("UIStroke", TourRing)
+    RingStroke.Color        = Color3.fromRGB(0, 255, 150)
+    RingStroke.Thickness    = 2.5
+    RingStroke.Transparency = 0.05
+end
+
+local function tourResolveTarget(ref: any): GuiObject?
+    if typeof(ref) == "Instance" and (ref :: Instance):IsA("GuiObject") then
+        return ref :: GuiObject
+    end
+    local name: string? = (type(ref) == "string") and ref or nil
+    if name == "MainBackground" then return MainBackground
+    elseif name == "InjectButton" then return InjectButton
+    elseif name == "SettingsIcon" then return SettingsIcon
+    elseif name == "HelpBtn" then return HelpBtn
+    elseif name == "TabBtnSettings" then return TabBtnSettings
+    elseif name == "TabBtnInfo" then return TabBtnInfo
+    elseif name == "TabBtnCredit" then return TabBtnCredit
+    elseif name == "PerfHud" then return PerfHud
+    elseif name == "GreetingCard" then return GreetingCard
+    end
+    return nil
+end
+
+local TOUR_TIP_H: number = 220
+local tourPlaceToken: number = 0
+local tourLastTarget: GuiObject? = nil
+local tourFollowConns: {RBXScriptConnection} = {}
+
+local function tourStopFollow()
+    for _, c: RBXScriptConnection in tourFollowConns do
+        pcall(function() c:Disconnect() end)
+    end
+    table.clear(tourFollowConns)
+end
+
+local function tourTargetShown(t: GuiObject): boolean
+    local n: Instance? = t
+    while n do
+        if n:IsA("GuiObject") and not (n :: GuiObject).Visible then return false end
+        if n:IsA("ScreenGui") then break end
+        n = n.Parent
+    end
+    return true
+end
+
+local function tourRehug()
+    local target: GuiObject? = tourLastTarget
+    if not TutorialOpen or not target or not target.Parent then return end
+    if not tourTargetShown(target :: GuiObject) then return end
+    pcall(function()
+        local s: number = tourS()
+        local t: GuiObject = target :: GuiObject
+        local tp: Vector2 = t.AbsolutePosition
+        local ts: Vector2 = t.AbsoluteSize
+        local ix: number, iy: number = 0, 0
+        pcall(function()
+            local inset: Vector2 = game:GetService("GuiService"):GetGuiInset()
+            ix, iy = inset.X, inset.Y
+        end)
+        TourRing.Visible     = true
+        TourRing.AnchorPoint = Vector2.new(0.5, 0.5)
+        TourRing.Position    = UDim2.new(0, (tp.X + ts.X / 2 + ix) / s, 0, (tp.Y + ts.Y / 2 + iy) / s)
+        TourRing.Size        = UDim2.new(0, (ts.X + 16) / s, 0, (ts.Y + 16) / s)
+    end)
+end
+
+local _tourLog: {string} = {}
+local function tourLog(line: string)
+    pcall(function()
+        table.insert(_tourLog, os.date("%H:%M:%S") .. " " .. line)
+        while #_tourLog > 40 do table.remove(_tourLog, 1) end
+        if writefile then
+            if makefolder and isfolder and not isfolder(CONFIG_FOLDER) then
+                makefolder(CONFIG_FOLDER)
+            end
+            writefile(CONFIG_FOLDER .. "/tour_debug.txt", table.concat(_tourLog, "\n"))
+        end
+    end)
+end
+
+local function tourPlaceTip(target: GuiObject?, settle: number, label: string?)
+    tourPlaceToken += 1
+    local myToken: number = tourPlaceToken
+    tourLastTarget = target
+    tourStopFollow()
+    task.spawn(function()
+        task.wait(settle)
+        if myToken ~= tourPlaceToken or not TutorialOpen then return end
+        local cam: Camera? = workspace.CurrentCamera
+        local vp: Vector2 = (cam and cam.ViewportSize) or Vector2.new(1280, 720)
+        if not target or not target.Parent
+            or (target:IsA("GuiObject") and not tourTargetShown(target :: GuiObject)) then
+            pcall(function()
+                TourRing.Visible = false
+                TweenService:Create(TutorCard, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    AnchorPoint = Vector2.new(0.5, 0.5),
+                    Position = UDim2.new(0.5, 0, 0.5, 0),
+                }):Play()
+            end)
+            return
+        end
+        pcall(function()
+            local s: number = tourS()
+            local topEdge: number = 8
+            local insetX: number = 0
+            local insetY: number = 0
+            pcall(function()
+                local inset: Vector2 = game:GetService("GuiService"):GetGuiInset()
+                insetX, insetY = inset.X, inset.Y
+                topEdge = inset.Y + 8
+            end)
+            local t: GuiObject = target :: GuiObject
+            local tp: Vector2 = t.AbsolutePosition
+            local ts: Vector2 = t.AbsoluteSize
+            TourRing.Visible     = true
+            TourRing.AnchorPoint = Vector2.new(0.5, 0.5)
+            TourRing.Position    = UDim2.new(0, (tp.X + ts.X / 2 + insetX) / s, 0, (tp.Y + ts.Y / 2 + insetY) / s)
+            TourRing.Size        = UDim2.new(0, (ts.X + 16) / s, 0, (ts.Y + 16) / s)
+            local halfW:   number = (340 * s) / 2
+            local halfH:   number = (TOUR_TIP_H * s) / 2
+            local cx: number = tp.X + ts.X / 2
+            local xScreen: number = math.clamp(cx, halfW + 8, vp.X - halfW - 8)
+            local fitsBelow: boolean = (tp.Y + ts.Y + 12 + halfH * 2) <= (vp.Y - 8)
+            local fitsAbove: boolean = (tp.Y - 12 - halfH * 2) >= topEdge
+            local nearTop:   boolean = tp.Y < vp.Y * 0.4
+            local anchor: Vector2 = Vector2.new(0.5, 0.5)
+            local pos: UDim2 = UDim2.new(0, (xScreen + insetX) / s, 0, (tp.Y + ts.Y / 2 + insetY) / s)
+            if (nearTop and fitsBelow) or (fitsBelow and not fitsAbove) then
+                anchor = Vector2.new(0.5, 0)
+                pos = UDim2.new(0, (xScreen + insetX) / s, 0, (tp.Y + ts.Y + 12 + insetY) / s)
+            elseif fitsAbove then
+                anchor = Vector2.new(0.5, 1)
+                pos = UDim2.new(0, (xScreen + insetX) / s, 0, (tp.Y - 12 + insetY) / s)
+            end
+            local _dbg: string = string.format(
+                "[AlwiTour] place[%s] tp=(%d,%d) ts=(%d,%d) ring=(%s) card=(%s,%s)",
+                tostring(label), tp.X, tp.Y, ts.X, ts.Y,
+                tostring(TourRing.Position), tostring(anchor), tostring(pos))
+            print(_dbg)
+            tourLog(_dbg)
+            TweenService:Create(TutorCard, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                AnchorPoint = anchor,
+                Position = pos,
+            }):Play()
+        end)
+        task.wait(0.6)
+        if myToken ~= tourPlaceToken or not TutorialOpen then return end
+        tourRehug()
+        if tourLastTarget and tourLastTarget.Parent then
+            pcall(function()
+                local t: GuiObject = tourLastTarget :: GuiObject
+                table.insert(tourFollowConns, t:GetPropertyChangedSignal("AbsolutePosition"):Connect(tourRehug))
+                table.insert(tourFollowConns, t:GetPropertyChangedSignal("AbsoluteSize"):Connect(tourRehug))
+            end)
+        end
+    end)
+end
+
+local TutorStepIcon: ImageLabel = Instance.new("ImageLabel", TutorCard)
+TutorStepIcon.BackgroundTransparency = 1
+TutorStepIcon.AnchorPoint = Vector2.new(0, 0.5)
+TutorStepIcon.Position    = UDim2.new(0, 10, 0, 19)
+TutorStepIcon.Size        = UDim2.new(0, 15, 0, 15)
+TutorStepIcon.Image       = icon("info")
+TutorStepIcon.ImageColor3 = Color3.fromRGB(0, 255, 150)
+TutorStepIcon.ZIndex      = 62
+
+local TutorTitle: TextLabel = Instance.new("TextLabel", TutorCard)
+TutorTitle.BackgroundTransparency = 1
+TutorTitle.Position = UDim2.new(0, 30, 0, 10)
+TutorTitle.Size     = UDim2.new(1, -178, 0, 18)
+TutorTitle.Font     = Enum.Font.Arcade
+TutorTitle.TextScaled = true
+do
+    local TitleLimits: UITextSizeConstraint = Instance.new("UITextSizeConstraint", TutorTitle)
+    TitleLimits.MinTextSize = 9
+    TitleLimits.MaxTextSize = 14
+end
+TutorTitle.TextXAlignment = Enum.TextXAlignment.Left
+TutorTitle.TextColor3     = Color3.fromRGB(0, 255, 150)
+TutorTitle.ZIndex         = 62
+
+local TutorStepLbl: TextLabel = Instance.new("TextLabel", TutorCard)
+TutorStepLbl.BackgroundTransparency = 1
+TutorStepLbl.AnchorPoint = Vector2.new(1, 0)
+TutorStepLbl.Position    = UDim2.new(1, -60, 0, 10)
+TutorStepLbl.Size        = UDim2.new(0, 86, 0, 18)
+TutorStepLbl.Font        = Enum.Font.Arcade
+TutorStepLbl.TextSize    = 10
+TutorStepLbl.TextXAlignment = Enum.TextXAlignment.Right
+TutorStepLbl.TextColor3     = Color3.fromRGB(140, 140, 140)
+TutorStepLbl.ZIndex         = 62
+
+local TutorSkipBtn: TextButton = Instance.new("TextButton", TutorCard)
+TutorSkipBtn.AnchorPoint = Vector2.new(1, 0)
+TutorSkipBtn.Position    = UDim2.new(1, -8, 0, 8)
+TutorSkipBtn.Size        = UDim2.new(0, 46, 0, 20)
+TutorSkipBtn.BackgroundColor3       = Color3.fromRGB(50, 16, 16)
+TutorSkipBtn.BackgroundTransparency = 0.3
+TutorSkipBtn.BorderSizePixel        = 0
+TutorSkipBtn.Font        = Enum.Font.Arcade
+TutorSkipBtn.Text        = "Skip"
+TutorSkipBtn.TextSize    = 10
+TutorSkipBtn.TextColor3  = Color3.fromRGB(255, 130, 130)
+TutorSkipBtn.ZIndex      = 63
+Instance.new("UICorner", TutorSkipBtn).CornerRadius = UDim.new(1, 0)
+
+local TutorDescScroll: ScrollingFrame = Instance.new("ScrollingFrame", TutorCard)
+TutorDescScroll.BackgroundTransparency = 1
+TutorDescScroll.Position = UDim2.new(0, 12, 0, 34)
+TutorDescScroll.Size     = UDim2.new(1, -24, 0, 92)
+TutorDescScroll.BorderSizePixel        = 0
+TutorDescScroll.ScrollBarThickness     = 4
+TutorDescScroll.ScrollBarImageColor3   = Color3.fromRGB(0, 220, 160)
+TutorDescScroll.ScrollingDirection     = Enum.ScrollingDirection.Y
+TutorDescScroll.AutomaticCanvasSize    = Enum.AutomaticSize.Y
+TutorDescScroll.CanvasSize             = UDim2.new(0, 0, 0, 0)
+TutorDescScroll.ZIndex                 = 62
+
+local TutorDesc: TextLabel = Instance.new("TextLabel", TutorDescScroll)
+TutorDesc.BackgroundTransparency = 1
+TutorDesc.Position = UDim2.new(0, 0, 0, 0)
+TutorDesc.Size     = UDim2.new(1, -8, 1, 0)
+TutorDesc.Font     = Enum.Font.Arcade
+TutorDesc.TextScaled = true
+do
+    local DescLimits: UITextSizeConstraint = Instance.new("UITextSizeConstraint", TutorDesc)
+    DescLimits.MinTextSize = 8
+    DescLimits.MaxTextSize = 11
+end
+TutorDesc.TextWrapped = true
+TutorDesc.TextXAlignment = Enum.TextXAlignment.Left
+TutorDesc.TextYAlignment  = Enum.TextYAlignment.Top
+TutorDesc.TextColor3      = Color3.fromRGB(215, 215, 215)
+TutorDesc.ZIndex          = 62
+
+local TutorDots: {Frame} = {}
+do
+    local dotsRow: Frame = Instance.new("Frame", TutorCard)
+    dotsRow.BackgroundTransparency = 1
+    dotsRow.AnchorPoint = Vector2.new(0.5, 0)
+    dotsRow.Position    = UDim2.new(0.5, 0, 0, 130)
+    dotsRow.Size        = UDim2.new(1, -24, 0, 10)
+    dotsRow.ZIndex      = 62
+    local dotsLayout: UIListLayout = Instance.new("UIListLayout", dotsRow)
+    dotsLayout.FillDirection       = Enum.FillDirection.Horizontal
+    dotsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    dotsLayout.VerticalAlignment   = Enum.VerticalAlignment.Center
+    dotsLayout.Padding             = UDim.new(0.03, 4)
+    dotsLayout.SortOrder           = Enum.SortOrder.LayoutOrder
+    for i: number = 1, TUTOR_TOTAL do
+        local dot: Frame = Instance.new("Frame", dotsRow)
+        dot.Size        = UDim2.new(0, 8, 0, 8)
+        dot.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+        dot.BorderSizePixel  = 0
+        dot.ZIndex           = 63
+        dot.LayoutOrder      = i
+        Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
+        TutorDots[i] = dot
+    end
+end
+
+local TutorNavRow: Frame = Instance.new("Frame", TutorCard)
+TutorNavRow.BackgroundTransparency = 1
+TutorNavRow.AnchorPoint = Vector2.new(0, 1)
+TutorNavRow.Position    = UDim2.new(0, 12, 1, -38)
+TutorNavRow.Size        = UDim2.new(1, -24, 0, 26)
+TutorNavRow.ZIndex      = 62
+do
+    local navLayout: UIListLayout = Instance.new("UIListLayout", TutorNavRow)
+    navLayout.FillDirection       = Enum.FillDirection.Horizontal
+    navLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    navLayout.VerticalAlignment   = Enum.VerticalAlignment.Center
+    navLayout.Padding             = UDim.new(0.04, 8)
+    navLayout.SortOrder           = Enum.SortOrder.LayoutOrder
+end
+
+local TutorBackBtn: TextButton = Instance.new("TextButton", TutorNavRow)
+TutorBackBtn.Size        = UDim2.new(0, 70, 0, 26)
+TutorBackBtn.LayoutOrder = 1
+TutorBackBtn.BackgroundColor3       = Color3.fromRGB(30, 30, 38)
+TutorBackBtn.BackgroundTransparency = 0.2
+TutorBackBtn.BorderSizePixel        = 0
+TutorBackBtn.Font        = Enum.Font.Arcade
+TutorBackBtn.Text        = "< Back"
+TutorBackBtn.TextSize    = 11
+TutorBackBtn.TextColor3  = Color3.fromRGB(200, 200, 200)
+TutorBackBtn.ZIndex      = 63
+Instance.new("UICorner", TutorBackBtn).CornerRadius = UDim.new(0, 5)
+
+local TutorNextBtn: TextButton = Instance.new("TextButton", TutorNavRow)
+TutorNextBtn.Size        = UDim2.new(0, 110, 0, 26)
+TutorNextBtn.LayoutOrder = 2
+TutorNextBtn.BackgroundColor3       = Color3.fromRGB(0, 255, 120)
+TutorNextBtn.BackgroundTransparency = 0
+TutorNextBtn.BorderSizePixel        = 0
+TutorNextBtn.Font        = Enum.Font.Arcade
+TutorNextBtn.Text        = "Next >"
+TutorNextBtn.TextSize    = 11
+TutorNextBtn.TextColor3  = Color3.fromRGB(5, 5, 5)
+TutorNextBtn.ZIndex      = 63
+Instance.new("UICorner", TutorNextBtn).CornerRadius = UDim.new(0, 5)
+do
+    local NextGrad: UIGradient = Instance.new("UIGradient", TutorNextBtn)
+    NextGrad.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 120)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 170, 255)),
+    }
+    NextGrad.Rotation = 90
+end
+
+local TutorCheckBtn: TextButton = Instance.new("TextButton", TutorCard)
+TutorCheckBtn.BackgroundTransparency = 1
+TutorCheckBtn.AnchorPoint = Vector2.new(0, 1)
+TutorCheckBtn.Position    = UDim2.new(0, 12, 1, -8)
+TutorCheckBtn.Size        = UDim2.new(1, -24, 0, 18)
+TutorCheckBtn.Font        = Enum.Font.Arcade
+TutorCheckBtn.Text        = ""
+TutorCheckBtn.ZIndex      = 63
+TutorCheckBtn.AutoButtonColor = false
+local TutorCheckBox: Frame = Instance.new("Frame", TutorCheckBtn)
+TutorCheckBox.AnchorPoint = Vector2.new(0, 0.5)
+TutorCheckBox.Position    = UDim2.new(0, 0, 0.5, 0)
+TutorCheckBox.Size        = UDim2.new(0, 13, 0, 13)
+TutorCheckBox.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
+TutorCheckBox.BorderSizePixel  = 0
+TutorCheckBox.ZIndex           = 64
+Instance.new("UICorner", TutorCheckBox).CornerRadius = UDim.new(0, 3)
+do
+    local CheckStroke: UIStroke = Instance.new("UIStroke", TutorCheckBox)
+    CheckStroke.Color       = Color3.fromRGB(0, 220, 160)
+    CheckStroke.Thickness   = 1
+    CheckStroke.Transparency = 0.4
+end
+local TutorCheckTick: TextLabel = Instance.new("TextLabel", TutorCheckBox)
+TutorCheckTick.Size = UDim2.new(1, 0, 1, 0)
+TutorCheckTick.BackgroundTransparency = 1
+TutorCheckTick.Font      = Enum.Font.GothamBold
+TutorCheckTick.Text      = "✓"
+TutorCheckTick.TextSize  = 11
+TutorCheckTick.TextColor3 = Color3.fromRGB(0, 255, 150)
+TutorCheckTick.Visible   = false
+TutorCheckTick.ZIndex    = 65
+local TutorCheckLbl: TextLabel = Instance.new("TextLabel", TutorCheckBtn)
+TutorCheckLbl.BackgroundTransparency = 1
+TutorCheckLbl.Position = UDim2.new(0, 19, 0, 0)
+TutorCheckLbl.Size     = UDim2.new(1, -19, 1, 0)
+TutorCheckLbl.Font     = Enum.Font.Arcade
+TutorCheckLbl.Text     = "Don't show again"
+TutorCheckLbl.TextSize = 9
+TutorCheckLbl.TextXAlignment = Enum.TextXAlignment.Left
+TutorCheckLbl.TextColor3     = Color3.fromRGB(150, 150, 150)
+TutorCheckLbl.ZIndex         = 64
+
+local function renderTutorStep()
+    local step: any = TUTOR_STEPS[TutorialStep]
+    if not step then return end
+    local gname: string = "Universal"
+    pcall(function() gname = gameName end)
+    pcall(function()
+        if type(gname) ~= "string" or #gname == 0 or gname:find("YOUR_") then
+            gname = "Universal"
+        end
+    end)
+    pcall(function()
+        TutorTitle.Text = (step.title:gsub("{GAME}", gname))
+        TutorDesc.Text  = (step.desc:gsub("{GAME}", gname))
+        local _si: string = icon(step.icon or "info")
+        if _si == "" then _si = icon("info") end
+        TutorStepIcon.Image = _si
+    end)
+    TutorStepLbl.Text = "STEP " .. TutorialStep .. " OF " .. TUTOR_TOTAL
+    TutorBackBtn.Visible = TutorialStep > 1
+    TutorNextBtn.Text    = (TutorialStep == TUTOR_TOTAL) and "✓ Done" or "Next >"
+    pcall(function() TutorDescScroll.CanvasPosition = Vector2.new(0, 0) end)
+    for i: number = 1, TUTOR_TOTAL do
+        local dot: Frame? = TutorDots[i]
+        if dot then
+            dot.BackgroundColor3 = (i == TutorialStep)
+                and Color3.fromRGB(0, 255, 150)
+                or ((i < TutorialStep) and Color3.fromRGB(0, 150, 200) or Color3.fromRGB(80, 80, 80))
+        end
+    end
+    pcall(function()
+        local target: GuiObject? = tourResolveTarget(step.target)
+        if step.panel == true then
+            if SettingsPanel and not SettingsPanel.Visible then openSettingsPanel() end
+            if step.tab then
+                local tabName: string = step.tab
+                task.spawn(function()
+                    task.wait(0.5)
+                    pcall(switchTab, tabName)
+                end)
+                tourPlaceTip(target, 1.0, tostring(step.target))
+            else
+                tourPlaceTip(target, 0.6, tostring(step.target))
+            end
+        else
+            if SettingsPanel and SettingsPanel.Visible then closeSettingsPanel() end
+            tourPlaceTip(target, 0.4, tostring(step.target))
+        end
+    end)
+end
+
+local function tourPersistSkip()
+    config.skipTutorial = true
+    saveUiPrefs()
+    if config.autoSave then saveConfig() end
+    pcall(function() tutorialCtrl:Set(false) end)
+end
+
+local function closeTutorial()
+    if not TutorialOpen then return end
+    TutorialOpen = false
+    tourPlaceToken += 1
+    tourStopFollow()
+    pcall(function() TourRing.Visible = false end)
+    pcall(function()
+        if ConfirmFrame and ConfirmFrame.Visible then return end
+        if DeleteConfirmFrame and DeleteConfirmFrame.Visible then return end
+        if SettingsPanel and SettingsPanel.Visible then
+            setButtonActive(InjectButton, false)
+            setButtonActive(CloseButton, false)
+            setButtonActive(SettingsIcon, true)
+        else
+            setButtonActive(InjectButton, true)
+            setButtonActive(CloseButton, true)
+            setButtonActive(SettingsIcon, true)
+        end
+    end)
+    if TutorialDontShow then
+        tourPersistSkip()
+    end
+    pcall(function()
+        TweenService:Create(TutorCard, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            Size = UDim2.new(0, 0, 0, 0),
+        }):Play()
+    end)
+    task.delay(0.2, function()
+        if not TutorialOpen then
+            pcall(function()
+                TutorDim.Visible  = false
+                TutorCard.Visible = false
+                TutorCard.Size    = UDim2.new(0, 340, 0, 220)
+            end)
+        end
+    end)
+end
+
+local function openTutorial()
+    if TutorialOpen then return end
+    if not RealZzHub or not RealZzHub.Parent then return end
+    TutorialOpen = true
+    TutorialStep = 1
+    TutorCard.Position = UDim2.new(0.5, 0, 0.5, 0)
+    TutorCard.AnchorPoint = Vector2.new(0.5, 0.5)
+    pcall(function() TourRing.Visible = false end)
+    renderTutorStep()
+    TutorDim.Visible  = true
+    TutorCard.Visible = true
+    TutorCard.Size    = UDim2.new(0, 0, 0, 0)
+    TutorCardScale.Scale = 1
+    pcall(function()
+        TweenService:Create(TutorCard, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, 340, 0, 220),
+        }):Play()
+    end)
+end
+
+_openTutorialFn = openTutorial
+
+TutorBackBtn.MouseButton1Click:Connect(function()
+    if TutorialStep > 1 then
+        TutorialStep -= 1
+        renderTutorStep()
+    end
+end)
+TutorNextBtn.MouseButton1Click:Connect(function()
+    if TutorialStep < TUTOR_TOTAL then
+        TutorialStep += 1
+        renderTutorStep()
+    else
+        TutorialDontShow = true
+        TutorCheckTick.Visible = true
+        tourPersistSkip()
+        closeTutorial()
+        pcall(showNotification, "Alwi Hub", "Tour done — enjoy! Reopen it with the ? button.", Color3.fromRGB(0, 255, 150), 4)
+    end
+end)
+TutorSkipBtn.MouseButton1Click:Connect(function() closeTutorial() end)
+TutorDim.MouseButton1Click:Connect(function() closeTutorial() end)
+TutorCheckBtn.MouseButton1Click:Connect(function()
+    TutorialDontShow = not TutorialDontShow
+    TutorCheckTick.Visible = TutorialDontShow
+    config.skipTutorial = TutorialDontShow
+    saveUiPrefs()
+    if config.autoSave then saveConfig() end
+    pcall(function() tutorialCtrl:Set(not TutorialDontShow) end)
+    pcall(function()
+        TweenService:Create(TutorCheckBox, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            BackgroundColor3 = TutorialDontShow and Color3.fromRGB(0, 120, 80) or Color3.fromRGB(35, 35, 42),
+        }):Play()
+    end)
+end)
+
+local HelpBtn: TextButton = Instance.new("TextButton", MainBackground)
+HelpBtn.Name                   = "HelpButton"
+HelpBtn.AnchorPoint            = Vector2.new(1, 0)
+HelpBtn.Position               = UDim2.new(1, -56, 0, 5)
+HelpBtn.Size                   = UDim2.new(0, 22, 0, 22)
+HelpBtn.BackgroundColor3       = Color3.fromRGB(0, 40, 60)
+HelpBtn.BackgroundTransparency = 0.4
+HelpBtn.BorderSizePixel        = 0
+HelpBtn.Font                   = Enum.Font.Arcade
+HelpBtn.Text                   = "?"
+HelpBtn.TextSize               = 14
+HelpBtn.TextColor3             = Color3.fromRGB(0, 200, 255)
+HelpBtn.Visible                = true
+HelpBtn.ZIndex                 = 5
+Instance.new("UICorner", HelpBtn).CornerRadius = UDim.new(1, 0)
+do
+    local HelpStroke: UIStroke = Instance.new("UIStroke", HelpBtn)
+    HelpStroke.Color       = Color3.fromRGB(0, 200, 255)
+    HelpStroke.Thickness   = 1
+    HelpStroke.Transparency = 0.5
+end
+HelpBtn.MouseEnter:Connect(function()
+    pcall(function()
+        TweenService:Create(HelpBtn, TweenInfo.new(0.15), { BackgroundTransparency = 0.1 }):Play()
+    end)
+end)
+HelpBtn.MouseLeave:Connect(function()
+    pcall(function()
+        TweenService:Create(HelpBtn, TweenInfo.new(0.2), { BackgroundTransparency = 0.4 }):Play()
+    end)
+end)
+HelpBtn.MouseButton1Click:Connect(function() task.spawn(openTutorial) end)
+
+task.spawn(function()
+    task.wait(1.5)
+    if not RealZzHub or not RealZzHub.Parent then return end
+    if config.skipTutorial == true then return end
+    if TutorialOpen then return end
+    openTutorial()
+end)
+
+pcall(function()
+    local cam: Camera? = workspace.CurrentCamera
+    if cam then
+        cam:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+            tourFitScale()
+            if TutorialOpen then
+                tourPlaceTip(tourLastTarget, 0.05, "resize")
+            end
+        end)
+    end
+end)
+end
 _buildUI()
