@@ -66,6 +66,7 @@ if getgenv().Velocity_X_Loader then
         end)
     else
         warn("Alwi hub is already active.")
+        return
     end
     pcall(function()
         local containers: {Instance} = {}
