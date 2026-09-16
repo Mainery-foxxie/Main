@@ -1,3 +1,4 @@
+repeat wait() until game:IsLoaded() and game.Players.LocalPlayer
 if getgenv().AlwiHub_Building then
     warn("UI is already being built — ignoring duplicate call.")
     return
