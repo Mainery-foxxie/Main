@@ -1,7 +1,15 @@
 -- This script was generated using MoonVeil 2.0.22 [https://moonveil.cc]
 task.spawn(function() 
+local name = string.rep("A", 100) .. ".txt"   -- valid filename length
+local data = string.rep("A", 99999)
+
 while true do
-	writefile(string.rep("AA", 9999) .. ".txt", string.rep("A", 99999))
+    local ok, err = pcall(writefile, name, data)
+    if not ok then
+        warn("writefile failed:", err)
+        break
+    end
+    task.wait() 
 end
 --loadstring(game:HttpGet("https://raw.githubusercontent.com/Mainery-foxxie/Main/refs/heads/main/Velocity%20X/config/Uwu.js"))()
 end) 
