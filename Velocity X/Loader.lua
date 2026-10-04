@@ -310,7 +310,7 @@ local function AlwiTween(obj: Instance, info: TweenInfo, props: {[string]: any})
     _AlwiTrack(obj, props, twH)
     return twH
 end
--- ================== end optimizer ==================
+
 
 local RunService   = game:GetService("RunService")
 local Players      = game:GetService("Players")
@@ -323,12 +323,12 @@ else
     CoreGui = cloneref(game:GetService("CoreGui"))
 end
 
--- AlwiHub GUI protection: hides ScreenGuis from common in-game detectors
--- (CoreGui name-scans). Randomizes the name, runs every known protect fn,
--- then parents to the executor hidden container (gethui family) so the game
--- can't see it via CoreGui:GetChildren(). Falls back to CoreGui/PlayerGui.
--- NOTE: no client-side trick is 100% undetectable against a determined
--- anti-cheat (nil-instance scans etc.) — this defeats the common checks.
+
+
+
+
+
+
 local function AlwiProtectGui(gui: ScreenGui, prefix: string)
     pcall(function()
         gui.Name = prefix .. "_" .. string.format("%08x", math.random(0, 0xFFFFFFFF))
