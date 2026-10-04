@@ -87,7 +87,7 @@ if getgenv().Velocity_X_Loader then
             for _, g: Instance in c:GetChildren() do
                 if g:IsA("ScreenGui") then
                     local n: string = g.Name
-                    if n == "AlwiPerfHudGui" or n == "AlwiTourGui"
+                    if (type(n) == "string" and (n:sub(1, 11) == "AlwiPerfHud" or n:sub(1, 8) == "AlwiTour" or n:sub(1, 9) == "Introvert"))
                         or (type(n) == "string" and n:sub(1, 9) == "Velocity_") then
                         pcall(function() (g :: ScreenGui):Destroy() end)
                     end
@@ -162,6 +162,156 @@ end
 local cloneref: (obj: any) -> any = cloneref or function(obj: any): any return obj end
 local HttpService  = cloneref(game:GetService("HttpService"))
 local TweenService = game:GetService("TweenService")
+
+local _AlwiUIS = game:GetService("UserInputService")
+local _AlwiLowOverride: any = nil
+pcall(function()
+    if getgenv then _AlwiLowOverride = getgenv().AlwiHub_LowPerf end
+end)
+if _AlwiLowOverride == nil then
+    local _g: any = rawget(_G, "AlwiHub_LowPerf")
+    if _g ~= nil then _AlwiLowOverride = _g end
+end
+local _AlwiLow: boolean = false
+pcall(function()
+    local plat = _AlwiUIS:GetPlatform()
+    if plat == Enum.Platform.Android or plat == Enum.Platform.IOS then
+        _AlwiLow = true
+    end
+end)
+if _AlwiLowOverride == true then
+    _AlwiLow = true
+elseif _AlwiLowOverride == false then
+    _AlwiLow = false
+end
+local function AlwiIsLow(): boolean
+    return _AlwiLow == true
+end
+pcall(function()
+    if getgenv then
+        getgenv().AlwiHub_LowPerf = _AlwiLow
+        getgenv().AlwiHub_IsLowEnd = AlwiIsLow
+    end
+end)
+task.spawn(function()
+    if _AlwiLowOverride == false then return end
+    local RS = game:GetService("RunService")
+    local n: number = 0
+    local conn: RBXScriptConnection? = nil
+    pcall(function()
+        conn = RS.Heartbeat:Connect(function() n += 1 end)
+    end)
+    for _ = 1, 5 do
+        task.wait(1)
+        local fps: number = n
+        n = 0
+        if fps > 0 and fps < 27 then
+            _AlwiLow = true
+            pcall(function()
+                if getgenv then getgenv().AlwiHub_LowPerf = true end
+            end)
+            break
+        end
+    end
+    pcall(function()
+        if conn then conn:Disconnect() end
+    end)
+end)
+local _ActiveTweens: {[any]: {any}} = {}
+local function _AlwiApplyProps(obj: Instance, props: {[string]: any})
+    for k: string, v: any in props do
+        pcall(function()
+            (obj :: any)[k] = v
+        end)
+    end
+end
+local function _AlwiCancelOverlap(obj: Instance, props: {[string]: any})
+    local list: {any}? = _ActiveTweens[obj]
+    if not list then return end
+    for i: number = #list, 1, -1 do
+        local e: any = list[i]
+        local overlap: boolean = false
+        for k: string, _ in props do
+            if e.keys[k] then overlap = true break end
+        end
+        if overlap then
+            pcall(function() e.tw:Cancel() end)
+            table.remove(list, i)
+        end
+    end
+    if #list == 0 then _ActiveTweens[obj] = nil end
+end
+local function _AlwiTrack(obj: Instance, props: {[string]: any}, tw: any)
+    local list: {any}? = _ActiveTweens[obj]
+    if not list then
+        list = {}
+        _ActiveTweens[obj] = list
+    end
+    local keys: {[string]: boolean} = {}
+    for k: string, _ in props do keys[k] = true end
+    local e: {[string]: any} = { tw = tw, keys = keys }
+    table.insert(list, e)
+    pcall(function()
+        tw.Completed:Connect(function()
+            local l2: {any}? = _ActiveTweens[obj]
+            if l2 then
+                for i: number = #l2, 1, -1 do
+                    if l2[i] == e then table.remove(l2, i) break end
+                end
+                if #l2 == 0 then _ActiveTweens[obj] = nil end
+            end
+        end)
+    end)
+end
+local function _AlwiFakeTween(obj: Instance, props: {[string]: any}): any
+    local be: BindableEvent = Instance.new("BindableEvent")
+    local tw: {[string]: any} = {}
+    tw.Completed = be.Event
+    function tw.Play(_self: any)
+        _AlwiApplyProps(obj, props)
+        task.defer(function()
+            pcall(function() be:Fire() end)
+        end)
+    end
+    function tw.Cancel(_self: any) end
+    function tw.Pause(_self: any) end
+    function tw.Destroy(_self: any)
+        pcall(function() be:Destroy() end)
+    end
+    return tw
+end
+local function AlwiTween(obj: Instance, info: TweenInfo, props: {[string]: any}): any
+    local dur: number = 0.2
+    local rep: number = 0
+    local rev: boolean = false
+    pcall(function()
+        dur = (info :: TweenInfo).Time
+        rep = (info :: TweenInfo).RepeatCount
+        rev = (info :: TweenInfo).Reverses
+    end)
+    if AlwiIsLow() then
+        if dur > 0.3 or rep ~= 0 or rev == true then
+            _AlwiCancelOverlap(obj, props)
+            return _AlwiFakeTween(obj, props)
+        end
+        _AlwiCancelOverlap(obj, props)
+        local ok: boolean, tw: any = pcall(function()
+            local qi: TweenInfo = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+            return TweenService:Create(obj, qi, props)
+        end)
+        if ok and tw then
+            _AlwiTrack(obj, props, tw)
+            return tw
+        end
+        return _AlwiFakeTween(obj, props)
+    end
+    _AlwiCancelOverlap(obj, props)
+    local twH: any = TweenService:Create(obj, info, props)
+    _AlwiTrack(obj, props, twH)
+    return twH
+end
+-- ================== end optimizer ==================
+
 local RunService   = game:GetService("RunService")
 local Players      = game:GetService("Players")
 local player       = Players.LocalPlayer
@@ -171,6 +321,50 @@ if RunService:IsStudio() then
     CoreGui = player.PlayerGui
 else
     CoreGui = cloneref(game:GetService("CoreGui"))
+end
+
+-- AlwiHub GUI protection: hides ScreenGuis from common in-game detectors
+-- (CoreGui name-scans). Randomizes the name, runs every known protect fn,
+-- then parents to the executor hidden container (gethui family) so the game
+-- can't see it via CoreGui:GetChildren(). Falls back to CoreGui/PlayerGui.
+-- NOTE: no client-side trick is 100% undetectable against a determined
+-- anti-cheat (nil-instance scans etc.) — this defeats the common checks.
+local function AlwiProtectGui(gui: ScreenGui, prefix: string)
+    pcall(function()
+        gui.Name = prefix .. "_" .. string.format("%08x", math.random(0, 0xFFFFFFFF))
+    end)
+    pcall(function()
+        if _syn and _syn.protect_gui then _syn.protect_gui(gui) end
+    end)
+    pcall(function()
+        local pg: any = rawget(_G, "protect_gui") or rawget(_G, "protectgui")
+        if type(pg) == "function" then pg(gui) end
+    end)
+    if gui.Parent then return end
+    if RunService:IsStudio() then
+        pcall(function() gui.Parent = player.PlayerGui end)
+        return
+    end
+    local hidden: any = nil
+    pcall(function()
+        local gh: any = rawget(_G, "gethui")
+        if type(gh) == "function" then hidden = gh() end
+    end)
+    if typeof(hidden) ~= "Instance" then
+        pcall(function()
+            local gh2: any = rawget(_G, "get_hidden_gui") or rawget(_G, "get_hidden_ui") or rawget(_G, "gethui")
+            if type(gh2) == "function" then hidden = gh2() end
+        end)
+    end
+    if typeof(hidden) == "Instance" then
+        pcall(function() gui.Parent = hidden end)
+    end
+    if not gui.Parent then
+        pcall(function() gui.Parent = CoreGui end)
+    end
+    if not gui.Parent then
+        pcall(function() gui.Parent = player.PlayerGui end)
+    end
 end
 
 local icons: {[string]: string} = {}
@@ -195,7 +389,7 @@ end
 
 local gui: ScreenGui = Instance.new("ScreenGui")
 gui.Name            = "Introvert"
-gui.Parent          = CoreGui
+AlwiProtectGui(gui, "Introvert")
 gui.IgnoreGuiInset  = true
 gui.ResetOnSpawn    = false
 gui.DisplayOrder    = 999999
@@ -347,6 +541,7 @@ if not _earlySkipIntro then
     progressGradient.Color = goldGradient
 
     task.spawn(function()
+        if AlwiIsLow ~= nil and AlwiIsLow() then return end
         local _gradFrame: number = 0
         while gui.Parent do
             _gradFrame += 1
@@ -384,32 +579,32 @@ if not _earlySkipIntro then
     task.spawn(function()
         task.wait(3.5)
         pcall(function()
-            TweenService:Create(scanlineVig, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {
+            AlwiTween(scanlineVig, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {
                 BackgroundTransparency = 0.85
             }):Play()
         end)
     end)
 
-    TweenService:Create(flash, TweenInfo.new(0.15), { BackgroundTransparency = 0.4 }):Play()
+    AlwiTween(flash, TweenInfo.new(0.15), { BackgroundTransparency = 0.4 }):Play()
     task.wait(0.15)
-    TweenService:Create(flash, TweenInfo.new(0.5),  { BackgroundTransparency = 1   }):Play()
+    AlwiTween(flash, TweenInfo.new(0.5),  { BackgroundTransparency = 1   }):Play()
 
-    TweenService:Create(image, TweenInfo.new(1.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    AlwiTween(image, TweenInfo.new(1.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
         Size = UDim2.new(0, 500, 0, 500), Rotation = 0, ImageTransparency = 0
     }):Play()
-    TweenService:Create(glow, TweenInfo.new(1.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+    AlwiTween(glow, TweenInfo.new(1.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
         Size = UDim2.new(0, 700, 0, 700), ImageTransparency = 0.5
     }):Play()
 
     task.wait(0.3)
 
-    TweenService:Create(title, TweenInfo.new(1, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
+    AlwiTween(title, TweenInfo.new(1, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
         Position = UDim2.new(0, 0, 0.34, 0), TextTransparency = 0
     }):Play()
 
     task.wait(0.2)
 
-    TweenService:Create(sub, TweenInfo.new(1, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
+    AlwiTween(sub, TweenInfo.new(1, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
         Position = UDim2.new(0, 0, 0.47, 0), TextTransparency = 0
     }):Play()
 
@@ -417,55 +612,62 @@ if not _earlySkipIntro then
     barBg.Visible = true
 
     task.spawn(function()
-        for i: number = 0, 100 do
+        for i: number = 0, 100, (AlwiIsLow() and 5 or 1) do
             progressText.Text = i .. "%"
             bar.Size = UDim2.new(i / 100, 0, 1, 0)
-            task.wait(0.03)
+            task.wait(AlwiIsLow() and 0.02 or 0.03)
         end
         progressText.Text = "✓ Ready"
-        TweenService:Create(progressText, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        AlwiTween(progressText, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
             Rotation = 2
         }):Play()
-        TweenService:Create(flash, TweenInfo.new(0.2), { BackgroundTransparency = 0.7 }):Play()
+        AlwiTween(flash, TweenInfo.new(0.2), { BackgroundTransparency = 0.7 }):Play()
         task.wait(0.2)
-        TweenService:Create(flash, TweenInfo.new(0.4), { BackgroundTransparency = 1   }):Play()
+        AlwiTween(flash, TweenInfo.new(0.4), { BackgroundTransparency = 1   }):Play()
     end)
 
     task.spawn(function()
+        if AlwiIsLow ~= nil and AlwiIsLow() then
+            pcall(function()
+                image.Rotation = 0
+                glow.Rotation = 0
+            end)
+            return
+        end
         while gui.Parent do
-            TweenService:Create(image, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+            AlwiTween(image, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
                 Rotation = 8, Size = UDim2.new(0, 530, 0, 530)
             }):Play()
-            TweenService:Create(glow, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+            AlwiTween(glow, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
                 Rotation = -15, Size = UDim2.new(0, 760, 0, 760)
             }):Play()
             task.wait(2)
-            TweenService:Create(image, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+            AlwiTween(image, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
                 Rotation = -8, Size = UDim2.new(0, 500, 0, 500)
             }):Play()
-            TweenService:Create(glow, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+            AlwiTween(glow, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
                 Rotation = 15, Size = UDim2.new(0, 700, 0, 700)
             }):Play()
             task.wait(2)
         end
     end)
 
-    task.wait(4)
+    task.wait(AlwiIsLow() and 1.2 or 4)
 
-    TweenService:Create(flash, TweenInfo.new(0.4), { BackgroundTransparency = 0.2 }):Play()
+    AlwiTween(flash, TweenInfo.new(0.4), { BackgroundTransparency = 0.2 }):Play()
     task.wait(0.3)
 
-    TweenService:Create(image, TweenInfo.new(1, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+    AlwiTween(image, TweenInfo.new(1, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
         Size = UDim2.new(0, 0, 0, 0), Rotation = 180, ImageTransparency = 1
     }):Play()
-    TweenService:Create(glow, TweenInfo.new(1), { ImageTransparency = 1, Size = UDim2.new(0, 0, 0, 0) }):Play()
-    TweenService:Create(title, TweenInfo.new(1), { Position = UDim2.new(0, -1000, 0.34, 0), TextTransparency = 1 }):Play()
-    TweenService:Create(sub, TweenInfo.new(1),   { Position = UDim2.new(0, 1000,  0.47, 0), TextTransparency = 1 }):Play()
-    TweenService:Create(barBg, TweenInfo.new(1), { BackgroundTransparency = 1 }):Play()
-    TweenService:Create(bar, TweenInfo.new(1),   { BackgroundTransparency = 1 }):Play()
-    TweenService:Create(progressText, TweenInfo.new(1), { TextTransparency = 1 }):Play()
+    AlwiTween(glow, TweenInfo.new(1), { ImageTransparency = 1, Size = UDim2.new(0, 0, 0, 0) }):Play()
+    AlwiTween(title, TweenInfo.new(1), { Position = UDim2.new(0, -1000, 0.34, 0), TextTransparency = 1 }):Play()
+    AlwiTween(sub, TweenInfo.new(1),   { Position = UDim2.new(0, 1000,  0.47, 0), TextTransparency = 1 }):Play()
+    AlwiTween(barBg, TweenInfo.new(1), { BackgroundTransparency = 1 }):Play()
+    AlwiTween(bar, TweenInfo.new(1),   { BackgroundTransparency = 1 }):Play()
+    AlwiTween(progressText, TweenInfo.new(1), { TextTransparency = 1 }):Play()
 
-    task.wait(1.5)
+    task.wait(AlwiIsLow() and 0.4 or 1.5)
     gui:Destroy()
 end
 
@@ -627,21 +829,7 @@ local RealZzHub: ScreenGui = Instance.new("ScreenGui")
 RealZzHub.Name            = "Velocity_" .. randomString(10)
 RealZzHub.ZIndexBehavior  = Enum.ZIndexBehavior.Sibling
 
-pcall(function()
-    if _syn and _syn.protect_gui then
-        _syn.protect_gui(RealZzHub)
-        RealZzHub.Parent = CoreGui
-    else
-        local _gethui: any = rawget(_G, "gethui")
-        if _gethui then
-            RealZzHub.Parent = _gethui()
-        end
-    end
-end)
-
-if not RealZzHub.Parent then
-    RealZzHub.Parent = CoreGui
-end
+AlwiProtectGui(RealZzHub, "Velocity")
 
 local LoaderScale: UIScale = Instance.new("UIScale", RealZzHub)
 LoaderScale.Scale = 1
@@ -791,15 +979,22 @@ do
     GlowStroke.Thickness   = 3
     GlowStroke.Transparency = 0.7
     task.spawn(function()
+        if AlwiIsLow ~= nil and AlwiIsLow() then
+            pcall(function()
+                GlowStroke.Transparency = 0.5
+                GlowStroke.Thickness = 3
+            end)
+            return
+        end
         while BtnGlowRing and BtnGlowRing.Parent do
             pcall(function()
-                TweenService:Create(GlowStroke, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                AlwiTween(GlowStroke, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
                     Transparency = 0.3, Thickness = 5
                 }):Play()
             end)
             task.wait(1.2)
             pcall(function()
-                TweenService:Create(GlowStroke, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                AlwiTween(GlowStroke, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
                     Transparency = 0.7, Thickness = 3
                 }):Play()
             end)
@@ -842,13 +1037,13 @@ local function setBtnState(state: string)
         if state == "error" then
             BtnGradient.Color = _btnErrorGrad
             BtnStroke.Color   = Color3.fromRGB(255, 80, 80)
-            for _ = 1, 3 do
-                TweenService:Create(BtnScale, TweenInfo.new(0.055, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { Scale = 1.03 }):Play()
+            for _ = 1, (AlwiIsLow() and 1 or 3) do
+                AlwiTween(BtnScale, TweenInfo.new(0.055, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { Scale = 1.03 }):Play()
                 task.wait(0.06)
-                TweenService:Create(BtnScale, TweenInfo.new(0.055, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { Scale = 0.97 }):Play()
+                AlwiTween(BtnScale, TweenInfo.new(0.055, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { Scale = 0.97 }):Play()
                 task.wait(0.06)
             end
-            TweenService:Create(BtnScale, TweenInfo.new(0.12, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+            AlwiTween(BtnScale, TweenInfo.new(0.12, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
             task.delay(1.8, function()
                 pcall(function()
                     BtnGradient.Color = _btnNormalGrad
@@ -858,10 +1053,10 @@ local function setBtnState(state: string)
         elseif state == "success" then
             BtnGradient.Color = _btnSuccessGrad
             BtnStroke.Color   = Color3.fromRGB(0, 255, 120)
-            TweenService:Create(BtnScale, TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1.06 }):Play()
+            AlwiTween(BtnScale, TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1.06 }):Play()
             task.delay(0.2, function()
                 pcall(function()
-                    TweenService:Create(BtnScale, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Scale = 1 }):Play()
+                    AlwiTween(BtnScale, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Scale = 1 }):Play()
                 end)
             end)
         else
@@ -874,25 +1069,25 @@ end
 InjectButton.MouseEnter:Connect(function()
     if not InjectButton.Active then return end
     pcall(function()
-        TweenService:Create(BtnScale,  TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1.05 }):Play()
-        TweenService:Create(BtnStroke, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Thickness = 2.5, Transparency = 0 }):Play()
+        AlwiTween(BtnScale,  TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1.05 }):Play()
+        AlwiTween(BtnStroke, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Thickness = 2.5, Transparency = 0 }):Play()
     end)
 end)
 InjectButton.MouseLeave:Connect(function()
     pcall(function()
-        TweenService:Create(BtnScale,  TweenInfo.new(0.20, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Scale = 1 }):Play()
-        TweenService:Create(BtnStroke, TweenInfo.new(0.20, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Thickness = 1.5, Transparency = 0 }):Play()
+        AlwiTween(BtnScale,  TweenInfo.new(0.20, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+        AlwiTween(BtnStroke, TweenInfo.new(0.20, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Thickness = 1.5, Transparency = 0 }):Play()
     end)
 end)
 InjectButton.MouseButton1Down:Connect(function()
     if not InjectButton.Active then return end
     pcall(function()
-        TweenService:Create(BtnScale, TweenInfo.new(0.10, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Scale = 0.94 }):Play()
+        AlwiTween(BtnScale, TweenInfo.new(0.10, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Scale = 0.94 }):Play()
     end)
 end)
 InjectButton.MouseButton1Up:Connect(function()
     pcall(function()
-        TweenService:Create(BtnScale, TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+        AlwiTween(BtnScale, TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
     end)
 end)
 
@@ -1160,39 +1355,39 @@ GCardClick.MouseButton1Click:Connect(function()
     GCardRipple.BackgroundTransparency = 0.55
     GCardRipple.Position             = UDim2.new(0.5, 0, 0.5, 0)
     pcall(function()
-        TweenService:Create(GCardRipple, TweenInfo.new(0.55, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        AlwiTween(GCardRipple, TweenInfo.new(0.55, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
             Size = UDim2.new(2.5, 0, 6, 0),
             BackgroundTransparency = 1,
         }):Play()
     end)
 
     pcall(function()
-        TweenService:Create(GreetingScale, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        AlwiTween(GreetingScale, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
             Scale = 0.93,
         }):Play()
     end)
     task.delay(0.12, function()
         pcall(function()
-            TweenService:Create(GreetingScale, TweenInfo.new(0.4, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {
+            AlwiTween(GreetingScale, TweenInfo.new(0.4, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {
                 Scale = 1,
             }):Play()
         end)
     end)
 
     pcall(function()
-        TweenService:Create(GCardIcon, TweenInfo.new(0.1, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        AlwiTween(GCardIcon, TweenInfo.new(0.1, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
             Rotation = -18,
         }):Play()
     end)
     task.delay(0.12, function()
         pcall(function()
-            TweenService:Create(GCardIcon, TweenInfo.new(0.15, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out), {
+            AlwiTween(GCardIcon, TweenInfo.new(0.15, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out), {
                 Rotation = 18,
             }):Play()
         end)
         task.delay(0.16, function()
             pcall(function()
-                TweenService:Create(GCardIcon, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                AlwiTween(GCardIcon, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
                     Rotation = 0,
                 }):Play()
             end)
@@ -1204,13 +1399,13 @@ GCardClick.MouseButton1Click:Connect(function()
     task.delay(1.2, function()
         pcall(function()
             if _greetingShowDiscord then
-                TweenService:Create(GreetingLabel, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+                AlwiTween(GreetingLabel, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
                     TextTransparency = 1,
                 }):Play()
                 task.wait(0.32)
                 GreetingLabel.Text = "Need help? Join our Discord!"
                 GreetingLabel.TextColor3 = Color3.fromRGB(170, 160, 255)
-                TweenService:Create(GreetingLabel, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+                AlwiTween(GreetingLabel, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
                     TextTransparency = 0,
                 }):Play()
             end
@@ -1248,21 +1443,10 @@ PerfHudGui.ResetOnSpawn   = false
 PerfHudGui.DisplayOrder   = 999998
 pcall(function()
     for _, gui: Instance in CoreGui:GetChildren() do
-        if gui.Name == "AlwiPerfHudGui" then gui:Destroy() end
+        if gui.Name == "AlwiPerfHudGui" or (type(gui.Name) == "string" and gui.Name:sub(1, 11) == "AlwiPerfHud") then gui:Destroy() end
     end
 end)
-pcall(function()
-    if _syn and _syn.protect_gui then
-        _syn.protect_gui(PerfHudGui)
-        PerfHudGui.Parent = CoreGui
-    else
-        local _gethui: any = rawget(_G, "gethui")
-        if _gethui then PerfHudGui.Parent = _gethui() end
-    end
-end)
-if not PerfHudGui.Parent then
-    PerfHudGui.Parent = CoreGui
-end
+AlwiProtectGui(PerfHudGui, "AlwiPerfHud")
 
 local HudScale: UIScale = Instance.new("UIScale", PerfHudGui)
 HudScale.Scale = 1
@@ -2232,15 +2416,16 @@ do
     AvatarCardStroke.Thickness    = 1.5
     AvatarCardStroke.Transparency = 0.35
     task.spawn(function()
+        if AlwiIsLow ~= nil and AlwiIsLow() then return end
         while AvatarCard and AvatarCard.Parent do
             pcall(function()
-                TweenService:Create(AvatarCardStroke, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                AlwiTween(AvatarCardStroke, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
                     Color = Color3.fromRGB(0, 200, 255), Transparency = 0.6
                 }):Play()
             end)
             task.wait(2)
             pcall(function()
-                TweenService:Create(AvatarCardStroke, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                AlwiTween(AvatarCardStroke, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
                     Color = Color3.fromRGB(0, 255, 150), Transparency = 0.35
                 }):Play()
             end)
@@ -2396,7 +2581,7 @@ EffectClick2 = function(c, p)
     local UICorner = Instance.new("UICorner")
     UICorner.CornerRadius = UDim.new(1, 0)
     UICorner.Parent = ClickButtonCircle
-    local expandTween = TweenService:Create(ClickButtonCircle, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+    local expandTween = AlwiTween(ClickButtonCircle, TweenInfo.new(AlwiIsLow() and 0.35 or 1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
         Size = UDim2.new(0, c.AbsoluteSize.X * 1.5, 0, c.AbsoluteSize.X * 1.5),
         BackgroundTransparency = 1
     })
@@ -2408,9 +2593,9 @@ RobloxBadge.MouseButton1Click:Connect(function()
     pcall(setclipboard, "https://www.roblox.com/users/1291925/profile")
     task.spawn(function()
         pcall(function()
-            TweenService:Create(RobloxBadgeScale, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Scale = 0.88 }):Play()
+            AlwiTween(RobloxBadgeScale, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Scale = 0.88 }):Play()
             task.wait(0.09)
-            TweenService:Create(RobloxBadgeScale, TweenInfo.new(0.45, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+            AlwiTween(RobloxBadgeScale, TweenInfo.new(0.45, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), { Scale = 1 }):Play()
         end)
     end)
     RobloxBadge.Text = "✓ Copied!"
@@ -2625,9 +2810,9 @@ local function makeSocialBtn(
     btn.MouseButton1Click:Connect(function()
         pcall(setclipboard, link)
         pcall(function()
-            TweenService:Create(btnScale, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Scale = 0.88 }):Play()
+            AlwiTween(btnScale, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Scale = 0.88 }):Play()
             task.wait(0.09)
-            TweenService:Create(btnScale, TweenInfo.new(0.45, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+            AlwiTween(btnScale, TweenInfo.new(0.45, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), { Scale = 1 }):Play()
         end)
         local prev = lbl.Text
         lbl.Text = "✓ Copied"
@@ -2663,15 +2848,16 @@ do
     HelperCardStroke.Thickness    = 1.5
     HelperCardStroke.Transparency = 0.35
     task.spawn(function()
+        if AlwiIsLow ~= nil and AlwiIsLow() then return end
         while HelperCard and HelperCard.Parent do
             pcall(function()
-                TweenService:Create(HelperCardStroke, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                AlwiTween(HelperCardStroke, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
                     Color = Color3.fromRGB(180, 100, 255), Transparency = 0.6
                 }):Play()
             end)
             task.wait(2)
             pcall(function()
-                TweenService:Create(HelperCardStroke, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                AlwiTween(HelperCardStroke, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
                     Color = Color3.fromRGB(100, 120, 255), Transparency = 0.35
                 }):Play()
             end)
@@ -2825,11 +3011,11 @@ HelperProfileBtn.MouseButton1Click:Connect(function()
     pcall(setclipboard, "https://www.roblox.com/users/1930806367/profile")
     task.spawn(function()
         pcall(function()
-            TweenService:Create(HelperRobloxBtnScale,
+            AlwiTween(HelperRobloxBtnScale,
                 TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
                 { Scale = 0.88 }):Play()
             task.wait(0.09)
-            TweenService:Create(HelperRobloxBtnScale,
+            AlwiTween(HelperRobloxBtnScale,
                 TweenInfo.new(0.45, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
                 { Scale = 1 }):Play()
         end)
@@ -2985,10 +3171,10 @@ task.spawn(function()
     if ok and url then
         pcall(function()
             HelperAvatarImg.Image = url
-            TweenService:Create(HelperAvatarImg,
+            AlwiTween(HelperAvatarImg,
                 TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
                 { ImageTransparency = 0 }):Play()
-            TweenService:Create(HelperLoadingLbl,
+            AlwiTween(HelperLoadingLbl,
                 TweenInfo.new(0.2),
                 { TextTransparency = 1 }):Play()
         end)
@@ -3040,10 +3226,10 @@ local function tweenTabColor(btn: TextButton, col: Color3, t: number)
     local lbl  = btn:FindFirstChild("TabLabel", true)
     local iimg = btn:FindFirstChild("TabIcon",  true)
     if lbl then
-        pcall(function() TweenService:Create(lbl,  TweenInfo.new(t, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { TextColor3  = col }):Play() end)
+        pcall(function() AlwiTween(lbl,  TweenInfo.new(t, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { TextColor3  = col }):Play() end)
     end
     if iimg then
-        pcall(function() TweenService:Create(iimg, TweenInfo.new(t, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { ImageColor3 = col }):Play() end)
+        pcall(function() AlwiTween(iimg, TweenInfo.new(t, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { ImageColor3 = col }):Play() end)
     end
 end
 
@@ -3069,7 +3255,7 @@ local function switchTab(tabName: string)
 
     local tbl: any = TAB_POSITIONS[tabName]
     pcall(function()
-        TweenService:Create(TabIndicator,
+        AlwiTween(TabIndicator,
             TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
             { Size = UDim2.new(0, 4, 0, 3) }
         ):Play()
@@ -3077,7 +3263,7 @@ local function switchTab(tabName: string)
     task.delay(0.12, function()
         pcall(function()
             TabIndicator.Position = UDim2.new(0, tbl.xPos + tbl.width * 0.5 - 2, 1, 0)
-            TweenService:Create(TabIndicator,
+            AlwiTween(TabIndicator,
                 TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
                 {
                     Position = UDim2.new(0, tbl.xPos, 1, 0),
@@ -3095,14 +3281,14 @@ local function switchTab(tabName: string)
         if isActive then
             if sc then
                 pcall(function()
-                    TweenService:Create(sc,
+                    AlwiTween(sc,
                         TweenInfo.new(0.10, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
                         { Scale = 0.80 }
                     ):Play()
                 end)
                 task.delay(0.10, function()
                     pcall(function()
-                        TweenService:Create(sc,
+                        AlwiTween(sc,
                             TweenInfo.new(0.38, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
                             { Scale = 1 }
                         ):Play()
@@ -3122,7 +3308,7 @@ local function switchTab(tabName: string)
     if fromContent then
         fromContent.ClipsDescendants = true
         pcall(function()
-            TweenService:Create(fromContent,
+            AlwiTween(fromContent,
                 TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
                 { Position = UDim2.new(0, slideOut, 0, CONTENT_Y) }
             ):Play()
@@ -3141,7 +3327,7 @@ local function switchTab(tabName: string)
 
     task.delay(0.10, function()
         pcall(function()
-            TweenService:Create(toContent,
+            AlwiTween(toContent,
                 TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
                 { Position = UDim2.new(0, 0, 0, CONTENT_Y) }
             ):Play()
@@ -3174,14 +3360,13 @@ local function resetToSettingsTab()
     TabIndicator.Size     = UDim2.new(0, 76, 0, 2)
 end
 
-local function connectTabHover(btn: TextButton)
+local function connectTabHover(btn: TextButton, tabName: string)
     btn.MouseEnter:Connect(function()
-        local lbl = btn:FindFirstChild("TabLabel", true)
-        if lbl and lbl.TextColor3 == ACTIVE_COL then return end
+        if currentTab == tabName then return end
         local sc: UIScale? = _btnScales[btn]
         pcall(function()
             if sc then
-                TweenService:Create(sc,
+                AlwiTween(sc,
                     TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
                     { Scale = 1.12 }):Play()
             end
@@ -3189,23 +3374,22 @@ local function connectTabHover(btn: TextButton)
         end)
     end)
     btn.MouseLeave:Connect(function()
-        local lbl = btn:FindFirstChild("TabLabel", true)
-        if lbl and lbl.TextColor3 == ACTIVE_COL then return end
         local sc: UIScale? = _btnScales[btn]
         pcall(function()
             if sc then
-                TweenService:Create(sc,
+                AlwiTween(sc,
                     TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
                     { Scale = 1 }):Play()
             end
+            if currentTab == tabName then return end
             tweenTabColor(btn, INACTIVE_COL, 0.18)
         end)
     end)
 end
 
-connectTabHover(TabBtnSettings)
-connectTabHover(TabBtnInfo)
-connectTabHover(TabBtnCredit)
+connectTabHover(TabBtnSettings, "settings")
+connectTabHover(TabBtnInfo, "info")
+connectTabHover(TabBtnCredit, "credit")
 
 TabBtnSettings.MouseButton1Click:Connect(function() switchTab("settings") end)
 TabBtnInfo.MouseButton1Click:Connect(function()     switchTab("info")     end)
@@ -3224,7 +3408,7 @@ task.spawn(function()
     pcall(function()
         AvatarLoadingLbl.Text    = ""
         AvatarLoadingLbl.Visible = false
-        TweenService:Create(AvatarImg,
+        AlwiTween(AvatarImg,
             TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
             { ImageTransparency = 0 }
         ):Play()
@@ -3446,24 +3630,24 @@ local function addToggle(
 
     local function flashError()
         pcall(function()
-            TweenService:Create(pill, TweenInfo.new(0.08), {
+            AlwiTween(pill, TweenInfo.new(0.08), {
                 BackgroundColor3 = COL_ERROR
             }):Play()
-            TweenService:Create(pillStroke, TweenInfo.new(0.08), {
+            AlwiTween(pillStroke, TweenInfo.new(0.08), {
                 Color = COL_ERROR, Transparency = 0
             }):Play()
             for _ = 1, 2 do
-                TweenService:Create(thumbScale, TweenInfo.new(0.055, Enum.EasingStyle.Sine), { Scale = 1.25 }):Play()
+                AlwiTween(thumbScale, TweenInfo.new(0.055, Enum.EasingStyle.Sine), { Scale = 1.25 }):Play()
                 task.wait(0.065)
-                TweenService:Create(thumbScale, TweenInfo.new(0.055, Enum.EasingStyle.Sine), { Scale = 0.80 }):Play()
+                AlwiTween(thumbScale, TweenInfo.new(0.055, Enum.EasingStyle.Sine), { Scale = 0.80 }):Play()
                 task.wait(0.065)
             end
-            TweenService:Create(thumbScale, TweenInfo.new(0.14, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+            AlwiTween(thumbScale, TweenInfo.new(0.14, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
             task.wait(0.55)
-            TweenService:Create(pill, TweenInfo.new(0.22, Enum.EasingStyle.Quad), {
+            AlwiTween(pill, TweenInfo.new(0.22, Enum.EasingStyle.Quad), {
                 BackgroundColor3 = COL_OFF
             }):Play()
-            TweenService:Create(pillStroke, TweenInfo.new(0.22, Enum.EasingStyle.Quad), {
+            AlwiTween(pillStroke, TweenInfo.new(0.22, Enum.EasingStyle.Quad), {
                 Color = COL_STROKE_OFF, Transparency = 0.2
             }):Play()
         end)
@@ -3474,35 +3658,35 @@ local function addToggle(
             local dur: number = instant and 0 or 0.22
             local style: Enum.EasingStyle = Enum.EasingStyle.Back
 
-            TweenService:Create(thumb, TweenInfo.new(dur, style, Enum.EasingDirection.Out), {
+            AlwiTween(thumb, TweenInfo.new(dur, style, Enum.EasingDirection.Out), {
                 Position = UDim2.new(0, value and THUMB_OFF_X_ON or THUMB_OFF_X_OFF, 0.5, 0)
             }):Play()
 
             if not instant then
-                TweenService:Create(thumb, TweenInfo.new(dur * 0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                AlwiTween(thumb, TweenInfo.new(dur * 0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     Size = UDim2.new(0, THUMB_SZ + 4, 0, THUMB_SZ - 2)
                 }):Play()
                 task.delay(dur * 0.4, function()
                     pcall(function()
-                        TweenService:Create(thumb, TweenInfo.new(dur * 0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                        AlwiTween(thumb, TweenInfo.new(dur * 0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
                             Size = UDim2.new(0, THUMB_SZ, 0, THUMB_SZ)
                         }):Play()
                     end)
                 end)
             end
 
-            TweenService:Create(pill, TweenInfo.new(dur, Enum.EasingStyle.Quad), {
+            AlwiTween(pill, TweenInfo.new(dur, Enum.EasingStyle.Quad), {
                 BackgroundColor3 = value and Color3.fromRGB(15, 25, 20) or COL_OFF
             }):Play()
-            TweenService:Create(pillFill, TweenInfo.new(dur, Enum.EasingStyle.Quad), {
+            AlwiTween(pillFill, TweenInfo.new(dur, Enum.EasingStyle.Quad), {
                 BackgroundTransparency = value and 0 or 1
             }):Play()
-            TweenService:Create(pillStroke, TweenInfo.new(dur, Enum.EasingStyle.Quad), {
+            AlwiTween(pillStroke, TweenInfo.new(dur, Enum.EasingStyle.Quad), {
                 Color       = value and COL_STROKE_ON or COL_STROKE_OFF,
                 Transparency = value and 0 or 0.2
             }):Play()
 
-            TweenService:Create(label, TweenInfo.new(dur, Enum.EasingStyle.Quad), {
+            AlwiTween(label, TweenInfo.new(dur, Enum.EasingStyle.Quad), {
                 TextColor3 = value
                     and Color3.fromRGB(255, 255, 255)
                     or  Color3.fromRGB(180, 180, 180)
@@ -3520,25 +3704,25 @@ local function addToggle(
 
     clickBtn.MouseEnter:Connect(function()
         pcall(function()
-            TweenService:Create(thumbScale, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1.18 }):Play()
-            TweenService:Create(pillStroke, TweenInfo.new(0.15, Enum.EasingStyle.Quad), { Transparency = 0 }):Play()
+            AlwiTween(thumbScale, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1.18 }):Play()
+            AlwiTween(pillStroke, TweenInfo.new(0.15, Enum.EasingStyle.Quad), { Transparency = 0 }):Play()
         end)
     end)
     clickBtn.MouseLeave:Connect(function()
         pcall(function()
-            TweenService:Create(thumbScale, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Scale = 1 }):Play()
-            TweenService:Create(pillStroke, TweenInfo.new(0.18, Enum.EasingStyle.Quad), { Transparency = 0.2 }):Play()
+            AlwiTween(thumbScale, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+            AlwiTween(pillStroke, TweenInfo.new(0.18, Enum.EasingStyle.Quad), { Transparency = 0.2 }):Play()
         end)
     end)
 
     clickBtn.MouseButton1Down:Connect(function()
         pcall(function()
-            TweenService:Create(thumbScale, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Scale = 0.85 }):Play()
+            AlwiTween(thumbScale, TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Scale = 0.85 }):Play()
         end)
     end)
     clickBtn.MouseButton1Up:Connect(function()
         pcall(function()
-            TweenService:Create(thumbScale, TweenInfo.new(0.20, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+            AlwiTween(thumbScale, TweenInfo.new(0.20, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
         end)
     end)
 
@@ -3552,7 +3736,7 @@ local function addToggle(
         pcall(function()
             ripple.Size                   = UDim2.new(0, 0, 0, 0)
             ripple.BackgroundTransparency = 0.7
-            TweenService:Create(ripple, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            AlwiTween(ripple, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                 Size = UDim2.new(1.6, 0, 2.4, 0), BackgroundTransparency = 1
             }):Play()
         end)
@@ -4184,7 +4368,7 @@ local function showErrorPanel(title: string, desc: string, onRetry: (() -> ())?)
     _errPanelOpen  = true
     ErrorPanel.Visible  = true
     ErrorPanel.Position = UDim2.new(0, 0, 1.05, 0)
-    TweenService:Create(ErrorPanel, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    AlwiTween(ErrorPanel, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
         Position = UDim2.new(0, 0, 0.62, 0),
     }):Play()
 
@@ -4192,7 +4376,7 @@ local function showErrorPanel(title: string, desc: string, onRetry: (() -> ())?)
     retryConn = ErrRetryBtn.MouseButton1Click:Connect(function()
         retryConn:Disconnect()
         pcall(function()
-            TweenService:Create(ErrorPanel, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            AlwiTween(ErrorPanel, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
                 Position = UDim2.new(0, 0, 1.05, 0),
             }):Play()
         end)
@@ -4207,7 +4391,7 @@ local function hideErrorPanel()
     if not _errPanelOpen then return end
     _errPanelOpen = false
     pcall(function()
-        TweenService:Create(ErrorPanel, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+        AlwiTween(ErrorPanel, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
             Position = UDim2.new(0, 0, 1.05, 0),
         }):Play()
     end)
@@ -4221,14 +4405,15 @@ ErrDismissBtn.MouseButton1Click:Connect(function()
 end)
 
 local function shakeError()
+    if AlwiIsLow ~= nil and AlwiIsLow() then return end
     pcall(function()
         local orig: UDim2 = MainBackground.Position
         local shakeInfo: TweenInfo = TweenInfo.new(0.07, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, 4, true)
-        TweenService:Create(MainBackground, shakeInfo, {
+        AlwiTween(MainBackground, shakeInfo, {
             Position = UDim2.new(orig.X.Scale, orig.X.Offset + 8, orig.Y.Scale, orig.Y.Offset)
         }):Play()
         task.wait(0.6)
-        TweenService:Create(MainBackground, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        AlwiTween(MainBackground, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
             Position = orig
         }):Play()
     end)
@@ -4428,7 +4613,7 @@ local function performAutoInject()
     injectScript()
     if not injected then return end
     InjectButton.Text = "Injecting..."
-    TweenService:Create(MainBackground, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+    AlwiTween(MainBackground, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
         Size = UDim2.new(0, 0, 0, 0), ImageTransparency = 1
     }):Play()
     clearText()
@@ -4442,7 +4627,7 @@ pcall(fitHudScale)
 
 MainBackground.Visible = true
 MainBackground.Size    = UDim2.new(0, 0, 0, 0)
-TweenService:Create(MainBackground, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+AlwiTween(MainBackground, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
     Size = UDim2.new(0, 330, 0, 172), ImageTransparency = 0.15
 }):Play()
 task.wait(0.4)
@@ -4766,26 +4951,26 @@ if config.autoExecutorLoader and _queueSupported then setupAutoExecutorLoader() 
 
 UpdateGreeting()
 pcall(function()
-    TweenService:Create(GreetingScale, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+    AlwiTween(GreetingScale, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
 end)
 
 task.spawn(function()
     while RealZzHub and RealZzHub.Parent do
-        task.wait(3)
+        task.wait(AlwiIsLow() and 10 or 3)
         if not (RealZzHub and RealZzHub.Parent) then break end
 
         pcall(function()
-            TweenService:Create(GreetingScale, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            AlwiTween(GreetingScale, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
                 Scale = 0.88,
             }):Play()
-            TweenService:Create(GreetingLabel, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            AlwiTween(GreetingLabel, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
                 TextTransparency = 1,
                 TextStrokeTransparency = 1,
             }):Play()
-            TweenService:Create(GCardSub, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            AlwiTween(GCardSub, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
                 TextTransparency = 1,
             }):Play()
-            TweenService:Create(GCardIcon, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            AlwiTween(GCardIcon, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
                 ImageTransparency = 1,
             }):Play()
         end)
@@ -4797,10 +4982,10 @@ task.spawn(function()
         if _greetingShowDiscord then
 
             pcall(function()
-                TweenService:Create(GCardIcon, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                AlwiTween(GCardIcon, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
                     ImageTransparency = 0,
                 }):Play()
-                TweenService:Create(GCardSub, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                AlwiTween(GCardSub, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     TextTransparency = 0.2,
                 }):Play()
             end)
@@ -4813,10 +4998,10 @@ task.spawn(function()
         end
 
         pcall(function()
-            TweenService:Create(GreetingScale, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            AlwiTween(GreetingScale, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
                 Scale = 1,
             }):Play()
-            TweenService:Create(GreetingLabel, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            AlwiTween(GreetingLabel, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                 TextTransparency = 0,
                 TextStrokeTransparency = 0.6,
             }):Play()
@@ -4900,16 +5085,16 @@ local function openSettingsPanel()
     _settingsPanelAnimating = true
 
     pcall(function()
-        TweenService:Create(SettingsIconScale,
+        AlwiTween(SettingsIconScale,
             TweenInfo.new(0.10, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
             { Scale = 0.72 }):Play()
     end)
     task.delay(0.10, function()
         pcall(function()
-            TweenService:Create(SettingsIconScale,
+            AlwiTween(SettingsIconScale,
                 TweenInfo.new(0.55, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
                 { Scale = 1 }):Play()
-            TweenService:Create(SettingsIcon,
+            AlwiTween(SettingsIcon,
                 TweenInfo.new(0.40, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
                 { Rotation = 90, ImageTransparency = 0 }):Play()
         end)
@@ -4923,10 +5108,10 @@ local function openSettingsPanel()
 
     task.delay(0.05, function()
         pcall(function()
-            TweenService:Create(SettingsPanel,
+            AlwiTween(SettingsPanel,
                 TweenInfo.new(0.32, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
                 { Size = UDim2.new(0, PANEL_W, 0, PANEL_H), ImageTransparency = 0 }):Play()
-            TweenService:Create(PanelScale,
+            AlwiTween(PanelScale,
                 TweenInfo.new(0.38, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
                 { Scale = 1 }):Play()
         end)
@@ -4949,26 +5134,26 @@ local function closeSettingsPanel(callback: (() -> ())?)
     _settingsPanelAnimating = true
 
     pcall(function()
-        TweenService:Create(SettingsIconScale,
+        AlwiTween(SettingsIconScale,
             TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
             { Scale = 0.78 }):Play()
     end)
     task.delay(0.08, function()
         pcall(function()
-            TweenService:Create(SettingsIconScale,
+            AlwiTween(SettingsIconScale,
                 TweenInfo.new(0.50, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
                 { Scale = 1 }):Play()
-            TweenService:Create(SettingsIcon,
+            AlwiTween(SettingsIcon,
                 TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.In),
                 { Rotation = 0, ImageTransparency = 0.2 }):Play()
         end)
     end)
 
     pcall(function()
-        TweenService:Create(PanelScale,
+        AlwiTween(PanelScale,
             TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
             { Scale = 0.92 }):Play()
-        TweenService:Create(SettingsPanel,
+        AlwiTween(SettingsPanel,
             TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
             { Size = UDim2.new(0, PANEL_W, 0, 0), ImageTransparency = 1 }):Play()
     end)
@@ -4989,10 +5174,10 @@ end
 SettingsIcon.MouseEnter:Connect(function()
     if SettingsPanel and not SettingsPanel.Visible and not _settingsPanelAnimating then
         pcall(function()
-            TweenService:Create(SettingsIconScale,
+            AlwiTween(SettingsIconScale,
                 TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
                 { Scale = 1.25 }):Play()
-            TweenService:Create(SettingsIcon,
+            AlwiTween(SettingsIcon,
                 TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
                 { Rotation = 36, ImageTransparency = 0 }):Play()
         end)
@@ -5002,10 +5187,10 @@ end)
 SettingsIcon.MouseLeave:Connect(function()
     if SettingsPanel and not SettingsPanel.Visible and not _settingsPanelAnimating then
         pcall(function()
-            TweenService:Create(SettingsIconScale,
+            AlwiTween(SettingsIconScale,
                 TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
                 { Scale = 1 }):Play()
-            TweenService:Create(SettingsIcon,
+            AlwiTween(SettingsIcon,
                 TweenInfo.new(0.45, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
                 { Rotation = 0, ImageTransparency = 0.2 }):Play()
         end)
@@ -5034,7 +5219,7 @@ local function closeConfirmDialog(callback: (() -> ())?)
         return
     end
     confirmClosing = true
-    local tween: Tween = TweenService:Create(ConfirmFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+    local tween: Tween = AlwiTween(ConfirmFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
         Size = UDim2.new(0, 0, 0, 0), ImageTransparency = 1
     })
     tween.Completed:Connect(function()
@@ -5071,7 +5256,7 @@ CloseButton.MouseButton1Click:Connect(function()
     ConfirmFrame.Visible           = true
     ConfirmFrame.Size              = UDim2.new(0, 0, 0, 0)
     ConfirmFrame.ImageTransparency = 1
-    TweenService:Create(ConfirmFrame, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    AlwiTween(ConfirmFrame, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
         Size = UDim2.new(0, 200, 0, 100), ImageTransparency = 0
     }):Play()
 end)
@@ -5079,7 +5264,7 @@ end)
 YesButton.MouseButton1Click:Connect(function()
     closeConfirmDialog(function()
         clearText()
-        TweenService:Create(MainBackground, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+        AlwiTween(MainBackground, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
             Size = UDim2.new(0, 0, 0, 0), ImageTransparency = 1
         }):Play()
         task.wait(0.3)
@@ -5100,7 +5285,7 @@ local function closeDeleteConfirmDialog(callback: (() -> ())?)
         return
     end
     deleteConfirmClosing = true
-    local tween: Tween = TweenService:Create(DeleteConfirmFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+    local tween: Tween = AlwiTween(DeleteConfirmFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
         Size = UDim2.new(0, 0, 0, 0), ImageTransparency = 1
     })
     tween.Completed:Connect(function()
@@ -5134,7 +5319,7 @@ deleteConfigButton.MouseButton1Click:Connect(function()
     _dcf.Visible           = true
     _dcf.Size              = UDim2.new(0, 0, 0, 0)
     _dcf.ImageTransparency = 1
-    TweenService:Create(_dcf, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    AlwiTween(_dcf, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
         Size = UDim2.new(0, 200, 0, 100), ImageTransparency = 0
     }):Play()
 end)
@@ -5203,7 +5388,7 @@ local _dragOk: boolean, _dragErr: any = pcall(function()
 
     local function applyTween(obj: Instance, props: { [string]: any }, info: TweenInfo?)
         local ok: boolean, err: any = pcall(function()
-            TweenService:Create(obj, info or pressTweenInfo, props):Play()
+            AlwiTween(obj, info or pressTweenInfo, props):Play()
         end)
         if not ok then warn("[VelocityX] Drag tween error:", err) end
     end
@@ -5227,6 +5412,7 @@ local _dragOk: boolean, _dragErr: any = pcall(function()
     end)
 
     drag.DragContinue:Connect(function()
+        if AlwiIsLow ~= nil and AlwiIsLow() then return end
         if not isDragging or settingsOpen() then return end
         local now: number = tick()
         if (now - lastSwayTime) < SWAY_THROTTLE then return end
@@ -5268,7 +5454,7 @@ if not _dragOk then
         dragStartMouse = Vector2.new(input.Position.X, input.Position.Y)
         dragStartPos   = MainBackground.Position
         pcall(function()
-            TweenService:Create(MainBackground, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+            AlwiTween(MainBackground, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
                 BackgroundTransparency = 0.5
             }):Play()
         end)
@@ -5292,7 +5478,7 @@ if not _dragOk then
         if not isDragInput(input) or not dragging then return end
         dragging = false
         pcall(function()
-            TweenService:Create(MainBackground, TweenInfo.new(0.35, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {
+            AlwiTween(MainBackground, TweenInfo.new(0.35, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {
                 BackgroundTransparency = 0
             }):Play()
         end)
@@ -5318,7 +5504,7 @@ pcall(function()
                 tx = UDim2.new(1, -10, 0, 10)
             end
         end
-        TweenService:Create(PerfHud, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        AlwiTween(PerfHud, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
             Position = tx,
         }):Play()
     end
@@ -5375,23 +5561,10 @@ TourGui.DisplayOrder   = 999999
 TourGui.IgnoreGuiInset = true
 pcall(function()
     for _, gui: Instance in CoreGui:GetChildren() do
-        if gui.Name == "AlwiTourGui" then gui:Destroy() end
+        if gui.Name == "AlwiTourGui" or (type(gui.Name) == "string" and gui.Name:sub(1, 8) == "AlwiTour") then gui:Destroy() end
     end
 end)
-pcall(function()
-    local _gethui2: any = rawget(_G, "gethui")
-    if _syn and _syn.protect_gui then
-        _syn.protect_gui(TourGui)
-        TourGui.Parent = CoreGui
-    elseif _gethui2 then
-        TourGui.Parent = _gethui2()
-    else
-        TourGui.Parent = CoreGui
-    end
-end)
-if not TourGui.Parent then
-    TourGui.Parent = CoreGui
-end
+AlwiProtectGui(TourGui, "AlwiTour")
 
 local TourScale: UIScale = Instance.new("UIScale", TourGui)
 TourScale.Scale = 1
@@ -5550,7 +5723,7 @@ local function tourPlaceTip(target: GuiObject?, settle: number, label: string?)
             or (target:IsA("GuiObject") and not tourTargetShown(target :: GuiObject)) then
             pcall(function()
                 TourRing.Visible = false
-                TweenService:Create(TutorCard, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                AlwiTween(TutorCard, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     AnchorPoint = Vector2.new(0.5, 0.5),
                     Position = UDim2.new(0.5, 0, 0.5, 0),
                 }):Play()
@@ -5596,7 +5769,7 @@ local function tourPlaceTip(target: GuiObject?, settle: number, label: string?)
                 tostring(TourRing.Position), tostring(anchor), tostring(pos))
             print(_dbg)
             tourLog(_dbg)
-            TweenService:Create(TutorCard, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            AlwiTween(TutorCard, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                 AnchorPoint = anchor,
                 Position = pos,
             }):Play()
@@ -5890,7 +6063,7 @@ local function closeTutorial()
         tourPersistSkip()
     end
     pcall(function()
-        TweenService:Create(TutorCard, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+        AlwiTween(TutorCard, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
             Size = UDim2.new(0, 0, 0, 0),
         }):Play()
     end)
@@ -5919,7 +6092,7 @@ local function openTutorial()
     TutorCard.Size    = UDim2.new(0, 0, 0, 0)
     TutorCardScale.Scale = 1
     pcall(function()
-        TweenService:Create(TutorCard, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        AlwiTween(TutorCard, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
             Size = UDim2.new(0, 340, 0, 220),
         }):Play()
     end)
@@ -5955,7 +6128,7 @@ TutorCheckBtn.MouseButton1Click:Connect(function()
     if config.autoSave then saveConfig() end
     pcall(function() tutorialCtrl:Set(not TutorialDontShow) end)
     pcall(function()
-        TweenService:Create(TutorCheckBox, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        AlwiTween(TutorCheckBox, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
             BackgroundColor3 = TutorialDontShow and Color3.fromRGB(0, 120, 80) or Color3.fromRGB(35, 35, 42),
         }):Play()
     end)
@@ -5984,12 +6157,12 @@ do
 end
 HelpBtn.MouseEnter:Connect(function()
     pcall(function()
-        TweenService:Create(HelpBtn, TweenInfo.new(0.15), { BackgroundTransparency = 0.1 }):Play()
+        AlwiTween(HelpBtn, TweenInfo.new(0.15), { BackgroundTransparency = 0.1 }):Play()
     end)
 end)
 HelpBtn.MouseLeave:Connect(function()
     pcall(function()
-        TweenService:Create(HelpBtn, TweenInfo.new(0.2), { BackgroundTransparency = 0.4 }):Play()
+        AlwiTween(HelpBtn, TweenInfo.new(0.2), { BackgroundTransparency = 0.4 }):Play()
     end)
 end)
 HelpBtn.MouseButton1Click:Connect(function() task.spawn(openTutorial) end)
