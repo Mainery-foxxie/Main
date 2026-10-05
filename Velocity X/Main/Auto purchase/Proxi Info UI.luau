@@ -1,0 +1,199 @@
+local ExistingGUI = game:GetService("CoreGui"):FindFirstChild("ProxiInfo")
+if ExistingGUI then
+	ExistingGUI:Destroy()
+end
+
+local GUI = Instance.new("ScreenGui")
+GUI.Name = "ProxiInfo"
+GUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+GUI.Parent = game:GetService("CoreGui")
+
+function Create(instance, properties, children)
+	local obj = Instance.new(instance)
+	for i, v in pairs(properties or {}) do
+		obj[i] = v 
+	end
+	for _, child in pairs(children or {}) do
+		child.Parent = obj
+	end
+	return obj
+end
+
+local MainFrame = Create("Frame", {
+	BorderSizePixel = 0,
+	BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Size = UDim2.new(0, 0, 0, 0),
+	Position = UDim2.new(0.5, 0, 0.5, 0),
+	Parent = GUI,
+	AutomaticSize = Enum.AutomaticSize.Y
+}, {
+	Create("UIScale", {}),
+	Create("UICorner", { CornerRadius = UDim.new(0, 16) }),
+	Create("UISizeConstraint", {
+		MinSize = Vector2.new(350, 0),
+		MaxSize = Vector2.new(500, 600)
+	}),
+	Create("UIListLayout", {
+		SortOrder = Enum.SortOrder.LayoutOrder,
+		HorizontalAlignment = Enum.HorizontalAlignment.Center
+	})
+})
+
+local TopFrame = Create("Frame", {
+	SizeConstraint = Enum.SizeConstraint.RelativeXX,
+	BorderSizePixel = 0,
+	BackgroundColor3 = Color3.fromRGB(0, 0, 255),
+	Size = UDim2.new(1, 0, 0, 50),
+	LayoutOrder = 1,
+	Parent = MainFrame
+}, {
+	Create("UIPadding", {
+		PaddingTop = UDim.new(0, 15),
+		PaddingRight = UDim.new(0, 30),
+		PaddingLeft = UDim.new(0, 25),
+		PaddingBottom = UDim.new(0, 15)
+	})
+})
+
+Create("TextLabel", {
+	TextWrapped = true,
+	BorderSizePixel = 0,
+	TextSize = 16,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+	FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Heavy, Enum.FontStyle.Normal),
+	TextColor3 = Color3.fromRGB(255, 255, 255),
+	BackgroundTransparency = 1,
+	AnchorPoint = Vector2.new(0, 0.5),
+	Size = UDim2.new(0, 0, 1, 0),
+	Text = "PROMPT SNIPER",
+	AutomaticSize = Enum.AutomaticSize.X,
+	Position = UDim2.new(0, 0, 0.5, 0),
+	Parent = TopFrame
+})
+
+local Buttons = Create("Frame", {
+	BorderSizePixel = 0,
+	BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+	AnchorPoint = Vector2.new(1, 0.5),
+	Size = UDim2.new(0.5, 0, 1, 0),
+	Position = UDim2.new(1, 0.0375, 0.5, 0),
+	BackgroundTransparency = 1,
+	Parent = TopFrame
+}, {
+	Create("UIListLayout", {
+		HorizontalAlignment = Enum.HorizontalAlignment.Right,
+		SortOrder = Enum.SortOrder.LayoutOrder,
+		FillDirection = Enum.FillDirection.Horizontal
+	}),
+	Create("ImageButton", {
+		ScaleType = Enum.ScaleType.Fit,
+		BackgroundTransparency = 1,
+		ZIndex = 2,
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Image = "rbxassetid://14829181141",
+		Size = UDim2.new(1, 0, 1, 0),
+		BorderColor3 = Color3.fromRGB(28, 43, 54),
+		Name = "Close",
+		Position = UDim2.new(1, 0, 0.5, 0)
+	}, {
+		Create("UIAspectRatioConstraint", {})
+	})
+})
+
+Buttons.Close.MouseButton1Click:Connect(function()
+	GUI:Destroy()
+end)
+
+local ScrollFrame = Create("ScrollingFrame", {
+	ScrollingDirection = Enum.ScrollingDirection.Y,
+	ZIndex = 2,
+	BorderSizePixel = 0,
+	CanvasSize = UDim2.new(0, 0, 0, 0),
+	HorizontalScrollBarInset = Enum.ScrollBarInset.Always,
+	ElasticBehavior = Enum.ElasticBehavior.Always,
+	TopImage = "rbxassetid://14558035053",
+	Name = "Frame",
+	ScrollBarImageTransparency = 0.5,
+	BackgroundColor3 = Color3.fromRGB(255, 255, 245),
+	MidImage = "rbxassetid://14558030992",
+	Selectable = false,
+	BottomImage = "rbxassetid://14558036860",
+	Size = UDim2.new(1, 0, 0, 0),
+	ScrollBarImageColor3 = Color3.fromRGB(255, 0, 133),
+	BorderColor3 = Color3.fromRGB(0, 0, 0),
+	ScrollBarThickness = 8,
+	LayoutOrder = 2,
+	BackgroundTransparency = 1,
+	Parent = MainFrame,
+	AutomaticSize = Enum.AutomaticSize.Y
+}, {
+	Create("UIListLayout", {
+		Padding = UDim.new(0, 12),
+		SortOrder = Enum.SortOrder.LayoutOrder
+	}),
+	Create("UIPadding", {
+		PaddingTop = UDim.new(0, 15),
+		PaddingRight = UDim.new(0, 25),
+		PaddingLeft = UDim.new(0, 25),
+		PaddingBottom = UDim.new(0, 15)
+	})
+})
+
+Create("TextLabel", {
+	TextWrapped = true,
+	BorderSizePixel = 0,
+	TextSize = 16,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	TextYAlignment = Enum.TextYAlignment.Top,
+	BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+	FontFace = Font.new("rbxasset://16658221428", Enum.FontWeight.Bold, Enum.FontStyle.Normal),
+	TextColor3 = Color3.fromRGB(18, 37, 100),
+	BackgroundTransparency = 1,
+	RichText = true,
+	Size = UDim2.new(1, 0, 0, 0),
+	AutomaticSize = Enum.AutomaticSize.Y,
+	Text = '<font transparency="0.3"><b>Prompt Sniper</b></font>\nAuto-clicks ProximityPrompt or ClickDetector when UGC is for sale.',
+	LayoutOrder = 1,
+	Name = "Description1",
+	Parent = ScrollFrame
+})
+
+Create("TextLabel", {
+	TextWrapped = true,
+	BorderSizePixel = 0,
+	TextSize = 16,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	TextYAlignment = Enum.TextYAlignment.Top,
+	BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+	FontFace = Font.new("rbxasset://16658221428", Enum.FontWeight.Bold, Enum.FontStyle.Normal),
+	TextColor3 = Color3.fromRGB(18, 37, 100),
+	BackgroundTransparency = 1,
+	RichText = true,
+	Size = UDim2.new(1, 0, 0, 0),
+	AutomaticSize = Enum.AutomaticSize.Y,
+	Text = '<font transparency="0.3"><b>How it Works</b></font>\nEnter Item ID. Script checks availability and triggers nearby prompts automatically.',
+	LayoutOrder = 2,
+	Name = "Description2",
+	Parent = ScrollFrame
+})
+
+Create("TextLabel", {
+	TextWrapped = true,
+	BorderSizePixel = 0,
+	TextSize = 16,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	TextYAlignment = Enum.TextYAlignment.Top,
+	BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+	FontFace = Font.new("rbxasset://16658221428", Enum.FontWeight.Bold, Enum.FontStyle.Normal),
+	TextColor3 = Color3.fromRGB(18, 37, 100),
+	BackgroundTransparency = 1,
+	RichText = true,
+	Size = UDim2.new(1, 0, 0, 0),
+	AutomaticSize = Enum.AutomaticSize.Y,
+	Text = '<font transparency="0.3"><b>Methods</b></font>\nChoose ProximityPrompt or ClickDetector. Stays within 15 studs range.',
+	LayoutOrder = 3,
+	Name = "Description3",
+	Parent = ScrollFrame
+})
