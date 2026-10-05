@@ -323,12 +323,6 @@ else
     CoreGui = cloneref(game:GetService("CoreGui"))
 end
 
-
-
-
-
-
-
 local function AlwiProtectGui(gui: ScreenGui, prefix: string)
     pcall(function()
         gui.Name = prefix .. "_" .. string.format("%08x", math.random(0, 0xFFFFFFFF))
