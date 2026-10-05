@@ -323,6 +323,12 @@ else
     CoreGui = cloneref(game:GetService("CoreGui"))
 end
 
+
+
+
+
+
+
 local function AlwiProtectGui(gui: ScreenGui, prefix: string)
     pcall(function()
         gui.Name = prefix .. "_" .. string.format("%08x", math.random(0, 0xFFFFFFFF))
@@ -535,7 +541,6 @@ if not _earlySkipIntro then
     progressGradient.Color = goldGradient
 
     task.spawn(function()
-        if AlwiIsLow ~= nil and AlwiIsLow() then return end
         local _gradFrame: number = 0
         while gui.Parent do
             _gradFrame += 1
@@ -573,32 +578,32 @@ if not _earlySkipIntro then
     task.spawn(function()
         task.wait(3.5)
         pcall(function()
-            AlwiTween(scanlineVig, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {
+            TweenService:Create(scanlineVig, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {
                 BackgroundTransparency = 0.85
             }):Play()
         end)
     end)
 
-    AlwiTween(flash, TweenInfo.new(0.15), { BackgroundTransparency = 0.4 }):Play()
+    TweenService:Create(flash, TweenInfo.new(0.15), { BackgroundTransparency = 0.4 }):Play()
     task.wait(0.15)
-    AlwiTween(flash, TweenInfo.new(0.5),  { BackgroundTransparency = 1   }):Play()
+    TweenService:Create(flash, TweenInfo.new(0.5),  { BackgroundTransparency = 1   }):Play()
 
-    AlwiTween(image, TweenInfo.new(1.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    TweenService:Create(image, TweenInfo.new(1.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
         Size = UDim2.new(0, 500, 0, 500), Rotation = 0, ImageTransparency = 0
     }):Play()
-    AlwiTween(glow, TweenInfo.new(1.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+    TweenService:Create(glow, TweenInfo.new(1.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
         Size = UDim2.new(0, 700, 0, 700), ImageTransparency = 0.5
     }):Play()
 
     task.wait(0.3)
 
-    AlwiTween(title, TweenInfo.new(1, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
+    TweenService:Create(title, TweenInfo.new(1, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
         Position = UDim2.new(0, 0, 0.34, 0), TextTransparency = 0
     }):Play()
 
     task.wait(0.2)
 
-    AlwiTween(sub, TweenInfo.new(1, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
+    TweenService:Create(sub, TweenInfo.new(1, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
         Position = UDim2.new(0, 0, 0.47, 0), TextTransparency = 0
     }):Play()
 
@@ -606,62 +611,55 @@ if not _earlySkipIntro then
     barBg.Visible = true
 
     task.spawn(function()
-        for i: number = 0, 100, (AlwiIsLow() and 5 or 1) do
+        for i: number = 0, 100 do
             progressText.Text = i .. "%"
             bar.Size = UDim2.new(i / 100, 0, 1, 0)
-            task.wait(AlwiIsLow() and 0.02 or 0.03)
+            task.wait(0.03)
         end
         progressText.Text = "✓ Ready"
-        AlwiTween(progressText, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        TweenService:Create(progressText, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
             Rotation = 2
         }):Play()
-        AlwiTween(flash, TweenInfo.new(0.2), { BackgroundTransparency = 0.7 }):Play()
+        TweenService:Create(flash, TweenInfo.new(0.2), { BackgroundTransparency = 0.7 }):Play()
         task.wait(0.2)
-        AlwiTween(flash, TweenInfo.new(0.4), { BackgroundTransparency = 1   }):Play()
+        TweenService:Create(flash, TweenInfo.new(0.4), { BackgroundTransparency = 1   }):Play()
     end)
 
     task.spawn(function()
-        if AlwiIsLow ~= nil and AlwiIsLow() then
-            pcall(function()
-                image.Rotation = 0
-                glow.Rotation = 0
-            end)
-            return
-        end
         while gui.Parent do
-            AlwiTween(image, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+            TweenService:Create(image, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
                 Rotation = 8, Size = UDim2.new(0, 530, 0, 530)
             }):Play()
-            AlwiTween(glow, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+            TweenService:Create(glow, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
                 Rotation = -15, Size = UDim2.new(0, 760, 0, 760)
             }):Play()
             task.wait(2)
-            AlwiTween(image, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+            TweenService:Create(image, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
                 Rotation = -8, Size = UDim2.new(0, 500, 0, 500)
             }):Play()
-            AlwiTween(glow, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+            TweenService:Create(glow, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
                 Rotation = 15, Size = UDim2.new(0, 700, 0, 700)
             }):Play()
             task.wait(2)
         end
     end)
 
-    task.wait(AlwiIsLow() and 1.2 or 4)
+    task.wait(4)
 
-    AlwiTween(flash, TweenInfo.new(0.4), { BackgroundTransparency = 0.2 }):Play()
+    TweenService:Create(flash, TweenInfo.new(0.4), { BackgroundTransparency = 0.2 }):Play()
     task.wait(0.3)
 
-    AlwiTween(image, TweenInfo.new(1, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+    TweenService:Create(image, TweenInfo.new(1, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
         Size = UDim2.new(0, 0, 0, 0), Rotation = 180, ImageTransparency = 1
     }):Play()
-    AlwiTween(glow, TweenInfo.new(1), { ImageTransparency = 1, Size = UDim2.new(0, 0, 0, 0) }):Play()
-    AlwiTween(title, TweenInfo.new(1), { Position = UDim2.new(0, -1000, 0.34, 0), TextTransparency = 1 }):Play()
-    AlwiTween(sub, TweenInfo.new(1),   { Position = UDim2.new(0, 1000,  0.47, 0), TextTransparency = 1 }):Play()
-    AlwiTween(barBg, TweenInfo.new(1), { BackgroundTransparency = 1 }):Play()
-    AlwiTween(bar, TweenInfo.new(1),   { BackgroundTransparency = 1 }):Play()
-    AlwiTween(progressText, TweenInfo.new(1), { TextTransparency = 1 }):Play()
+    TweenService:Create(glow, TweenInfo.new(1), { ImageTransparency = 1, Size = UDim2.new(0, 0, 0, 0) }):Play()
+    TweenService:Create(title, TweenInfo.new(1), { Position = UDim2.new(0, -1000, 0.34, 0), TextTransparency = 1 }):Play()
+    TweenService:Create(sub, TweenInfo.new(1),   { Position = UDim2.new(0, 1000,  0.47, 0), TextTransparency = 1 }):Play()
+    TweenService:Create(barBg, TweenInfo.new(1), { BackgroundTransparency = 1 }):Play()
+    TweenService:Create(bar, TweenInfo.new(1),   { BackgroundTransparency = 1 }):Play()
+    TweenService:Create(progressText, TweenInfo.new(1), { TextTransparency = 1 }):Play()
 
-    task.wait(AlwiIsLow() and 0.4 or 1.5)
+    task.wait(1.5)
     gui:Destroy()
 end
 
@@ -2279,68 +2277,103 @@ local CREATOR_USER_ID: number = 1291925
 local STATUS_COLOR_INGAME: Color3  = Color3.fromRGB(0, 255, 110)
 local STATUS_COLOR_ONLINE: Color3  = Color3.fromRGB(255, 200, 0)
 local STATUS_COLOR_OFFLINE: Color3 = Color3.fromRGB(120, 120, 130)
+local STATUS_COLOR_UNKNOWN: Color3 = Color3.fromRGB(150, 150, 160)
 
-local function getPresence(userId: number): (number, string?, number?)
-    if not http_request_fn then
-        return 0, nil, nil
-    end
-
-    local resultType: number      = 0
-    local resultGame: string?     = nil
-    local resultUniverse: number? = nil
-
-    local wholeOk: boolean = pcall(function()
-        local function fetch(token: string?): any
-            return http_request_fn({
-                Url     = "https://presence.roblox.com/v1/presence/users",
-                Method  = "POST",
+local function _presenceRequest(userId: number, useBuiltin: boolean, token: string?): any
+    local res: any = nil
+    pcall(function()
+        local payload: string = HttpService:JSONEncode({ userIds = { userId } })
+        if useBuiltin then
+            res = HttpService:RequestAsync({
+                Url = "https://presence.roblox.com/v1/presence/users",
+                Method = "POST",
                 Headers = {
                     ["Content-Type"] = "application/json",
                     ["X-CSRF-TOKEN"] = token,
                 },
-                Body    = HttpService:JSONEncode({ userIds = { userId } }),
+                Body = payload,
+            })
+        elseif http_request_fn then
+            res = http_request_fn({
+                Url = "https://presence.roblox.com/v1/presence/users",
+                Method = "POST",
+                Headers = {
+                    ["Content-Type"] = "application/json",
+                    ["X-CSRF-TOKEN"] = token,
+                },
+                Body = payload,
             })
         end
-
-        local res: any = fetch(nil)
-        if type(res) == "table" then
-            local status: any = res.StatusCode or res.statusCode
-            if status == 403 then
-                local headers: any = res.Headers or res.headers
-                local token: string? = (type(headers) == "table")
-                    and (headers["x-csrf-token"] or headers["X-CSRF-TOKEN"])
-                    or nil
-                if token then
-                    res = fetch(token)
-                end
-            end
-        end
-
-        if type(res) ~= "table" then return end
-        local body: any = res.Body or res.body
-        if type(body) ~= "string" or #body == 0 then return end
-
-        local data: any = HttpService:JSONDecode(body)
-        if type(data) ~= "table" or type(data.userPresences) ~= "table" then return end
-
-        local presence: any = data.userPresences[1]
-        if type(presence) ~= "table" then return end
-
-        if type(presence.userPresenceType) == "number" then
-            resultType = presence.userPresenceType
-        end
-        if type(presence.lastLocation) == "string" then
-            resultGame = presence.lastLocation
-        end
-        if type(presence.universeId) == "number" then
-            resultUniverse = presence.universeId
-        end
     end)
+    return res
+end
 
-    if not wholeOk then
-        return 0, nil, nil
+local function _presenceStatusOf(res: any): number?
+    if type(res) ~= "table" then return nil end
+    local s: any = res.StatusCode or res.statusCode
+    return (type(s) == "number") and s or nil
+end
+
+local function _presenceTokenOf(res: any): string?
+    if type(res) ~= "table" then return nil end
+    local h: any = res.Headers or res.headers
+    if type(h) ~= "table" then return nil end
+    local tok: any = h["x-csrf-token"] or h["X-CSRF-TOKEN"]
+    return (type(tok) == "string" and #tok > 0) and tok or nil
+end
+
+local function _presenceParseBody(body: any): (boolean, number, string?, number?)
+    if type(body) ~= "string" or #body == 0 then return false, 0, nil, nil end
+    local ok: boolean, data: any = pcall(HttpService.JSONDecode, HttpService, body)
+    if not ok or type(data) ~= "table" or type(data.userPresences) ~= "table" then
+        return false, 0, nil, nil
     end
-    return resultType, resultGame, resultUniverse
+    local presence: any = data.userPresences[1]
+    if type(presence) ~= "table" then return false, 0, nil, nil end
+    local ptype: number = 0
+    local gloc: string? = nil
+    local uvid: number? = nil
+    if type(presence.userPresenceType) == "number" then ptype = presence.userPresenceType end
+    if type(presence.lastLocation) == "string" then gloc = presence.lastLocation end
+    if type(presence.universeId) == "number" then uvid = presence.universeId end
+    return true, ptype, gloc, uvid
+end
+
+local function getPresence(userId: number): (boolean, number, string?, number?)
+    for _, useBuiltin: boolean in { true, false } do
+        if not useBuiltin and not http_request_fn then continue end
+        local finished: boolean = false
+        local rReach: boolean = false
+        local rType: number = 0
+        local rLoc: string? = nil
+        local rUv: number? = nil
+        task.spawn(function()
+            pcall(function()
+                local res: any = _presenceRequest(userId, useBuiltin, nil)
+                local code: number? = _presenceStatusOf(res)
+                if code == 403 then
+                    local tok: string? = _presenceTokenOf(res)
+                    if tok then
+                        res = _presenceRequest(userId, useBuiltin, tok)
+                        code = _presenceStatusOf(res)
+                    end
+                end
+                if code ~= 200 then return end
+                local b: any = res.Body or res.body
+                local okP: boolean, pT: number, gL: string?, uV: number? = _presenceParseBody(b)
+                if okP then
+                    rReach, rType, rLoc, rUv = true, pT, gL, uV
+                end
+            end)
+            finished = true
+        end)
+        local deadline: number = tick() + 10
+        while not finished and tick() < deadline do task.wait(0.1) end
+        if finished and rReach then
+            return true, rType, rLoc, rUv
+        end
+    end
+    return false, 0, nil, nil
 end
 
 local function resolveGameName(universeId: number?): string?
@@ -2526,7 +2559,7 @@ StatusLabel.Position          = UDim2.new(0, 62, 0, 34)
 StatusLabel.Size              = UDim2.new(1, -68, 0, 12)
 StatusLabel.BackgroundTransparency = 1
 StatusLabel.Font              = Enum.Font.Arcade
-StatusLabel.Text              = "Offline"
+StatusLabel.Text              = "Checking..."
 StatusLabel.TextSize          = 8
 StatusLabel.TextXAlignment    = Enum.TextXAlignment.Left
 StatusLabel.TextColor3        = STATUS_COLOR_OFFLINE
@@ -2958,25 +2991,36 @@ HelperStatusLabel.Position          = UDim2.new(0, 62, 0, 34)
 HelperStatusLabel.Size              = UDim2.new(1, -68, 0, 12)
 HelperStatusLabel.BackgroundTransparency = 1
 HelperStatusLabel.Font              = Enum.Font.Arcade
-HelperStatusLabel.Text              = "Offline"
+HelperStatusLabel.Text              = "Checking..."
 HelperStatusLabel.TextSize          = 8
 HelperStatusLabel.TextXAlignment    = Enum.TextXAlignment.Left
 HelperStatusLabel.TextColor3        = STATUS_COLOR_OFFLINE
 HelperStatusLabel.ZIndex            = 5
 
 task.spawn(function()
-    local ok, presType = pcall(function()
-        local ps = game:GetService("Players")
-        local data = ps:GetFriendInfoAsync(SINQUE_USER_ID)
-        return data and data.IsOnline and 2 or 0
-    end)
-    local col = (ok and presType and presType > 0) and STATUS_COLOR_ONLINE or STATUS_COLOR_OFFLINE
-    local txt = (ok and presType and presType > 0) and "Online" or "Offline"
-    pcall(function()
-        HelperStatusDot.BackgroundColor3  = col
-        HelperStatusLabel.TextColor3      = col
-        HelperStatusLabel.Text            = txt
-    end)
+    while RealZzHub and RealZzHub.Parent do
+        local reachable: boolean, ptype: number = getPresence(SINQUE_USER_ID)
+        pcall(function()
+            if not reachable then
+                HelperStatusDot.BackgroundColor3 = STATUS_COLOR_UNKNOWN
+                HelperStatusLabel.TextColor3     = STATUS_COLOR_UNKNOWN
+                HelperStatusLabel.Text           = "Status unavailable"
+            elseif ptype == 2 then
+                HelperStatusDot.BackgroundColor3 = STATUS_COLOR_INGAME
+                HelperStatusLabel.TextColor3     = STATUS_COLOR_INGAME
+                HelperStatusLabel.Text           = "In Game"
+            elseif ptype == 1 or ptype == 3 then
+                HelperStatusDot.BackgroundColor3 = STATUS_COLOR_ONLINE
+                HelperStatusLabel.TextColor3     = STATUS_COLOR_ONLINE
+                HelperStatusLabel.Text           = (ptype == 3) and "In Studio" or "Online"
+            else
+                HelperStatusDot.BackgroundColor3 = STATUS_COLOR_OFFLINE
+                HelperStatusLabel.TextColor3     = STATUS_COLOR_OFFLINE
+                HelperStatusLabel.Text           = "Offline"
+            end
+        end)
+        task.wait(20)
+    end
 end)
 
 local HelperProfileBtn: TextButton = Instance.new("TextButton", HelperCard)
@@ -3409,7 +3453,13 @@ task.spawn(function()
     end)
 end)
 
-local function applyCreatorStatus(presenceType: number, gameName: string?)
+local function applyCreatorStatus(reachable: boolean, presenceType: number, gameName: string?)
+    if not reachable then
+        StatusDot.BackgroundColor3 = STATUS_COLOR_UNKNOWN
+        StatusLabel.TextColor3     = STATUS_COLOR_UNKNOWN
+        StatusLabel.Text           = "Status unavailable"
+        return
+    end
     if presenceType == 2 then
         StatusDot.BackgroundColor3 = STATUS_COLOR_INGAME
         StatusLabel.TextColor3     = STATUS_COLOR_INGAME
@@ -3427,11 +3477,11 @@ end
 
 task.spawn(function()
     while RealZzHub and RealZzHub.Parent do
-        local presenceType: number, gameName: string?, universeId: number? = getPresence(CREATOR_USER_ID)
-        if presenceType == 2 and (not gameName or #gameName == 0) then
+        local reachable: boolean, presenceType: number, gameName: string?, universeId: number? = getPresence(CREATOR_USER_ID)
+        if reachable and presenceType == 2 and (not gameName or #gameName == 0) then
             gameName = resolveGameName(universeId)
         end
-        pcall(applyCreatorStatus, presenceType, gameName)
+        pcall(applyCreatorStatus, reachable, presenceType, gameName)
         task.wait(20)
     end
 end)
