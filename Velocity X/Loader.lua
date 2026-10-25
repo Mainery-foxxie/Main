@@ -817,18 +817,6 @@ local function decode_obfuscated(obj: any): any
     return obj
 end
 
--- One UI scale factor shared by the hub, the perf HUD and the tutorial, so all
--- three shrink and grow together with the viewport instead of each capping at 1.
-local ALWI_UI_DESIGN: Vector2 = Vector2.new(1100, 650)
-local function alwiUiScale(): number
-    local vp: Vector2 = Vector2.new(1280, 720)
-    pcall(function()
-        local cam: Camera? = workspace.CurrentCamera
-        if cam then vp = cam.ViewportSize end
-    end)
-    return math.clamp(math.min(vp.X / ALWI_UI_DESIGN.X, vp.Y / ALWI_UI_DESIGN.Y), 0.62, 1.35)
-end
-
 local RealZzHub: ScreenGui = Instance.new("ScreenGui")
 RealZzHub.Name            = "Velocity_" .. randomString(10)
 RealZzHub.ZIndexBehavior  = Enum.ZIndexBehavior.Sibling
@@ -839,7 +827,8 @@ local LoaderScale: UIScale = Instance.new("UIScale", RealZzHub)
 LoaderScale.Scale = 1
 local function fitLoaderScale()
     pcall(function()
-        LoaderScale.Scale = alwiUiScale()
+        local vp: Vector2 = workspace.CurrentCamera.ViewportSize
+        LoaderScale.Scale = math.clamp(math.min(vp.X / 1100, vp.Y / 650), 0.62, 1)
     end)
 end
 fitLoaderScale()
@@ -1455,7 +1444,8 @@ local HudScale: UIScale = Instance.new("UIScale", PerfHudGui)
 HudScale.Scale = 1
 local function fitHudScale()
     pcall(function()
-        HudScale.Scale = alwiUiScale()
+        local vp: Vector2 = workspace.CurrentCamera.ViewportSize
+        HudScale.Scale = math.clamp(math.min(vp.X / 1100, vp.Y / 650), 0.7, 1)
     end)
 end
 fitHudScale()
@@ -5624,7 +5614,9 @@ local TourScale: UIScale = Instance.new("UIScale", TourGui)
 TourScale.Scale = 1
 local function tourFitScale()
     pcall(function()
-        TourScale.Scale = alwiUiScale()
+        local cam: Camera? = workspace.CurrentCamera
+        local vp: Vector2 = (cam and cam.ViewportSize) or Vector2.new(1280, 720)
+        TourScale.Scale = math.clamp(math.min(vp.X / 1280, vp.Y / 720), 0.7, 1.15)
     end)
 end
 local function tourS(): number
@@ -5704,7 +5696,6 @@ local function tourResolveTarget(ref: any): GuiObject?
     return nil
 end
 
-local TOUR_TIP_W: number = 340
 local TOUR_TIP_H: number = 220
 local tourPlaceToken: number = 0
 local tourLastTarget: GuiObject? = nil
@@ -5727,91 +5718,24 @@ local function tourTargetShown(t: GuiObject): boolean
     return true
 end
 
-type TourLayout = {
-    ringPos:  Vector2,
-    ringSize: Vector2,
-    cardX:    number,
-    cardTop:  number,
-    debug:    string,
-}
-
--- Everything here is in physical screen pixels. AbsolutePosition is reported in
--- the safe-area space (below the topbar) while TourGui uses IgnoreGuiInset, so
--- the top inset must be added back before any comparison or placement.
-local function tourLayout(t: GuiObject): TourLayout
-    local s: number = tourS()
-    local cam: Camera? = workspace.CurrentCamera
-    local vp: Vector2 = (cam and cam.ViewportSize) or Vector2.new(1280, 720)
-    local insetX: number = 0
-    local insetY: number = 0
-    pcall(function()
-        -- TutorDim is a full-screen (0,0) element inside an IgnoreGuiInset GUI,
-        -- so its AbsolutePosition is exactly minus the inset. This is always
-        -- current, unlike GuiService:GetGuiInset() which reports 0 until the
-        -- topbar has initialised, and it matches what the renderer really uses.
-        local d: Vector2 = TutorDim.AbsolutePosition
-        insetX, insetY = -d.X, -d.Y
-    end)
-    if insetY <= 0 then
-        pcall(function()
-            local inset: Vector2 = game:GetService("GuiService"):GetGuiInset()
-            insetX, insetY = inset.X, inset.Y
-        end)
-    end
-
-    local tp: Vector2 = t.AbsolutePosition
-    local ts: Vector2 = t.AbsoluteSize
-    local targetTop: number = tp.Y + insetY
-    local targetBottom: number = tp.Y + ts.Y + insetY
-    local cx: number = tp.X + ts.X * 0.5
-
-    local cardW: number = TOUR_TIP_W * s
-    local cardH: number = TOUR_TIP_H * s
-    local gap: number = 12
-    local safeTop: number = insetY + 8
-    local safeBottom: number = vp.Y - 8
-
-    local belowTop: number = targetBottom + gap
-    local aboveTop: number = targetTop - gap - cardH
-    local cardTop: number
-    if belowTop + cardH <= safeBottom then
-        cardTop = belowTop
-    elseif aboveTop >= safeTop then
-        cardTop = aboveTop
-    elseif (safeBottom - targetBottom) >= (targetTop - safeTop) then
-        cardTop = belowTop
-    else
-        cardTop = aboveTop
-    end
-    cardTop = math.clamp(cardTop, safeTop, math.max(safeTop, safeBottom - cardH))
-
-    local minX: number = cardW * 0.5 + 8
-    local maxX: number = math.max(minX, vp.X - cardW * 0.5 - 8)
-    local cardX: number = math.clamp(cx, minX, maxX)
-
-    return {
-        ringPos  = Vector2.new((cx + insetX) / s, (tp.Y + ts.Y * 0.5 + insetY) / s),
-        ringSize = Vector2.new((ts.X + 16) / s, (ts.Y + 16) / s),
-        cardX    = cardX / s,
-        cardTop  = cardTop / s,
-        debug    = string.format(
-            "tp=(%d,%d) ts=(%d,%d) vp=(%d,%d) inset=%d s=%.2f cardTop=%d",
-            tp.X, tp.Y, ts.X, ts.Y, vp.X, vp.Y, insetY, s, cardTop),
-    }
-end
-
 local function tourRehug()
     local target: GuiObject? = tourLastTarget
     if not TutorialOpen or not target or not target.Parent then return end
     if not tourTargetShown(target :: GuiObject) then return end
     pcall(function()
-        local layout: TourLayout = tourLayout(target :: GuiObject)
+        local s: number = tourS()
+        local t: GuiObject = target :: GuiObject
+        local tp: Vector2 = t.AbsolutePosition
+        local ts: Vector2 = t.AbsoluteSize
+        local ix: number, iy: number = 0, 0
+        pcall(function()
+            local inset: Vector2 = game:GetService("GuiService"):GetGuiInset()
+            ix, iy = inset.X, inset.Y
+        end)
         TourRing.Visible     = true
         TourRing.AnchorPoint = Vector2.new(0.5, 0.5)
-        TourRing.Position    = UDim2.new(0, layout.ringPos.X, 0, layout.ringPos.Y)
-        TourRing.Size        = UDim2.new(0, layout.ringSize.X, 0, layout.ringSize.Y)
-        TutorCard.AnchorPoint = Vector2.new(0.5, 0)
-        TutorCard.Position    = UDim2.new(0, layout.cardX, 0, layout.cardTop)
+        TourRing.Position    = UDim2.new(0, (tp.X + ts.X / 2 + ix) / s, 0, (tp.Y + ts.Y / 2 + iy) / s)
+        TourRing.Size        = UDim2.new(0, (ts.X + 16) / s, 0, (ts.Y + 16) / s)
     end)
 end
 
@@ -5837,6 +5761,8 @@ local function tourPlaceTip(target: GuiObject?, settle: number, label: string?)
     task.spawn(function()
         task.wait(settle)
         if myToken ~= tourPlaceToken or not TutorialOpen then return end
+        local cam: Camera? = workspace.CurrentCamera
+        local vp: Vector2 = (cam and cam.ViewportSize) or Vector2.new(1280, 720)
         if not target or not target.Parent
             or (target:IsA("GuiObject") and not tourTargetShown(target :: GuiObject)) then
             pcall(function()
@@ -5849,16 +5775,42 @@ local function tourPlaceTip(target: GuiObject?, settle: number, label: string?)
             return
         end
         pcall(function()
-            local layout: TourLayout = tourLayout(target :: GuiObject)
+            local s: number = tourS()
+            local topEdge: number = 8
+            local insetX: number = 0
+            local insetY: number = 0
+            pcall(function()
+                local inset: Vector2 = game:GetService("GuiService"):GetGuiInset()
+                insetX, insetY = inset.X, inset.Y
+                topEdge = inset.Y + 8
+            end)
+            local t: GuiObject = target :: GuiObject
+            local tp: Vector2 = t.AbsolutePosition
+            local ts: Vector2 = t.AbsoluteSize
             TourRing.Visible     = true
             TourRing.AnchorPoint = Vector2.new(0.5, 0.5)
-            TourRing.Position    = UDim2.new(0, layout.ringPos.X, 0, layout.ringPos.Y)
-            TourRing.Size        = UDim2.new(0, layout.ringSize.X, 0, layout.ringSize.Y)
-            local anchor: Vector2 = Vector2.new(0.5, 0)
-            local pos: UDim2 = UDim2.new(0, layout.cardX, 0, layout.cardTop)
+            TourRing.Position    = UDim2.new(0, (tp.X + ts.X / 2 + insetX) / s, 0, (tp.Y + ts.Y / 2 + insetY) / s)
+            TourRing.Size        = UDim2.new(0, (ts.X + 16) / s, 0, (ts.Y + 16) / s)
+            local halfW:   number = (340 * s) / 2
+            local halfH:   number = (TOUR_TIP_H * s) / 2
+            local cx: number = tp.X + ts.X / 2
+            local xScreen: number = math.clamp(cx, halfW + 8, vp.X - halfW - 8)
+            local fitsBelow: boolean = (tp.Y + ts.Y + 12 + halfH * 2) <= (vp.Y - 8)
+            local fitsAbove: boolean = (tp.Y - 12 - halfH * 2) >= topEdge
+            local nearTop:   boolean = tp.Y < vp.Y * 0.4
+            local anchor: Vector2 = Vector2.new(0.5, 0.5)
+            local pos: UDim2 = UDim2.new(0, (xScreen + insetX) / s, 0, (tp.Y + ts.Y / 2 + insetY) / s)
+            if (nearTop and fitsBelow) or (fitsBelow and not fitsAbove) then
+                anchor = Vector2.new(0.5, 0)
+                pos = UDim2.new(0, (xScreen + insetX) / s, 0, (tp.Y + ts.Y + 12 + insetY) / s)
+            elseif fitsAbove then
+                anchor = Vector2.new(0.5, 1)
+                pos = UDim2.new(0, (xScreen + insetX) / s, 0, (tp.Y - 12 + insetY) / s)
+            end
             local _dbg: string = string.format(
-                "[AlwiTour] place[%s] %s ring=(%s) card=(%s,%s)",
-                tostring(label), layout.debug, tostring(TourRing.Position), tostring(anchor), tostring(pos))
+                "[AlwiTour] place[%s] tp=(%d,%d) ts=(%d,%d) ring=(%s) card=(%s,%s)",
+                tostring(label), tp.X, tp.Y, ts.X, ts.Y,
+                tostring(TourRing.Position), tostring(anchor), tostring(pos))
             print(_dbg)
             tourLog(_dbg)
             AlwiTween(TutorCard, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
